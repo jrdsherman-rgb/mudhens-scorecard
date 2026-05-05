@@ -824,10 +824,20 @@ async function fetchGame() {
     const ds = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
     document.getElementById('meta-date').textContent = today.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 
-    const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=12&teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`);
-    const data = await res.json();
+    // Try multiple sportIds — MiLB Triple-A varies by API version
+    let data = null;
+    for (const sid of [11, 12, 14, '']) {
+      const url = sid !== ''
+        ? `https://statsapi.mlb.com/api/v1/schedule?sportId=${sid}&teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`
+        : `https://statsapi.mlb.com/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`;
+      try {
+        const r = await fetch(url);
+        const d = await r.json();
+        if (d.dates?.length && d.dates[0].games?.length) { data = d; break; }
+      } catch(e) {}
+    }
 
-    if (!data.dates?.length || !data.dates[0].games?.length) {
+    if (!data?.dates?.length || !data.dates[0].games?.length) {
       document.getElementById('s-inn').textContent = 'No game today';
       document.getElementById('fp-time').textContent = 'Off day — enjoy the rest!';
       document.getElementById('opp-nm').textContent = 'OFF DAY';
