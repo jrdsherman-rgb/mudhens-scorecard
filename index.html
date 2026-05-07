@@ -269,7 +269,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       </div>
     </div>
     <div class="fp" id="fp-time">Loading...</div>
-    <div class="standings-info" id="standings-info"></div>
   </div>
 
   <div class="grid2">
@@ -1091,17 +1090,13 @@ async function fetchWeather(lat, lon, venueName) {
 
 // ── MOCK LINEUP ────────────────────────────────────────────
 function mockLineup() {
-  return [
-    {name:'Zach McKinstry',pos:'2B',num:'20',mlbId:null},
-    {name:'Tyler Gentry',pos:'RF',num:'27',mlbId:null},
-    {name:'Andrew Navigato',pos:'LF',num:'10',mlbId:null},
-    {name:'Eduardo Valencia',pos:'1B',num:'39',mlbId:null},
-    {name:'Gage Workman',pos:'3B',num:'25',mlbId:null},
-    {name:'Max Burt',pos:'SS',num:'2',mlbId:null},
-    {name:'Cal Stevenson',pos:'CF',num:'16',mlbId:null},
-    {name:'Tomas Nido',pos:'C',num:'3',mlbId:null},
-    {name:'Corey Julks',pos:'DH',num:'12',mlbId:null},
-  ];
+  // Placeholder until official lineup posts ~60-90 min before first pitch
+  return [1,2,3,4,5,6,7,8,9].map(n => ({
+    name: `Lineup pending...`,
+    pos: '—',
+    num: '',
+    mlbId: null
+  }));
 }
 
 // ── FETCH GAME ─────────────────────────────────────────────
