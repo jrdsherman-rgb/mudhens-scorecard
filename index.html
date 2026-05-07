@@ -233,12 +233,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="nav-tab active" onclick="showSection('game',this)">Game</div>
   <div class="nav-tab" onclick="showSection('scorecard',this)">Mud Hens</div>
   <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
-  <div class="nav-tab" onclick="showSection('pitching',this)">Pitching</div>
+  <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
   <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
-  <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
 </div>
 
 <!-- ══════════════ GAME ══════════════ -->
@@ -423,38 +422,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <b>Groundouts:</b> #-# (e.g. 6-3) · U# = unassisted<br>
       <b>Special:</b> FC · E · DP · SAC · SF<br>
       <b>Fielders:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════ PITCHING ══════════════ -->
-<div class="section" id="sec-pitching">
-  <div class="section-title">Pitch Count Tracker</div>
-  <div class="pc-panel">
-    <div class="pc-label">Starting Pitcher</div>
-    <div class="pc-pitcher" id="pc-pitcher-name">—</div>
-    <div class="pc-row">
-      <div class="pc-num" id="pc-display">0</div>
-      <div class="pc-btns">
-        <button class="pc-btn minus" onclick="adjustPC(-1)">−</button>
-        <button class="pc-btn" onclick="adjustPC(1)">+</button>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:10px;color:#555;">75+ caution &bull; 100+ danger</div>
-      <button class="pc-reset" onclick="resetPC()">Reset</button>
-    </div>
-  </div>
-  <div class="grid2">
-    <div class="card">
-      <div class="card-label">Mud Hens Starter</div>
-      <div class="card-val" id="pc-mud-starter">TBD</div>
-      <div class="card-sub" id="pc-mud-era"></div>
-    </div>
-    <div class="card">
-      <div class="card-label" id="pc-opp-label">Opp Starter</div>
-      <div class="card-val" id="pc-opp-starter">TBD</div>
-      <div class="card-sub" id="pc-opp-era"></div>
     </div>
   </div>
 </div>
