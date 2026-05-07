@@ -187,7 +187,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
 <div class="nav-tabs">
   <div class="nav-tab active" onclick="showSection('game',this)">Game</div>
-  <div class="nav-tab" onclick="showSection('scorecard',this)">Scorecard</div>
+  <div class="nav-tab" onclick="showSection('scorecard',this)">Mud Hens</div>
+  <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
   <div class="nav-tab" onclick="showSection('pitching',this)">Pitching</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
@@ -321,6 +322,52 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <b>Special:</b> FC (fielder's choice) · E (error) · DP (double play)<br>
       <b>Sacrifices:</b> SAC (bunt) · SF (sacrifice fly)<br>
       <b>Fielder Numbers:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ OPPONENT SCORECARD ══════════════ -->
+<div class="section" id="sec-oppscore">
+  <div class="sc-tabs">
+    <div class="sc-tab active" onclick="switchOppTab('live')">Live Scoring</div>
+    <div class="sc-tab" onclick="switchOppTab('full')">Notation Key</div>
+  </div>
+
+  <div id="opp-live-view">
+    <div class="table-wrap">
+      <table class="sc">
+        <thead><tr>
+          <th class="ph" id="opp-sc-header">Opponent Batter</th>
+          <th class="ps">Pos</th>
+          <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
+          <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
+          <th class="pi">7</th><th class="pi">8</th><th class="pi">9</th>
+          <th class="pst">AB</th><th class="pst">H</th>
+          <th class="pst">R</th><th class="pst">RBI</th>
+        </tr></thead>
+        <tbody id="opp-sc-body">
+          <tr><td colspan="15" class="loading-msg">Loading opponent lineup...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:#2d6a1f"></div>Hit</div>
+      <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
+      <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
+      <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
+      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">Tap name = stats · Tap cell = score</span>
+    </div>
+  </div>
+
+  <div id="opp-key-view" style="display:none;">
+    <div class="notation-key">
+      <b>Hits:</b> 1B · 2B · 3B · HR<br>
+      <b>Walks/On Base:</b> BB · IBB · HBP<br>
+      <b>Strikeouts:</b> K (swinging) · Kc (called)<br>
+      <b>Flyouts:</b> F# · Popups: P# · Lineouts: L#<br>
+      <b>Groundouts:</b> #-# (e.g. 6-3) · U# = unassisted<br>
+      <b>Special:</b> FC · E · DP · SAC · SF<br>
+      <b>Fielders:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
     </div>
   </div>
 </div>
@@ -635,10 +682,11 @@ function openScModal(bi, inn) {
   document.getElementById('sc-modal-title').textContent = p ? p.name : 'Batter';
   document.getElementById('sc-modal-sub').textContent = `Inning ${inn}`;
   pendingPrefix = ''; goFirst = null;
+  document.getElementById('sc-modal').dataset.mode = 'mud';
   showStep('step-cat');
   document.getElementById('sc-modal').classList.add('open');
 }
-function closeScModal() { document.getElementById('sc-modal').classList.remove('open'); activeCell = null; }
+function closeScModal() { document.getElementById('sc-modal').classList.remove('open'); activeCell = null; activeOppCell = null; }
 function backToStep(id) { showStep(id); }
 function chooseCategory(cat) {
   if (cat === 'hit')  showStep('step-hit');
@@ -673,12 +721,22 @@ function goStep(n) {
 }
 
 function finalRec(r) {
-  if (!activeCell) return;
-  const key = `${activeCell.bi}_${activeCell.inn}`;
-  if (r === '') { delete scores[key]; delete scores[key + '_auto']; }
-  else { scores[key] = r; delete scores[key + '_auto']; }
-  closeScModal();
-  renderScorecard();
+  const mode = document.getElementById('sc-modal').dataset.mode;
+  if (mode === 'opp') {
+    if (!activeOppCell) return;
+    const key = `${activeOppCell.bi}_${activeOppCell.inn}`;
+    if (r === '') { delete oppScores[key]; delete oppScores[key + '_auto']; }
+    else { oppScores[key] = r; delete oppScores[key + '_auto']; }
+    closeScModal();
+    renderOppScorecard();
+  } else {
+    if (!activeCell) return;
+    const key = `${activeCell.bi}_${activeCell.inn}`;
+    if (r === '') { delete scores[key]; delete scores[key + '_auto']; }
+    else { scores[key] = r; delete scores[key + '_auto']; }
+    closeScModal();
+    renderScorecard();
+  }
 }
 
 // ── PLAYER MODAL ───────────────────────────────────────────
@@ -826,19 +884,12 @@ async function fetchGame() {
     document.getElementById('meta-date').textContent = today.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     console.log('Fetching games for date:', ds, '— Team ID:', TEAM_ID);
 
-    // Try multiple sportIds — MiLB Triple-A varies by API version
+    // Worker handles sportId fallback automatically
     let data = null;
-    for (const sid of [11, 12, 14, '']) {
-      const url = sid !== ''
-        ? `https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?sportId=${sid}&teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`
-        : `https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`;
-      try {
-        const r = await fetch(url);
-        const d = await r.json();
-        console.log('sportId', sid, '— games found:', d.dates?.[0]?.games?.length ?? 0);
-        if (d.dates?.length && d.dates[0].games?.length) { data = d; break; }
-      } catch(e) { console.log('sportId', sid, 'failed:', e); }
-    }
+    try {
+      const r = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`);
+      data = await r.json();
+    } catch(e) { console.log('fetch failed:', e); }
 
     if (!data?.dates?.length || !data.dates[0].games?.length) {
       document.getElementById('s-inn').textContent = 'No game today';
@@ -880,11 +931,23 @@ async function fetchGame() {
     }
 
     const lp = isHome ? game.lineups?.homePlayers : game.lineups?.awayPlayers;
+    const op = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
+
     if (lp?.length) {
       lineup = lp.slice(0,9).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
     } else {
       lineup = mockLineup(); renderScorecard();
+    }
+
+    if (op?.length) {
+      oppLineup = op.slice(0,9).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
+      // Update opponent scorecard header
+      const oppHeader = document.getElementById('opp-sc-header');
+      if (oppHeader) oppHeader.textContent = oppTeam.name + ' Batter';
+      fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
+    } else {
+      renderOppScorecard();
     }
 
     setTimeout(fetchGame, 30000);
@@ -1031,6 +1094,99 @@ function deleteGame(i) {
   games.splice(i,1);
   localStorage.setItem('mh_archive',JSON.stringify(games));
   loadArchive();
+}
+
+// ── OPPONENT SCORECARD ────────────────────────────────────
+let oppLineup = [], oppScores = {}, oppPlayerStats = {};
+let activeOppCell = null;
+
+function switchOppTab(t) {
+  document.querySelectorAll('#sec-oppscore .sc-tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
+  document.getElementById('opp-live-view').style.display = t === 'live' ? 'block' : 'none';
+  document.getElementById('opp-key-view').style.display  = t === 'full' ? 'block' : 'none';
+}
+
+function oppCellHTML(bi, inn) {
+  const key = `${bi}_${inn}`;
+  const r = oppScores[key] || '', isAuto = !!oppScores[key + '_auto'];
+  const c = col(r);
+  return `<div class="ab" onclick="openOppScModal(${bi},${inn})">${diamond(r,isAuto)}
+    <div class="ab-res" style="color:${c}" title="${r}">${r || '<span class="ab-dot">·</span>'}</div>
+    ${isAuto && r ? '<div class="ab-auto">auto</div>' : ''}
+  </div>`;
+}
+
+function getOppStats(bi) {
+  let ab = 0, h = 0, r = 0, rbi = 0;
+  for (let i = 1; i <= INNINGS; i++) {
+    const v = oppScores[`${bi}_${i}`];
+    if (!v) continue;
+    if (!walks.includes(v)) ab++;
+    if (hits.includes(v)) h++;
+  }
+  return {ab, h, r, rbi};
+}
+
+function renderOppScorecard() {
+  const tbody = document.getElementById('opp-sc-body');
+  if (!oppLineup.length) {
+    tbody.innerHTML = '<tr><td colspan="15" class="loading-msg">No opponent lineup yet — lineup posts closer to first pitch.</td></tr>';
+    return;
+  }
+  let html = '';
+  oppLineup.forEach((p, i) => {
+    const s = getOppStats(i);
+    const badge = oppPlayerStats[p.mlbId] ? streakBadge(p.mlbId) : '';
+    html += `<tr>
+      <td class="pn"><div class="nm" onclick="openOppPlayerModal(${i})">${p.name}${badge}</div><div class="av">${p.pos}</div></td>
+      <td class="pp">${p.pos}</td>`;
+    for (let n = 1; n <= INNINGS; n++) html += `<td>${oppCellHTML(i, n)}</td>`;
+    html += `<td class="pst">${s.ab}</td><td class="pst">${s.h}</td><td class="pst">${s.r}</td><td class="pst">${s.rbi}</td></tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function openOppScModal(bi, inn) {
+  activeOppCell = {bi, inn};
+  const p = oppLineup[bi];
+  document.getElementById('sc-modal-title').textContent = p ? p.name : 'Batter';
+  document.getElementById('sc-modal-sub').textContent = `Inning ${inn}`;
+  pendingPrefix = ''; goFirst = null;
+  // Store which scorecard is active
+  document.getElementById('sc-modal').dataset.mode = 'opp';
+  showStep('step-cat');
+  document.getElementById('sc-modal').classList.add('open');
+}
+
+function openOppPlayerModal(bi) {
+  const p = oppLineup[bi]; if (!p) return;
+  const st = oppPlayerStats[p.mlbId] || playerStats[p.mlbId] || {};
+  document.getElementById('psp-name').textContent = p.name;
+  document.getElementById('psp-meta').textContent = `#${p.num||'—'} · ${p.pos||'—'} · 2026 Season`;
+  const f = (v, d='.---') => v || d;
+  document.getElementById('psp-stats').innerHTML = `
+    <div class="stat-box"><div class="sv">${f(st.avg)}</div><div class="sl">AVG</div></div>
+    <div class="stat-box"><div class="sv">${f(st.obp)}</div><div class="sl">OBP</div></div>
+    <div class="stat-box"><div class="sv">${f(st.slg)}</div><div class="sl">SLG</div></div>
+    <div class="stat-box hi"><div class="sv">${f(st.ops)}</div><div class="sl">OPS</div></div>
+    <div class="stat-box"><div class="sv">${st.homeRuns??'—'}</div><div class="sl">HR</div></div>
+    <div class="stat-box"><div class="sv">${st.rbi??'—'}</div><div class="sl">RBI</div></div>
+    <div class="stat-box"><div class="sv">${st.stolenBases??'—'}</div><div class="sl">SB</div></div>
+    <div class="stat-box"><div class="sv">${st.gamesPlayed??'—'}</div><div class="sl">G</div></div>`;
+  document.getElementById('player-modal').classList.add('open');
+}
+
+async function fetchOppPlayerStats(ids) {
+  for (const id of ids) {
+    if (!id || oppPlayerStats[id] || playerStats[id]) continue;
+    try {
+      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting`);
+      const data = await res.json();
+      const splits = data.stats?.[0]?.splits;
+      if (splits?.length) oppPlayerStats[id] = splits[splits.length-1].stat;
+    } catch(e) {}
+  }
+  renderOppScorecard();
 }
 
 // ── MODAL BACKDROP ─────────────────────────────────────────
