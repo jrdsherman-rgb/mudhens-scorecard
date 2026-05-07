@@ -278,10 +278,10 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="card gold">
       <div class="card-label" id="wx-label">Weather at Fifth Third</div>
       <div class="wx-row">
-        <div class="wx-icon" id="wx-icon">—</div>
-        <div>
+        <div class="wx-icon" id="wx-icon" style="font-size:28px;">—</div>
+        <div style="flex:1;">
           <div class="wx-temp" id="wx-temp">—</div>
-          <div class="wx-desc" id="wx-desc">—</div>
+          <div class="wx-desc" id="wx-desc" style="line-height:1.5;">—</div>
         </div>
       </div>
     </div>
@@ -1052,20 +1052,58 @@ async function fetchVenueWeather(venueId, venueName, isHome) {
     } catch(e) {}
   }
 
-  fetchWeather(lat, lon, resolvedName);
+  fetchWeather(lat, lon, resolvedName, window._gameTimeUTC, window._gameStatus);
 }
 
 // ── FETCH WEATHER ──────────────────────────────────────────
-async function fetchWeather(lat, lon, venueName) {
+function renderWeather(temp, feelsLike, code, wind, humidity, venueName, isForcast, forecastTime) {
+  const wxStr = WX[code] || '🌡️ —';
+  const parts = wxStr.split(' ');
+  const icon = parts[0];
+  const desc = parts.slice(1).join(' ');
+  document.getElementById('wx-icon').textContent = icon;
+  document.getElementById('wx-temp').textContent = `${Math.round(temp)}°F`;
+  const feelsStr = feelsLike !== null ? ` · Feels like ${Math.round(feelsLike)}°F` : '';
+  document.getElementById('wx-desc').textContent = `${desc}${feelsStr} · ${Math.round(wind)} mph wind`;
+  const wxLabel = document.getElementById('wx-label');
+  if (wxLabel) {
+    if (isForcast && forecastTime) {
+      wxLabel.textContent = `Forecast at ${forecastTime} · ${venueName}`;
+    } else {
+      wxLabel.textContent = `Live weather · ${venueName}`;
+    }
+  }
+}
+
+async function fetchWeather(lat, lon, venueName, gameTimeUTC, gameStatus) {
   try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&temperature_unit=fahrenheit&wind_speed_unit=mph`);
+    // Decide whether to show forecast or live weather
+    const now = new Date();
+    const isPreGame = gameStatus && !gameStatus.includes('Progress') && gameStatus !== 'Final';
+    const isFinal = gameStatus === 'Final';
+    
+    // Fetch both current and hourly forecast
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&hourly=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`);
     const data = await res.json();
-    const cur = data.current, parts = (WX[cur.weather_code]||'🌡️ —').split(' ');
-    document.getElementById('wx-icon').textContent = parts[0];
-    document.getElementById('wx-temp').textContent = `${Math.round(cur.temperature_2m)}°F`;
-    document.getElementById('wx-desc').textContent = `${parts.slice(1).join(' ')} · ${Math.round(cur.wind_speed_10m)} mph · ${cur.relative_humidity_2m}% humidity`;
-    const wxLabel = document.getElementById('wx-label');
-    if (wxLabel) wxLabel.textContent = `Weather at ${venueName}`;
+    const cur = data.current;
+
+    if (gameTimeUTC && isPreGame) {
+      // Show forecast for game time
+      const gameTime = new Date(gameTimeUTC);
+      const gameHour = gameTime.getHours();
+      const gameDateStr = gameTime.toISOString().slice(0,13); // "2026-05-07T18"
+      const hourlyTimes = data.hourly?.time || [];
+      const idx = hourlyTimes.findIndex(t => t === gameDateStr + ':00');
+      if (idx !== -1) {
+        const h = data.hourly;
+        const forecastTime = gameTime.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'});
+        renderWeather(h.temperature_2m[idx], h.apparent_temperature[idx], h.weather_code[idx], h.wind_speed_10m[idx], null, venueName, true, forecastTime);
+        return;
+      }
+    }
+
+    // Live current weather (in progress or fallback)
+    renderWeather(cur.temperature_2m, cur.apparent_temperature, cur.weather_code, cur.wind_speed_10m, null, venueName, false, null);
   } catch(e) { document.getElementById('wx-temp').textContent='—'; }
 }
 
@@ -1129,6 +1167,8 @@ async function fetchGame() {
     document.getElementById('opp-sc').textContent = game.teams[oi].score ?? '—';
 
     const status = game.status?.detailedState || '';
+    window._gameStatus = status;
+    window._gameTimeUTC = game.gameDate || null;
     document.getElementById('fp-time').textContent =
       status === 'Final' ? 'Final' :
       status.includes('Progress') ? '▶ In Progress' :
@@ -1494,7 +1534,14 @@ function getOppStats(bi) {
 function renderOppScorecard() {
   const tbody = document.getElementById('opp-sc-body');
   if (!oppLineup.length) {
-    tbody.innerHTML = '<tr><td colspan="15" class="loading-msg">No opponent lineup yet — lineup posts closer to first pitch.</td></tr>';
+    // Show 9 pending slots like the Mud Hens card
+    let html = '';
+    for (let i = 0; i < 9; i++) {
+      html += `<tr><td class="pn"><div class="nm" style="cursor:default;text-decoration:none;color:rgba(26,43,94,0.35);">Lineup pending...</div><div class="av">—</div></td><td class="pp">—</td>`;
+      for (let n = 1; n <= INNINGS; n++) html += `<td><div class="ab" style="cursor:default;"><span class="ab-dot">·</span></div></td>`;
+      html += `<td class="pst">—</td><td class="pst">—</td><td class="pst">—</td><td class="pst">—</td></tr>`;
+    }
+    tbody.innerHTML = html;
     return;
   }
   let html = '';
@@ -1683,7 +1730,7 @@ function startCountdown() {
 
 // ── INIT ───────────────────────────────────────────────────
 fetchGame();
-fetchWeather(LAT, LON, 'Fifth Third Field');
+fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
 loadTrivia();
 startCountdown();
 </script>
