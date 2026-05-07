@@ -968,6 +968,20 @@ async function fetchStandings(mudId, oppId) {
   } catch(e) {}
 }
 
+// Full team name lookup by team ID
+const TEAM_NAMES = {
+  512:'Toledo Mud Hens', 235:'Memphis Redbirds', 445:'Columbus Clippers',
+  484:'Indianapolis Indians', 416:'Louisville Bats', 1960:'St. Paul Saints',
+  541:'Omaha Storm Chasers', 451:'Iowa Cubs', 556:'Nashville Sounds',
+  431:'Gwinnett Stripers', 552:'Syracuse Mets', 531:'Scranton/WB RailRiders',
+  533:'Worcester Red Sox', 564:'Jacksonville Jumbo Shrimp', 1410:'Lehigh Valley IronPigs',
+  494:'Charlotte Knights', 534:'Rochester Red Wings', 422:'Buffalo Bisons',
+  568:'Norfolk Tides', 234:'Durham Bulls', 238:'Oklahoma City Comets',
+  342:'Albuquerque Isotopes', 400:'Las Vegas Aviators', 102:'Round Rock Express',
+  4904:'El Paso Chihuahuas', 105:'Sacramento River Cats', 529:'Tacoma Rainiers',
+  561:'Salt Lake Bees', 2310:'Reno Aces', 5434:'Sugar Land Space Cowboys',
+};
+
 function renderStandingsTable(records, containerId) {
   const el = document.getElementById(containerId);
   if (!records || !records.length) {
@@ -985,7 +999,7 @@ function renderStandingsTable(records, containerId) {
       </tr></thead><tbody>`;
     div.teamRecords?.forEach(tr => {
       const isMudHens = tr.team.id === 512;
-      const name = (tr.team.locationName ? tr.team.locationName + ' ' : '') + (tr.team.teamName || tr.team.name || '—');
+      const name = TEAM_NAMES[tr.team.id] || tr.team.name || '—';
       const w = tr.wins ?? '—';
       const l = tr.losses ?? '—';
       const pct = tr.winningPercentage ?? '—';
