@@ -173,6 +173,14 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .section-title{font-size:10px;color:#c8a84b;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-weight:bold;}
 .notation-key{background:#0f1d40;border-radius:4px;padding:10px 12px;margin-bottom:10px;font-size:10px;color:#888;line-height:1.9;}
 .notation-key b{color:#c8a84b;}
+.standings-table{width:100%;border-collapse:collapse;margin-bottom:14px;}
+.standings-table th{background:#c8102e;color:#fff;font-size:9px;padding:6px 6px;text-align:center;border:1px solid #0f1d40;letter-spacing:0.5px;}
+.standings-table th.team-col{text-align:left;padding-left:10px;min-width:130px;}
+.standings-table td{border:1px solid #1a2b5e;font-size:11px;text-align:center;padding:5px 4px;color:#c8a84b;background:#0f1d40;}
+.standings-table td.team-cell{text-align:left;padding-left:10px;color:#fff;font-size:11px;}
+.standings-table td.team-cell.mud-hens{color:#c8a84b;font-weight:bold;}
+.standings-table tr.div-header td{background:#1a2b5e;color:#c8a84b;font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:10px;}
+.standings-div-title{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -194,6 +202,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
   <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
+  <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
 </div>
 
 <!-- ══════════════ GAME ══════════════ -->
@@ -397,7 +406,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="card-sub" id="pc-mud-era"></div>
     </div>
     <div class="card">
-      <div class="card-label">Opp Starter</div>
+      <div class="card-label" id="pc-opp-label">Opp Starter</div>
       <div class="card-val" id="pc-opp-starter">TBD</div>
       <div class="card-sub" id="pc-opp-era"></div>
     </div>
@@ -445,6 +454,14 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   </div>
   <div class="section-title">Past Games</div>
   <div id="archive-list"></div>
+</div>
+
+<!-- ══════════════ STANDINGS ══════════════ -->
+<div class="section" id="sec-standings">
+  <div class="section-title">Triple-A International League Standings</div>
+  <div id="standings-il"></div>
+  <div class="section-title" style="margin-top:16px;">Triple-A Pacific Coast League Standings</div>
+  <div id="standings-pcl"></div>
 </div>
 
 <!-- ══════════════ SCORING MODAL ══════════════ -->
@@ -586,6 +603,7 @@ const WX = {0:'☀️ Clear',1:'🌤️ Mainly clear',2:'⛅ Partly cloudy',3:'�
 let lineup = [], scores = {}, activeCell = null, playerStats = {};
 let pitchCount = 0;
 let pendingPrefix = '', goFirst = null;
+let oppTeamName = 'Opponent';
 
 // ── NAV ────────────────────────────────────────────────────
 function showSection(name, el) {
@@ -597,6 +615,7 @@ function showSection(name, el) {
   if (name === 'history') loadHistory();
   if (name === 'promotions') loadPromos();
   if (name === 'archive') loadArchive();
+  if (name === 'standings') loadStandingsTab();
 }
 
 // ── COLOR ──────────────────────────────────────────────────
@@ -772,7 +791,7 @@ function resetPC() { pitchCount = 0; adjustPC(0); }
 function updateLinescore(game, isHome) {
   const ls = game.linescore; if (!ls || !ls.innings) return;
   const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
-  const oppName = isHome ? game.teams.away.team.name : game.teams.home.team.name;
+  const oppName = oppTeamName || (isHome ? game.teams.away.team.name : game.teams.home.team.name);
   let mRow = `<tr><td class="tn">Mud Hens</td>`, oRow = `<tr><td class="tn">${oppName}</td>`;
   for (let i = 0; i < 9; i++) {
     const inn = ls.innings[i];
@@ -830,12 +849,21 @@ async function fetchStarters(gamePk, isHome) {
 }
 
 // ── FETCH STANDINGS ────────────────────────────────────────
+let standingsCache = null;
+
 async function fetchStandings(mudId, oppId) {
   try {
-    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`);
-    const data = await res.json();
+    // Fetch both IL (117) and PCL (112)
+    const [resIL, resPCL] = await Promise.all([
+      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
+      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
+    ]);
+    const ilData = await resIL.json();
+    const pclData = await resPCL.json();
+    standingsCache = { il: ilData.records || [], pcl: pclData.records || [] };
+
     let mudRec='', oppRec='', mudStand='';
-    data.records?.forEach(div => {
+    [...(ilData.records||[]), ...(pclData.records||[])].forEach(div => {
       div.teamRecords?.forEach(tr => {
         if (tr.team.id === mudId) { mudRec=`${tr.wins}-${tr.losses}`; mudStand=`${ordinal(tr.divisionRank)} in ${div.division?.name||''}`; }
         if (tr.team.id === oppId) oppRec=`${tr.wins}-${tr.losses}`;
@@ -845,6 +873,64 @@ async function fetchStandings(mudId, oppId) {
     if (oppRec) document.getElementById('opp-rec').textContent = oppRec;
     if (mudStand) document.getElementById('standings-info').innerHTML = `Standings: <span>${mudStand}</span>`;
   } catch(e) {}
+}
+
+function renderStandingsTable(records, containerId) {
+  const el = document.getElementById(containerId);
+  if (!records || !records.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-text">Standings unavailable</div></div>';
+    return;
+  }
+  let html = '';
+  records.forEach(div => {
+    const divName = div.division?.name || 'Division';
+    html += `<div class="standings-div-title">${divName}</div>`;
+    html += `<table class="standings-table">
+      <thead><tr>
+        <th class="team-col">Team</th>
+        <th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th><th>L10</th>
+      </tr></thead><tbody>`;
+    div.teamRecords?.forEach(tr => {
+      const isMudHens = tr.team.id === 512;
+      const name = tr.team.name || '—';
+      const w = tr.wins ?? '—';
+      const l = tr.losses ?? '—';
+      const pct = tr.winningPercentage ?? '—';
+      const gb = tr.gamesBack ?? '—';
+      const strk = tr.streak?.streakCode ?? '—';
+      const l10 = tr.records?.splitRecords?.find(r=>r.type==='lastTen');
+      const l10str = l10 ? `${l10.wins}-${l10.losses}` : '—';
+      html += `<tr>
+        <td class="team-cell${isMudHens?' mud-hens':''}">${isMudHens?'★ ':''}${name}</td>
+        <td>${w}</td><td>${l}</td><td>${pct}</td><td>${gb}</td><td>${strk}</td><td>${l10str}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  });
+  el.innerHTML = html;
+}
+
+async function loadStandingsTab() {
+  if (standingsCache) {
+    renderStandingsTable(standingsCache.il, 'standings-il');
+    renderStandingsTable(standingsCache.pcl, 'standings-pcl');
+    return;
+  }
+  document.getElementById('standings-il').innerHTML = '<div class="empty-state"><div class="empty-text">Loading standings...</div></div>';
+  document.getElementById('standings-pcl').innerHTML = '<div class="empty-state"><div class="empty-text">Loading standings...</div></div>';
+  try {
+    const [resIL, resPCL] = await Promise.all([
+      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
+      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
+    ]);
+    const ilData = await resIL.json();
+    const pclData = await resPCL.json();
+    standingsCache = { il: ilData.records || [], pcl: pclData.records || [] };
+    renderStandingsTable(standingsCache.il, 'standings-il');
+    renderStandingsTable(standingsCache.pcl, 'standings-pcl');
+  } catch(e) {
+    document.getElementById('standings-il').innerHTML = '<div class="empty-state"><div class="empty-text">Could not load standings.</div></div>';
+  }
 }
 
 // ── FETCH WEATHER ──────────────────────────────────────────
@@ -903,7 +989,14 @@ async function fetchGame() {
     const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
     const oppTeam = game.teams[oi].team;
 
-    document.getElementById('opp-nm').textContent = (oppTeam.name||'Opponent').toUpperCase();
+    oppTeamName = oppTeam.name || 'Opponent';
+    document.getElementById('opp-nm').textContent = oppTeamName.toUpperCase();
+    // Update opponent scorecard header
+    const oppScHeader = document.getElementById('opp-sc-header');
+    if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
+    // Update opponent tab label
+    const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]');
+    if (oppTab) oppTab.textContent = oppTeamName;
     document.getElementById('mud-sc').textContent = game.teams[mi].score ?? '—';
     document.getElementById('opp-sc').textContent = game.teams[oi].score ?? '—';
 
@@ -914,6 +1007,10 @@ async function fetchGame() {
       `First Pitch: ${fmtTime(game.gameDate)} ET`;
 
     fetchStandings(TEAM_ID, oppTeam.id);
+    // Update all opponent labels with real team name
+    const pcOppLabel = document.getElementById('pc-opp-label');
+    if (pcOppLabel) pcOppLabel.textContent = oppTeamName + ' Starter';
+    const gameOppLabel = document.querySelector('#sec-game .card-label[id="opp-starter"]');
     fetchStarters(game.gamePk, isHome);
     updateLinescore(game, isHome);
 
@@ -950,12 +1047,146 @@ async function fetchGame() {
       renderOppScorecard();
     }
 
+    if (game.gamePk) {
+      currentGamePk = game.gamePk;
+      checkForHalfInningEnd(game.gamePk);
+    }
     setTimeout(fetchGame, 30000);
   } catch(e) {
     document.getElementById('s-inn').textContent='Demo mode';
     document.getElementById('fp-time').textContent='Could not load game data';
     lineup = mockLineup(); renderScorecard();
   }
+}
+
+// ── AUTO-FILL PLAY BY PLAY ────────────────────────────────
+let lastInning = null, lastIsTop = null, currentGamePk = null;
+
+function mapPlayResult(play) {
+  const event = play.result?.event || '';
+  const desc = play.result?.description || '';
+  
+  // Map MLB API event names to our notation
+  if (event === 'Home Run') return 'HR';
+  if (event === 'Triple') return '3B';
+  if (event === 'Double') return '2B';
+  if (event === 'Single') return '1B';
+  if (event === 'Walk') return 'BB';
+  if (event === 'Intent Walk') return 'IBB';
+  if (event === 'Hit By Pitch') return 'HBP';
+  if (event === 'Strikeout') {
+    // Check if called or swinging
+    const lastPitch = play.pitchIndex?.[play.pitchIndex.length - 1];
+    const pitches = play.playEvents || [];
+    const last = pitches[pitches.length - 1];
+    if (last?.details?.code === 'C') return 'Kc';
+    return 'K';
+  }
+  if (event === 'Grounded Into DP' || event === 'Double Play') return 'DP';
+  if (event === 'Sac Fly') return 'SF';
+  if (event === 'Sac Bunt') return 'SAC';
+  if (event === 'Field Error') return 'E';
+  if (event === 'Fielders Choice' || event === 'Fielders Choice Out') return 'FC';
+  if (event === 'Flyout') {
+    // Try to get fielder number
+    const fielder = play.matchup?.postOnFirst || null;
+    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
+    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+    if (pos && posMap[pos]) return `F${posMap[pos]}`;
+    return 'FO';
+  }
+  if (event === 'Pop Out') {
+    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
+    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+    if (pos && posMap[pos]) return `P${posMap[pos]}`;
+    return 'FO';
+  }
+  if (event === 'Lineout') {
+    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
+    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+    if (pos && posMap[pos]) return `L${posMap[pos]}`;
+    return 'LO';
+  }
+  if (event === 'Groundout' || event === 'Forceout') {
+    // Try to build #-# notation
+    const credits = play.runners?.[0]?.credits || [];
+    if (credits.length >= 2) {
+      const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+      const f1 = posMap[credits[0]?.position?.abbreviation];
+      const f2 = posMap[credits[1]?.position?.abbreviation];
+      if (f1 && f2) return `${f1}-${f2}`;
+    }
+    return 'GO';
+  }
+  if (event === 'Field Out') return 'FO';
+  // Fallback
+  return event ? event.substring(0,4).toUpperCase() : '';
+}
+
+async function autoFillHalfInning(gamePk, inning, isTop) {
+  try {
+    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/playByPlay`);
+    const data = await res.json();
+    const allPlays = data.allPlays || [];
+
+    // Filter plays for this half inning
+    const halfPlays = allPlays.filter(p => {
+      const ab = p.about;
+      return ab && ab.inning === inning && ab.isTopInning === isTop && ab.isComplete;
+    });
+
+    if (!halfPlays.length) return;
+
+    // Determine which lineup to use
+    const targetLineup = isTop ? oppLineup : lineup;
+    const targetScores = isTop ? oppScores : scores;
+
+    halfPlays.forEach(play => {
+      const batterId = play.matchup?.batter?.id;
+      if (!batterId) return;
+
+      // Find batter index in lineup
+      const bi = targetLineup.findIndex(p => p.mlbId === batterId);
+      if (bi === -1) return;
+
+      const key = `${bi}_${inning}`;
+      // Only auto-fill if not manually scored
+      if (targetScores[key] && !targetScores[key + '_auto']) return;
+
+      const result = mapPlayResult(play);
+      if (result) {
+        targetScores[key] = result;
+        targetScores[key + '_auto'] = true;
+      }
+    });
+
+    renderScorecard();
+    renderOppScorecard();
+  } catch(e) {
+    console.log('Auto-fill error:', e);
+  }
+}
+
+async function checkForHalfInningEnd(gamePk) {
+  try {
+    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/linescore`);
+    const data = await res.json();
+    const inning = data.currentInning;
+    const isTop = data.isTopInning;
+    if (!inning) return;
+
+    // Detect half inning change
+    if (lastInning !== null && (inning !== lastInning || isTop !== lastIsTop)) {
+      // Half inning just ended — auto-fill the previous one
+      const prevInning = isTop ? inning - 1 : inning;
+      const prevIsTop = !isTop;
+      console.log(`Half inning ended: ${prevIsTop ? 'Top' : 'Bot'} ${prevInning} — auto-filling...`);
+      await autoFillHalfInning(gamePk, prevInning, prevIsTop);
+    }
+
+    lastInning = inning;
+    lastIsTop = isTop;
+  } catch(e) {}
 }
 
 // ── TRIVIA ─────────────────────────────────────────────────
