@@ -288,7 +288,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="grid2">
     <div class="card gold">
       <div class="card-label">Date</div>
-      <div class="card-val" id="meta-date">—</div>
+      <div class="card-val" id="meta-date" style="font-size:18px;font-weight:800;">—</div>
     </div>
     <div class="card gold">
       <div class="card-label" id="wx-label">Weather at Fifth Third</div>
@@ -375,7 +375,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
       <div class="leg">🔥 Hot</div>
       <div class="leg">❄️ Cold</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">Tap name = stats · Tap cell = score</span>
+      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name = stats · Tap cell = score</span>
     </div>
   </div>
 
@@ -424,7 +424,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
       <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
       <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">Tap name = stats · Tap cell = score</span>
+      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name = stats · Tap cell = score</span>
     </div>
   </div>
 
@@ -1212,9 +1212,43 @@ async function fetchWeather(lat, lon, venueName, gameTimeUTC, gameStatus) {
 
 // ── MOCK LINEUP ────────────────────────────────────────────
 function mockLineup() {
-  // Placeholder until official lineup posts ~60-90 min before first pitch
+  // If we have batting stats, show predicted lineup sorted by games played
+  if (hensStatsCache && hensStatsCache.length) {
+    const predicted = [...hensStatsCache]
+      .sort((a,b) => b.g - a.g) // sort by games played
+      .slice(0,9)
+      .map(p => ({
+        name: p.name + ' *',
+        pos: p.pos,
+        num: '',
+        mlbId: null
+      }));
+    return predicted;
+  }
   return [1,2,3,4,5,6,7,8,9].map(n => ({
-    name: `Lineup pending...`,
+    name: 'Lineup pending...',
+    pos: '—',
+    num: '',
+    mlbId: null
+  }));
+}
+
+function mockOppLineup() {
+  // If we have opp batting stats, show predicted lineup
+  if (oppStatsCache && oppStatsCache.length) {
+    const predicted = [...oppStatsCache]
+      .sort((a,b) => b.g - a.g)
+      .slice(0,9)
+      .map(p => ({
+        name: p.name + ' *',
+        pos: p.pos,
+        num: '',
+        mlbId: null
+      }));
+    return predicted;
+  }
+  return [1,2,3,4,5,6,7,8,9].map(n => ({
+    name: 'Lineup pending...',
     pos: '—',
     num: '',
     mlbId: null
@@ -1350,6 +1384,7 @@ async function fetchGame() {
       if (oppHeader) oppHeader.textContent = oppTeam.name + ' Batter';
       fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
     } else {
+      oppLineup = mockOppLineup();
       renderOppScorecard();
     }
 
@@ -1391,9 +1426,12 @@ async function fetchGame() {
       setTimeout(fetchGame, 30000);
     }
   } catch(e) {
-    document.getElementById('s-inn').textContent='Demo mode';
-    document.getElementById('fp-time').textContent='Could not load game data';
+    console.error('fetchGame error:', e);
+    document.getElementById('s-inn').textContent='Retrying...';
+    document.getElementById('fp-time').textContent='Reconnecting...';
     lineup = mockLineup(); renderScorecard();
+    // Retry in 15 seconds
+    setTimeout(fetchGame, 15000);
   }
 }
 
@@ -1764,7 +1802,9 @@ async function loadOppStats() {
   }
   const oppTbody = document.getElementById('opp-stats-body');
   if (!window._oppTeamId) {
-    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>';
+    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading game data first... try again in a moment.</td></tr>';
+    // Try again in 3 seconds
+    setTimeout(loadOppStats, 3000);
     return;
   }
   if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
