@@ -233,7 +233,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
 <div class="app-header">
   <div>
-    <div class="app-title">Mud Hens Scorecard</div>
+    <div class="app-title">Toledo Mud Hens Scorecard</div>
     <div class="app-sub" id="app-venue-sub">Fifth Third Field &bull; Toledo, OH</div>
   </div>
   <a class="radio-btn" href="iheart://live/7480" onclick="setTimeout(()=>{window.open('https://www.iheart.com/live/the-gambler-1260-7480/','_blank')},500);return false;">&#9654; RADIO</a>
@@ -1213,8 +1213,8 @@ async function fetchGame() {
 
     if (!data?.dates?.length || !data.dates[0].games?.length) {
       document.getElementById('s-inn').textContent = 'No game today';
-    document.getElementById('s-cnt').textContent = '';
-      document.getElementById('fp-time').textContent = 'Off day — enjoy the rest!';
+      document.getElementById('s-cnt').textContent = '';
+      document.getElementById('fp-time').textContent = `Off day — next game coming soon (checked: ${ds})`;
       document.getElementById('opp-nm').textContent = 'OFF DAY';
       document.getElementById('countdown-card').style.display = 'block';
       lineup = mockLineup(); renderScorecard(); return;
@@ -1550,16 +1550,16 @@ const TRIVIA = [
   {q:"Where does the nickname 'Mud Hens' come from?",a:"The original team played near the Maumee River marshes, home to American Coots — locally called 'mud hens.' The name stuck and became iconic."},
   {q:"Which MLB team are the Mud Hens currently affiliated with?",a:"The Detroit Tigers. Toledo has been a Tigers Triple-A affiliate since 1987 — one of the longest continuous affiliations in MiLB history."},
   {q:"What are the names of the Mud Hens' mascots?",a:"Muddy and Spike — two mud hen bird mascots who entertain fans at Fifth Third Field throughout every home game."},
-  {q:"Jamie Farr, who played Klinger on M*A*S*H, was actually born in Toledo. True or False?",a:"True! Jamie Farr was born and raised in Toledo, Ohio. His character's devotion to the Mud Hens was a genuine nod to his hometown."},
-  {q:"What year did Fifth Third Field open?",a:"2002. It's consistently ranked among the best minor league ballparks in America and has won multiple awards for fan experience and design."},
-  {q:"How many Governors' Cup championships have the Mud Hens won?",a:"Five — in 1927, 1953, 1963, 1967, and 2010. The 2010 title is their most recent Triple-A championship."},
+  {q:"Jamie Farr, who played Klinger on M*A*S*H, was actually born in Toledo. True or False?",a:"True! Jamie Farr was born and raised in Toledo, Ohio. His character\'s devotion to the Mud Hens was a genuine nod to his hometown."},
+  {q:"What year did Fifth Third Field open?",a:"2002. It\'s consistently ranked among the best minor league ballparks in America and has won multiple awards for fan experience and design."},
+  {q:"How many Governors Cup championships have the Mud Hens won?",a:"Five — in 1927, 1953, 1963, 1967, and 2010. The 2010 title is their most recent Triple-A championship."},
   {q:"What entertainment district surrounds Fifth Third Field?",a:"Hensville — a dedicated entertainment district with restaurants, bars, and a fan plaza, all built around the ballpark in downtown Toledo."},
   {q:"Several future Detroit Tigers stars developed in Toledo. Name one from the famous 1984 World Series team.",a:"Kirk Gibson, Alan Trammell, Lou Whitaker, and Jack Morris all came through the Toledo organization before starring on the 1984 World Series champion Tigers."},
   {q:"What is the approximate seating capacity of Fifth Third Field?",a:"About 10,300 for a sellout, with standing room bringing it closer to 11,000 fans."},
-  {q:"The Mud Hens play in which league?",a:"The International League — which is now the top Triple-A circuit after Minor League Baseball's 2021 restructuring placed all Triple-A teams into one league."},
-  {q:"What river runs near Fifth Third Field and gave the original team their name?",a:"The Maumee River. The original Toledo team played at Bay View Park near the river's marshlands, where mud hens (American Coots) were common."},
-  {q:"Which Mud Hens pitcher threw a perfect game in Toledo's history?",a:"Several no-hitters and near-perfect games have occurred in Toledo's history — checking game notes and Mud Hens historical records reveals the full list of pitching gems at Fifth Third Field."},
-  {q:"What is the duck connection to Toledo and the Mud Hens?",a:"Toledo is home to the Jeep assembly plant, and Jeep owners famously 'duck' each other by leaving rubber ducks on vehicles — a local tradition that's become part of Toledo's identity, including at Mud Hens games."},
+  {q:"The Mud Hens play in which league?",a:"The International League — which is now the top Triple-A circuit after Minor League Baseball\'s 2021 restructuring placed all Triple-A teams into one league."},
+  {q:"What river runs near Fifth Third Field and gave the original team their name?",a:"The Maumee River. The original Toledo team played at Bay View Park near the river\'s marshlands, where mud hens (American Coots) were common."},
+  {q:"Which Mud Hens pitcher threw a perfect game in Toledo\'s history?",a:"Several no-hitters and near-perfect games have occurred in Toledo\'s history — checking game notes and Mud Hens historical records reveals the full list of pitching gems at Fifth Third Field."},
+  {q:"What is the duck connection to Toledo and the Mud Hens?",a:"Toledo is home to the Jeep assembly plant, and Jeep owners famously 'duck' each other by leaving rubber ducks on vehicles — a local tradition that\'s become part of Toledo\'s identity, including at Mud Hens games."},
 ];
 let triviaIdx = 0;
 function loadTrivia() {
@@ -1573,37 +1573,24 @@ function nextTrivia() { triviaIdx = (triviaIdx+1)%TRIVIA.length; loadTrivia(); }
 
 // ── HISTORY ────────────────────────────────────────────────
 const MH_HISTORY = [
-  {year:'1896',title:'Franchise Founded',desc:'The Toledo Mud Hens are established as a professional baseball franchise, making them one of the oldest teams in minor league history. The team plays at Bay View Park near the marshes of the Maumee River — home to American Coots, locally called "mud hens," which gives the team its iconic name.'},
-  {year:'1900s–1920s',title:'Early Championship Era',desc:'Toledo becomes a powerhouse in early professional baseball. The team wins its first Governors' Cup in 1927, establishing a tradition of winning that would define the franchise for decades.'},
-  {year:'1927',title:'First Governors' Cup Championship',desc:'The Toledo Mud Hens win the International League Governors' Cup for the first time, cementing their status as one of minor league baseball's premier franchises.'},
-  {year:'1953',title:'Governors' Cup Champions',desc:'Toledo wins its second Governors' Cup championship, continuing a remarkable run of success in the International League.'},
-  {year:'1963',title:'Third Governors' Cup',desc:'The Mud Hens win another International League title. The 1960s are a golden era for Toledo baseball with back-to-back championship appearances.'},
-  {year:'1967',title:'Fourth Governors' Cup',desc:'Toledo adds a fourth Governors' Cup championship to its trophy case in another dominant season, making the 1960s the most successful decade in franchise history.'},
-  {year:'1970s',title:'M*A*S*H Puts Toledo on the Map',desc:'Corporal Maxwell Q. Klinger, played by Toledo native Jamie Farr on the hit TV show M*A*S*H, becomes the most famous fictional Mud Hens fan in history. Klinger's devotion to the team — wearing their jersey on the show — brings national attention to Toledo baseball and cements the Mud Hens as a pop culture icon.'},
-  {year:'1987',title:'Detroit Tigers Affiliation Begins',desc:'The Toledo Mud Hens become the Triple-A affiliate of the Detroit Tigers, beginning one of the longest and most successful continuous affiliate relationships in Minor League Baseball history — a partnership that continues to this day.'},
-  {year:'1984',title:'Tigers World Series Pipeline',desc:'Many of the 1984 World Series champion Detroit Tigers developed in Toledo, including Hall of Famers Alan Trammell and Lou Whitaker, plus Kirk Gibson, Jack Morris, and others who came through the Mud Hens system.'},
-  {year:'2002',title:'Fifth Third Field Opens',desc:'The Toledo Mud Hens move into brand new Fifth Third Field in the heart of downtown Toledo, immediately recognized as one of the finest minor league ballparks in America. The $39 million stadium transforms the Hensville district and anchors a downtown revitalization. It wins numerous awards for design and fan experience.'},
-  {year:'2010',title:'Triple-A Championship',desc:'The Toledo Mud Hens win the Triple-A championship — their fifth and most recent title — in one of the most celebrated seasons in franchise history. The championship caps a memorable run through the International League playoffs.'},
-  {year:'2013',title:'Hall of Fame Connection',desc:'Alan Trammell and Lou Whitaker, two of the most celebrated Mud Hens alumni, remain central figures in Baseball Hall of Fame discussions. Both spent time developing in Toledo before becoming Detroit Tigers legends.'},
-  {year:'2021',title:'MiLB Restructuring',desc:'Minor League Baseball undergoes its largest restructuring in history. Toledo retains its Triple-A status and continues as the Tigers' top affiliate in the newly organized International League, maintaining their place as one of MiLB's marquee franchises.'},
-  {year:'2026',title:'New Season, New Prospects',desc:'The 2026 Toledo Mud Hens feature some of the Detroit Tigers' top prospects including Kevin McGonigle, Max Clark, Thayron Liranzo, and Josue Briceño, managed by returning skipper Gabe Alvarez. The Mud Hens open the season April 7 at Fifth Third Field with high expectations for another championship run.'},
+  {year:"1896",title:"Franchise Founded",desc:"The Toledo Mud Hens are established as a professional baseball franchise, one of the oldest in minor league history. The team plays at Bay View Park near the marshes of the Maumee River, home to American Coots locally called mud hens, which gives the team its iconic name."},
+  {year:"1900s-1920s",title:"Early Championship Era",desc:"Toledo becomes a powerhouse in early professional baseball, establishing a winning tradition that would define the franchise for decades."},
+  {year:"1927",title:"First Governors Cup Championship",desc:"The Toledo Mud Hens win the International League Governors Cup for the first time, cementing their status as one of minor league baseball's most celebrated franchises."},
+  {year:"1953",title:"Governors Cup Champions",desc:"Toledo wins its second Governors Cup championship, continuing a remarkable run of success in the International League."},
+  {year:"1963",title:"Third Governors Cup",desc:"The Mud Hens win another International League title. The 1960s are a golden era for Toledo baseball with multiple championship appearances."},
+  {year:"1967",title:"Fourth Governors Cup",desc:"Toledo adds a fourth Governors Cup to its trophy case, making the 1960s the most successful decade in franchise history."},
+  {year:"1970s",title:"M*A*S*H Puts Toledo on the Map",desc:"Corporal Maxwell Q. Klinger, played by Toledo native Jamie Farr on the hit TV show M*A*S*H, becomes the most famous fictional Mud Hens fan ever. Klinger wearing their jersey throughout the show brings national attention to Toledo baseball."},
+  {year:"1984",title:"World Series Pipeline",desc:"Many of the 1984 World Series champion Detroit Tigers developed in Toledo, including Hall of Famers Alan Trammell and Lou Whitaker, plus Kirk Gibson and Jack Morris."},
+  {year:"1987",title:"Detroit Tigers Affiliation Begins",desc:"The Toledo Mud Hens become the Triple-A affiliate of the Detroit Tigers, beginning one of the longest continuous affiliate relationships in Minor League Baseball history."},
+  {year:"2002",title:"Fifth Third Field Opens",desc:"The Mud Hens move into brand new Fifth Third Field in downtown Toledo, immediately recognized as one of the finest minor league ballparks in America. The stadium anchors the Hensville district and downtown revitalization."},
+  {year:"2010",title:"Triple-A Championship",desc:"The Toledo Mud Hens win the Triple-A championship, their fifth and most recent title, in one of the most celebrated seasons in franchise history."},
+  {year:"2021",title:"MiLB Restructuring",desc:"Minor League Baseball undergoes its largest restructuring in history. Toledo retains Triple-A status in the newly organized International League as one of MiLB's marquee franchises."},
+  {year:"2026",title:"New Season, New Prospects",desc:"The 2026 Toledo Mud Hens feature top Detroit Tigers prospects including Kevin McGonigle, Max Clark, Thayron Liranzo, and Josue Briceno, managed by returning skipper Gabe Alvarez."},
 ];
 function loadHistory() {
-  document.getElementById('history-title').textContent = 'Toledo Mud Hens — Franchise History';
+  document.getElementById('history-title').textContent = 'Toledo Mud Hens - Franchise History';
   const el = document.getElementById('history-list');
   el.innerHTML = MH_HISTORY.map(h=>`<div class="history-card">
-    <div class="history-year">${h.year}</div>
-    <div class="history-title">${h.title}</div>
-    <div class="history-desc">${h.desc}</div>
-  </div>`).join('');
-})}`;
-  const relevant = HISTORY.filter(h => h.month === m);
-  const el = document.getElementById('history-list');
-  if (!relevant.length) {
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">No specific history recorded for this month.<br>Check back during another part of the season!</div></div>`;
-    return;
-  }
-  el.innerHTML = relevant.map(h=>`<div class="history-card">
     <div class="history-year">${h.year}</div>
     <div class="history-title">${h.title}</div>
     <div class="history-desc">${h.desc}</div>
@@ -1613,9 +1600,9 @@ function loadHistory() {
 // ── PROMOTIONS ─────────────────────────────────────────────
 const PROMOS = [
   // May 2026
-  {date:'2026-05-10',name:"Mother's Day — Kids Run the Bases",desc:"Special Mother's Day celebration at Fifth Third Field. Kids Run the Bases postgame. Family Sunday fun.",badge:'Holiday'},
+  {date:'2026-05-10',name:"Mother\'s Day — Kids Run the Bases",desc:"Special Mother\'s Day celebration at Fifth Third Field. Kids Run the Bases postgame. Family Sunday fun.",badge:'Holiday'},
   {date:'2026-05-22',name:'Military Appreciation Night',desc:'Honoring past and present military with a specialty jersey giveaway and special on-field recognition ceremony.',badge:'Theme Night'},
-  {date:'2026-05-23',name:'"The Paper" Night + Fireworks',desc:'Theme night inspired by Peacock's hit comedy set in Toledo, with a special appearance by series star Oscar Nuñez! Clips from the show throughout the night. First postgame fireworks show of the season.',badge:'Special Event'},
+  {date:'2026-05-23',name:'"The Paper" Night + Fireworks',desc:'Theme night inspired by Peacock\'s hit comedy set in Toledo, with a special appearance by series star Oscar Nuñez! Clips from the show throughout the night. First postgame fireworks show of the season.',badge:'Special Event'},
   {date:'2026-05-24',name:'Kids Day — Bluey & Bingo Visit',desc:'Bluey and Bingo visit Fifth Third Field! Kids Run the Bases postgame. Sunday Family Day.',badge:'Kids Event'},
   {date:'2026-05-25',name:'Memorial Day',desc:'Special Memorial Day game. Patriotic ceremonies and family fun at the ballpark.',badge:'Holiday'},
   {date:'2026-05-29',name:"Boots & Baseball Festival",desc:'Hensville comes alive with country music, food, and drinks for the Boots & Baseball festival weekend.',badge:'Festival'},
