@@ -16,7 +16,7 @@ body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Dis
 .radio-btn{background:rgba(200,16,46,0.9);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;backdrop-filter:blur(10px);}
 .nav-tabs{display:flex;gap:0;margin-bottom:0;overflow-x:auto;padding:0;background:#1a2b5e;border-bottom:2px solid #c8102e;scrollbar-width:none;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:0 0 auto;padding:10px 14px;font-size:10px;background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;font-family:inherit;border:none;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:all 0.2s;}
+.nav-tab{flex:0 0 auto;padding:10px 14px;font-size:10px;background:transparent;color:rgba(255,255,255,0.95);cursor:pointer;font-family:inherit;border:none;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:all 0.2s;}
 .nav-tab.active{color:#c8a84b;border-bottom-color:#c8a84b;background:rgba(255,255,255,0.05);}
 .section{display:none;}
 .section.active{display:block;padding:14px 14px 0;background:#e8e0cc;}
@@ -31,10 +31,10 @@ body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Dis
 .matchup-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(200,16,46,0.1) 0%,transparent 70%);pointer-events:none;}
 .matchup-row{display:flex;align-items:center;justify-content:space-between;}
 .team-block{text-align:center;flex:1;}
-.team-nm{font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;}
+.team-nm{font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;}
 .team-rec{font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;}
 .team-sc{font-size:40px;font-weight:800;color:#fff;margin-top:4px;letter-spacing:-1px;}
-.vs{color:rgba(255,255,255,0.2);font-size:13px;padding:0 10px;font-weight:300;}
+.vs{color:rgba(255,255,255,0.8);font-size:15px;padding:0 10px;font-weight:500;}
 .fp{font-size:10px;color:#c8a84b;text-align:center;margin-top:10px;letter-spacing:0.5px;font-weight:600;}
 .standings-info{font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-top:3px;}
 .standings-info span{color:rgba(200,168,75,0.8);}
@@ -197,14 +197,14 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .summary-save-btn{flex:2;background:linear-gradient(135deg,#c8102e,#a00020);border:none;border-radius:10px;padding:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
 /* NEXT GAME COUNTDOWN */
 .countdown-card{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:16px;padding:18px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.25);text-align:center;box-shadow:0 4px 16px rgba(26,43,94,0.2);}
-.countdown-label{font-size:9px;color:rgba(200,168,75,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:600;}
-.countdown-opp{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;}
+.countdown-label{font-size:11px;color:#c8a84b;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-weight:700;}
+.countdown-opp{font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);margin-bottom:4px;}
 .countdown-time{font-size:28px;font-weight:800;color:#c8a84b;letter-spacing:-1px;margin-bottom:4px;}
-.countdown-date{font-size:11px;color:rgba(255,255,255,0.4);}
+.countdown-date{font-size:11px;color:rgba(255,255,255,0.7);}
 .countdown-units{display:flex;justify-content:center;gap:12px;margin-top:10px;}
 .countdown-unit{text-align:center;}
-.countdown-num{font-size:24px;font-weight:800;color:#fff;line-height:1;}
-.countdown-unit-label{font-size:8px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.countdown-num{font-size:28px;font-weight:800;color:#ffffff;line-height:1;}
+.countdown-unit-label{font-size:8px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
 .section-title{font-size:10px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-weight:700;}
 .notation-key{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;font-size:10px;color:rgba(26,43,94,0.5);line-height:2;border:1px solid rgba(26,43,94,0.08);}
 .notation-key b{color:#1a2b5e;font-weight:700;}
@@ -245,7 +245,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
   <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
   <div class="nav-tab" onclick="showSection('henstats',this)">Hens Stats</div>
-  <div class="nav-tab" onclick="showSection('oppstats',this)">Opp Stats</div>
+  <div class="nav-tab" onclick="showSection('oppstats',this)" id="opp-stats-tab">Opp Stats</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
@@ -493,55 +493,53 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
 <!-- ══════════════ HENS STATS ══════════════ -->
 <div class="section" id="sec-henstats">
-  <div class="section-title">Toledo Mud Hens — 2026 Season Batting Stats</div>
-  <div style="overflow-x:auto;">
-    <table class="stats-table" id="hens-stats-table">
-      <thead>
-        <tr>
-          <th>#&nbsp;Player</th>
-          <th>POS</th>
-          <th>G</th>
-          <th>AB</th>
-          <th>AVG</th>
-          <th>OBP</th>
-          <th>SLG</th>
-          <th>OPS</th>
-          <th>HR</th>
-          <th>RBI</th>
-          <th>SB</th>
-        </tr>
-      </thead>
-      <tbody id="hens-stats-body">
-        <tr><td colspan="11" class="stats-loading">Loading Toledo Mud Hens roster stats...</td></tr>
-      </tbody>
-    </table>
+  <div class="sc-tabs" style="margin-bottom:10px;">
+    <div class="sc-tab active" onclick="switchStatTab('hens','bat',this)">Batting</div>
+    <div class="sc-tab" onclick="switchStatTab('hens','pit',this)">Pitching</div>
+  </div>
+  <div id="hens-bat-view">
+    <div class="section-title">Toledo Mud Hens — 2026 Batting</div>
+    <div style="overflow-x:auto;">
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
+        <tbody id="hens-stats-body"><tr><td colspan="11" class="stats-loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="hens-pit-view" style="display:none;">
+    <div class="section-title">Toledo Mud Hens — 2026 Pitching</div>
+    <div style="overflow-x:auto;">
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th>G</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+        <tbody id="hens-pitch-body"><tr><td colspan="9" class="stats-loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- ══════════════ OPP STATS ══════════════ -->
 <div class="section" id="sec-oppstats">
-  <div class="section-title" id="opp-stats-title">Opponent — 2026 Season Batting Stats</div>
-  <div style="overflow-x:auto;">
-    <table class="stats-table" id="opp-stats-table">
-      <thead>
-        <tr>
-          <th>#&nbsp;Player</th>
-          <th>POS</th>
-          <th>G</th>
-          <th>AB</th>
-          <th>AVG</th>
-          <th>OBP</th>
-          <th>SLG</th>
-          <th>OPS</th>
-          <th>HR</th>
-          <th>RBI</th>
-          <th>SB</th>
-        </tr>
-      </thead>
-      <tbody id="opp-stats-body">
-        <tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>
-      </tbody>
-    </table>
+  <div class="sc-tabs" style="margin-bottom:10px;">
+    <div class="sc-tab active" onclick="switchStatTab('opp','bat',this)">Batting</div>
+    <div class="sc-tab" onclick="switchStatTab('opp','pit',this)">Pitching</div>
+  </div>
+  <div id="opp-bat-view">
+    <div class="section-title" id="opp-stats-title">Opponent — 2026 Batting</div>
+    <div style="overflow-x:auto;">
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
+        <tbody id="opp-stats-body"><tr><td colspan="11" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="opp-pit-view" style="display:none;">
+    <div class="section-title" id="opp-pitch-title">Opponent — 2026 Pitching</div>
+    <div style="overflow-x:auto;">
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th>G</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+        <tbody id="opp-pitch-body"><tr><td colspan="9" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -977,19 +975,17 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
     if (oN !== 'TBD') {
       ['opp-starter'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = oN; });
     }
-    // Try to get pitcher season stats from person endpoint
-    const fetchPitcherStats = async (name, eraId) => {
-      if (!name || name === 'TBD') return;
+    // Get pitcher stats by searching team pitching stats
+    const findPitcherStats = async (name, teamId, eraId) => {
+      if (!name || name === 'TBD' || !teamId) return;
       try {
-        // Search for player by name
-        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/search?names=${encodeURIComponent(name)}`);
-        const sd = await sr.json();
-        const pid = sd.people?.[0]?.id;
-        if (!pid) return;
-        const pr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${pid}/stats?stats=season&season=2026&group=pitching&gameType=R`);
-        const pd = await pr.json();
-        const sp = pd.stats?.[0]?.splits?.[0]?.stat;
-        if (sp) {
+        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const splits = data.stats?.[0]?.splits || [];
+        const match = splits.find(s => s.player?.fullName === name);
+        if (match) {
+          const sp = match.stat;
           const el = document.getElementById(eraId);
           if (el) el.textContent = `ERA ${sp.era||'—'} · ${sp.wins||0}-${sp.losses||0} · ${sp.strikeOuts||0} K`;
         }
@@ -1001,14 +997,14 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
       const el = document.getElementById('mud-starter-era');
       if (el) el.textContent = `ERA ${mp.era||'—'} · ${mp.wins||0}-${mp.losses||0} · ${mp.strikeOuts||0} K`;
     } else {
-      fetchPitcherStats(mN, 'mud-starter-era');
+      findPitcherStats(mN, 512, 'mud-starter-era');
     }
     if (oP?.seasonStats?.pitching) {
       const op = oP.seasonStats.pitching;
       const el = document.getElementById('opp-starter-era');
       if (el) el.textContent = `ERA ${op.era||'—'} · ${op.wins||0}-${op.losses||0} · ${op.strikeOuts||0} K`;
     } else {
-      fetchPitcherStats(oN, 'opp-starter-era');
+      findPitcherStats(oN, window._oppTeamId, 'opp-starter-era');
     }
   } catch(e) {}
 }
@@ -1259,6 +1255,12 @@ async function fetchGame() {
     // Update all opp starter labels
     const oscl = document.getElementById('opp-starter-card-label');
     if (oscl) oscl.textContent = oppTeamName + ' Starter';
+    // Update opp stats tab to show team nickname (short)
+    const oppStatsTab = document.getElementById('opp-stats-tab');
+    if (oppStatsTab) {
+      const nickname = oppTeamName.split(' ').pop(); // get last word = nickname
+      oppStatsTab.textContent = nickname + ' Stats';
+    }
     // Update vs/@  indicator
     const vsEl = document.getElementById('matchup-vs');
     if (vsEl) vsEl.textContent = isHome ? 'vs' : '@';
@@ -1513,18 +1515,19 @@ async function checkForHalfInningEnd(gamePk) {
 // ── PLAYER STATS TABS ─────────────────────────────────────
 async function fetchRosterStats(teamId) {
   try {
-    // Use the team stats endpoint directly - much more reliable than individual calls
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/stats?stats=season&season=2026&group=hitting&gameType=R`;
+    // Use the stats endpoint with teamId and sportId for individual player stats
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
     
-    if (splits.length) {
-      const stats = splits
+    if (splits.length > 1) {
+      // Individual player stats returned
+      return splits
         .filter(s => (s.stat?.atBats || 0) >= 1)
         .map(s => ({
           name: s.player?.fullName || '—',
-          num: s.player?.id ? '' : '—',
+          num: '',
           pos: s.position?.abbreviation || '—',
           g: s.stat.gamesPlayed ?? 0,
           ab: s.stat.atBats ?? 0,
@@ -1537,17 +1540,16 @@ async function fetchRosterStats(teamId) {
           sb: s.stat.stolenBases ?? 0,
         }))
         .sort((a,b) => b.ab - a.ab);
-      return stats;
     }
-    
-    // Fallback: try roster + individual stats
+
+    // Fallback: roster then individual stats calls
     const rRes = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/roster?season=2026&rosterType=fullRoster`);
     const rData = await rRes.json();
-    const roster = rData.roster || [];
+    const roster = (rData.roster || []).filter(p => p.position?.type !== 'Pitcher');
     const stats = [];
-    await Promise.all(roster.slice(0,30).map(async p => {
+    await Promise.all(roster.slice(0,25).map(async p => {
       try {
-        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting&gameType=R`);
+        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
         const sd = await sr.json();
         const sp = sd.stats?.[0]?.splits;
         if (sp?.length) {
@@ -1568,7 +1570,55 @@ async function fetchRosterStats(teamId) {
     }));
     stats.sort((a,b) => b.ab - a.ab);
     return stats;
-  } catch(e) { console.log('Stats fetch error:', e); return []; }
+  } catch(e) { console.log('Batting stats error:', e); return []; }
+}
+
+async function fetchPitcherStats(teamId) {
+  try {
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const splits = data.stats?.[0]?.splits || [];
+    
+    if (splits.length > 0) {
+      return splits
+        .filter(s => (s.stat?.inningsPitched || 0) >= 1)
+        .map(s => ({
+          name: s.player?.fullName || '—',
+          pos: s.position?.abbreviation || 'P',
+          g: s.stat.gamesPlayed ?? 0,
+          ip: s.stat.inningsPitched || '0.0',
+          era: s.stat.era || '—',
+          w: s.stat.wins ?? 0,
+          l: s.stat.losses ?? 0,
+          so: s.stat.strikeOuts ?? 0,
+          whip: s.stat.whip || '—',
+          sv: s.stat.saves ?? 0,
+        }))
+        .sort((a,b) => parseFloat(b.ip) - parseFloat(a.ip));
+    }
+    return [];
+  } catch(e) { console.log('Pitching stats error:', e); return []; }
+}
+
+function renderPitchTable(stats, bodyId) {
+  const tbody = document.getElementById(bodyId);
+  if (!tbody) return;
+  if (!stats.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="stats-loading">No pitching stats available yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = stats.map(p => `<tr>
+    <td>${p.name}</td>
+    <td>${p.g}</td>
+    <td>${p.ip}</td>
+    <td class="${parseFloat(p.era)<3.50?'highlight':''}">${p.era}</td>
+    <td>${p.w}</td>
+    <td>${p.l}</td>
+    <td>${p.so}</td>
+    <td>${p.whip}</td>
+    <td>${p.sv}</td>
+  </tr>`).join('');
 }
 
 function renderStatsTable(stats, bodyId) {
@@ -1594,18 +1644,48 @@ function renderStatsTable(stats, bodyId) {
 
 let hensStatsCache = null, oppStatsCache = null, oppStatsTeamId = null;
 
+let hensPitchCache = null;
+
+function switchStatTab(team, type, el) {
+  const batView = document.getElementById(team + '-bat-view');
+  const pitView = document.getElementById(team + '-pit-view');
+  const tabs = el.closest('.sc-tabs').querySelectorAll('.sc-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (type === 'bat') {
+    batView.style.display = 'block';
+    pitView.style.display = 'none';
+  } else {
+    batView.style.display = 'none';
+    pitView.style.display = 'block';
+    if (team === 'hens') loadHensPitching();
+    else loadOppPitching();
+  }
+}
+
 async function loadHensStats() {
   if (hensStatsCache) { renderStatsTable(hensStatsCache, 'hens-stats-body'); return; }
-  document.getElementById('hens-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading stats...</td></tr>';
+  document.getElementById('hens-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
   hensStatsCache = await fetchRosterStats(512);
   renderStatsTable(hensStatsCache, 'hens-stats-body');
 }
 
+async function loadHensPitching() {
+  if (hensPitchCache) { renderPitchTable(hensPitchCache, 'hens-pitch-body'); return; }
+  document.getElementById('hens-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Loading pitching stats...</td></tr>';
+  hensPitchCache = await fetchPitcherStats(512);
+  renderPitchTable(hensPitchCache, 'hens-pitch-body');
+}
+
+let oppPitchCache = null, oppPitchTeamId = null;
+
 async function loadOppStats() {
   const titleEl = document.getElementById('opp-stats-title');
-  if (oppTeamName && oppTeamName !== 'Opponent') {
-    if (titleEl) titleEl.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
-  }
+  const oppName = oppTeamName && oppTeamName !== 'Opponent' ? oppTeamName : 'Opponent';
+  if (titleEl) titleEl.textContent = `${oppName} — 2026 Batting`;
+  const pitTitleEl = document.getElementById('opp-pitch-title');
+  if (pitTitleEl) pitTitleEl.textContent = `${oppName} — 2026 Pitching`;
+
   if (oppStatsCache && oppStatsTeamId === window._oppTeamId) {
     renderStatsTable(oppStatsCache, 'opp-stats-body');
     return;
@@ -1614,10 +1694,25 @@ async function loadOppStats() {
     document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>';
     return;
   }
-  document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading opponent stats...</td></tr>';
+  document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
   oppStatsTeamId = window._oppTeamId;
   oppStatsCache = await fetchRosterStats(window._oppTeamId);
   renderStatsTable(oppStatsCache, 'opp-stats-body');
+}
+
+async function loadOppPitching() {
+  if (oppPitchCache && oppPitchTeamId === window._oppTeamId) {
+    renderPitchTable(oppPitchCache, 'opp-pitch-body');
+    return;
+  }
+  if (!window._oppTeamId) {
+    document.getElementById('opp-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Load the game first.</td></tr>';
+    return;
+  }
+  document.getElementById('opp-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Loading pitching stats...</td></tr>';
+  oppPitchTeamId = window._oppTeamId;
+  oppPitchCache = await fetchPitcherStats(window._oppTeamId);
+  renderPitchTable(oppPitchCache, 'opp-pitch-body');
 }
 
 // ── TRIVIA ─────────────────────────────────────────────────
