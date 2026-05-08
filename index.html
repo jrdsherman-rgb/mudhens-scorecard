@@ -241,7 +241,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
 <div class="nav-tabs">
   <div class="nav-tab active" onclick="showSection('game',this)">Game</div>
-  <div class="nav-tab" onclick="showSection('scorecard',this)">Toledo Hens</div>
+  <div class="nav-tab" onclick="showSection('scorecard',this)">Toledo Mud Hens</div>
   <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
   <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
   <div class="nav-tab" onclick="showSection('henstats',this)">Hens Stats</div>
@@ -291,11 +291,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="card gold">
       <div class="card-label" id="wx-label">Weather at Fifth Third</div>
       <div class="wx-row">
-        <div class="wx-icon" id="wx-icon" style="font-size:28px;">—</div>
         <div style="flex:1;">
-          <div class="wx-temp" id="wx-temp">—</div>
-          <div class="wx-desc" id="wx-desc" style="line-height:1.5;">—</div>
+          <div class="wx-temp" id="wx-temp" style="font-size:22px;font-weight:800;">—</div>
+          <div id="wx-desc" style="font-size:10px;color:rgba(26,43,94,0.6);margin-top:2px;line-height:1.5;">—</div>
         </div>
+        <div class="wx-icon" id="wx-icon" style="font-size:32px;margin-left:8px;">—</div>
       </div>
     </div>
   </div>
@@ -959,7 +959,7 @@ async function fetchPlayerStats(ids) {
 }
 
 // ── FETCH STARTERS ─────────────────────────────────────────
-async function fetchStarters(gamePk, isHome) {
+async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
   try {
     const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/boxscore`);
     const data = await res.json();
@@ -1207,7 +1207,7 @@ async function fetchGame() {
     // Worker handles sportId fallback automatically
     let data = null;
     try {
-      const r = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team`);
+      const r = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team,probablePitcher,person,stats`);
       data = await r.json();
     } catch(e) { console.log('fetch failed:', e); }
 
@@ -1263,7 +1263,19 @@ async function fetchGame() {
     const pcOppLabel = document.getElementById('pc-opp-label');
     if (pcOppLabel) pcOppLabel.textContent = oppTeamName + ' Starter';
     const gameOppLabel = document.querySelector('#sec-game .card-label[id="opp-starter"]');
-    fetchStarters(game.gamePk, isHome);
+    // Try to get probable pitchers from schedule data first
+    const mudProbable = game.teams[mi]?.probablePitcher;
+    const oppProbable = game.teams[oi]?.probablePitcher;
+    if (mudProbable?.fullName) {
+      document.getElementById('mud-starter').textContent = mudProbable.fullName;
+      if (document.getElementById('pc-mud-starter')) document.getElementById('pc-mud-starter').textContent = mudProbable.fullName;
+    }
+    if (oppProbable?.fullName) {
+      document.getElementById('opp-starter').textContent = oppProbable.fullName;
+      if (document.getElementById('pc-opp-starter')) document.getElementById('pc-opp-starter').textContent = oppProbable.fullName;
+    }
+    // Also fetch boxscore for in-game pitcher stats
+    fetchStarters(game.gamePk, isHome, mudProbable, oppProbable);
     updateLinescore(game, isHome);
 
     const ls = game.linescore;
@@ -1389,9 +1401,17 @@ function mapPlayResult(play) {
 
 async function autoFillHalfInning(gamePk, inning, isTop) {
   try {
-    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/playByPlay`);
-    const data = await res.json();
-    const allPlays = data.allPlays || [];
+    // Try v1.1 live feed first, fall back to v1 playByPlay
+    let allPlays = [];
+    try {
+      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1.1/game/${gamePk}/feed/live`);
+      const data = await res.json();
+      allPlays = data.liveData?.plays?.allPlays || [];
+    } catch(e) {
+      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/playByPlay`);
+      const data = await res.json();
+      allPlays = data.allPlays || [];
+    }
 
     // Filter plays for this half inning
     const halfPlays = allPlays.filter(p => {
@@ -1435,8 +1455,9 @@ async function checkForHalfInningEnd(gamePk) {
   try {
     const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/linescore`);
     const data = await res.json();
-    const inning = data.currentInning;
-    const isTop = data.isTopInning;
+    const lsData = data.currentInning !== undefined ? data : data.linescore;
+    const inning = lsData?.currentInning;
+    const isTop = lsData?.isTopInning;
     if (!inning) return;
 
     // Detect half inning change
@@ -1462,7 +1483,7 @@ async function fetchRosterStats(teamId) {
     const stats = [];
     // Fetch stats for each player (batch in parallel)
     await Promise.all(roster.map(async p => {
-      if (p.status?.code !== 'A') return; // active only
+      // Include all roster members
       try {
         const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting`);
         const sd = await sr.json();
