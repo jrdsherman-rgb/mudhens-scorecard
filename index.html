@@ -728,9 +728,14 @@ const WX = {0:'☀️ Clear',1:'🌤️ Mainly clear',2:'⛅ Partly cloudy',3:'�
 
 // ── STATE ──────────────────────────────────────────────────
 let lineup = [], scores = {}, activeCell = null, playerStats = {};
+let oppLineup = [], oppScores = {}, oppPlayerStats = {}, activeOppCell = null;
 let pitchCount = 0;
 let pendingPrefix = '', goFirst = null;
 let oppTeamName = 'Opponent';
+let currentGamePk = null, lastInning = null, lastIsTop = null;
+let hensStatsCache = null, oppStatsCache = null, oppStatsTeamId = null;
+let hensPitchCache = null, oppPitchCache = null, oppPitchTeamId = null;
+let standingsCache = null;
 
 // ── NAV ────────────────────────────────────────────────────
 function showSection(name, el) {
@@ -768,7 +773,7 @@ function diamond(r, isAuto) {
 
 // ── STREAK BADGE ───────────────────────────────────────────
 function streakBadge(mlbId) {
-  const st = playerStats[mlbId];
+  const st = playerStats[mlbId] || oppPlayerStats[mlbId];
   if (!st) return '';
   const avg = parseFloat(st.avg) || 0;
   if (avg >= 0.320) return ' 🔥';
@@ -949,7 +954,7 @@ async function fetchPlayerStats(ids) {
   for (const id of ids) {
     if (!id || playerStats[id]) continue;
     try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting`);
+      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
       const data = await res.json();
       const splits = data.stats?.[0]?.splits;
       if (splits?.length) playerStats[id] = splits[splits.length-1].stat;
@@ -1012,7 +1017,7 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
 }
 
 // ── FETCH STANDINGS ────────────────────────────────────────
-let standingsCache = null;
+// standingsCache declared in STATE block above
 
 async function fetchStandings(mudId, oppId) {
   try {
@@ -1212,47 +1217,25 @@ async function fetchWeather(lat, lon, venueName, gameTimeUTC, gameStatus) {
 
 // ── MOCK LINEUP ────────────────────────────────────────────
 function mockLineup() {
-  // If we have batting stats, show predicted lineup sorted by games played
+  // Always return 9 rows so scorecard grid shows
   if (hensStatsCache && hensStatsCache.length) {
-    const predicted = [...hensStatsCache]
-      .sort((a,b) => b.g - a.g) // sort by games played
+    return [...hensStatsCache]
+      .sort((a,b) => b.g - a.g)
       .slice(0,9)
-      .map(p => ({
-        name: p.name + ' *',
-        pos: p.pos,
-        num: '',
-        mlbId: null
-      }));
-    return predicted;
+      .map(p => ({ name: p.name + ' *', pos: p.pos, num: '', mlbId: null }));
   }
-  return [1,2,3,4,5,6,7,8,9].map(n => ({
-    name: 'Lineup pending...',
-    pos: '—',
-    num: '',
-    mlbId: null
-  }));
+  return Array.from({length:9}, () => ({ name: 'Lineup pending...', pos: '—', num: '', mlbId: null }));
 }
 
 function mockOppLineup() {
-  // If we have opp batting stats, show predicted lineup
+  // Always return 9 rows so scorecard grid shows
   if (oppStatsCache && oppStatsCache.length) {
-    const predicted = [...oppStatsCache]
+    return [...oppStatsCache]
       .sort((a,b) => b.g - a.g)
       .slice(0,9)
-      .map(p => ({
-        name: p.name + ' *',
-        pos: p.pos,
-        num: '',
-        mlbId: null
-      }));
-    return predicted;
+      .map(p => ({ name: p.name + ' *', pos: p.pos, num: '', mlbId: null }));
   }
-  return [1,2,3,4,5,6,7,8,9].map(n => ({
-    name: 'Lineup pending...',
-    pos: '—',
-    num: '',
-    mlbId: null
-  }));
+  return Array.from({length:9}, () => ({ name: 'Lineup pending...', pos: '—', num: '', mlbId: null }));
 }
 
 // ── FETCH GAME ─────────────────────────────────────────────
@@ -1322,6 +1305,7 @@ async function fetchGame() {
     const status = game.status?.detailedState || '';
     window._gameStatus = status;
     window._gameTimeUTC = game.gameDate || null;
+    window._isHome = isHome;
     document.getElementById('fp-time').textContent =
       status === 'Final' ? 'Final' :
       status.includes('Progress') ? '▶ In Progress' :
@@ -1414,29 +1398,37 @@ async function fetchGame() {
       if (gStatus.includes('Progress') || gStatus === 'Final') {
         document.getElementById('countdown-card').style.display = 'none';
       }
-      // If lineups still pending, poll more frequently
-      if (!lp?.length) {
-        setTimeout(fetchGame, 60000); // check every minute for lineup
+      // Schedule next refresh based on game state
+      const isLive = gStatus.includes('Progress');
+      const isFinal = gStatus === 'Final';
+      if (isFinal) {
+        // Game over - check less frequently
+        setTimeout(fetchGame, 60000);
+      } else if (isLive) {
+        // Live game - refresh every 20s
+        setTimeout(fetchGame, 20000);
+      } else if (!lp?.length) {
+        // Pre-game, no lineup yet - check every 2 min
+        setTimeout(fetchGame, 120000);
       } else {
-        // During active game poll linescore more frequently
-    const activeGame = status.includes('Progress');
-    setTimeout(fetchGame, activeGame ? 20000 : 30000); // normal 30s refresh
+        // Pre-game with lineup - refresh every 30s
+        setTimeout(fetchGame, 30000);
       }
     } else {
-      setTimeout(fetchGame, 30000);
+      // No game today
+      setTimeout(fetchGame, 300000); // check every 5 min on off days
     }
   } catch(e) {
     console.error('fetchGame error:', e);
-    document.getElementById('s-inn').textContent='Retrying...';
-    document.getElementById('fp-time').textContent='Reconnecting...';
+    document.getElementById('s-inn').textContent = 'Retrying...';
+    document.getElementById('fp-time').textContent = 'Reconnecting...';
     lineup = mockLineup(); renderScorecard();
-    // Retry in 15 seconds
     setTimeout(fetchGame, 15000);
   }
 }
 
 // ── AUTO-FILL PLAY BY PLAY ────────────────────────────────
-let lastInning = null, lastIsTop = null, currentGamePk = null;
+// lastInning, lastIsTop, currentGamePk declared in STATE block above
 
 function mapPlayResult(play) {
   const event = play.result?.event || '';
@@ -1522,8 +1514,14 @@ async function autoFillHalfInning(gamePk, inning, isTop) {
     if (!halfPlays.length) return;
 
     // Determine which lineup to use
-    const targetLineup = isTop ? oppLineup : lineup;
-    const targetScores = isTop ? oppScores : scores;
+    // Convention: top of inning = away team bats, bottom = home team bats
+    // If Mud Hens are HOME: top=opp bats, bottom=hens bats
+    // If Mud Hens are AWAY: top=hens bats, bottom=opp bats
+    const isHome = window._isHome !== undefined ? window._isHome : true;
+    const hensAreTopTeam = !isHome; // away team bats in top
+    const hensAreBatting = isTop === hensAreTopTeam;
+    const targetLineup = hensAreBatting ? lineup : oppLineup;
+    const targetScores = hensAreBatting ? scores : oppScores;
 
     halfPlays.forEach(play => {
       const batterId = play.matchup?.batter?.id;
@@ -1771,23 +1769,28 @@ async function loadHensStats() {
   }
   const tbody = document.getElementById('hens-stats-body');
   if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
-  const stats = await fetchRosterStats(512);
-  if (stats.length) {
-    hensStatsCache = stats;
-    renderStatsTable(hensStatsCache, 'hens-stats-body');
-  } else {
-    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Could not load stats — try again shortly.</td></tr>';
+  try {
+    const stats = await fetchRosterStats(512);
+    if (stats && stats.length) {
+      hensStatsCache = stats;
+      renderStatsTable(hensStatsCache, 'hens-stats-body');
+    } else {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">No stats available yet — try again later.</td></tr>';
+    }
+  } catch(e) {
+    console.error('loadHensStats error:', e);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Error loading stats.</td></tr>';
   }
 }
 
 async function loadHensPitching() {
   if (hensPitchCache) { renderPitchTable(hensPitchCache, 'hens-pitch-body'); return; }
-  document.getElementById('hens-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Loading pitching stats...</td></tr>';
+  document.getElementById('hens-pitch-body').innerHTML = '<tr><td colspan="10" class="stats-loading">Loading pitching stats...</td></tr>';
   hensPitchCache = await fetchPitcherStats(512);
   renderPitchTable(hensPitchCache, 'hens-pitch-body');
 }
 
-let oppPitchCache = null, oppPitchTeamId = null;
+// oppPitchCache, oppPitchTeamId declared in STATE block
 
 async function loadOppStats() {
   const titleEl = document.getElementById('opp-stats-title');
@@ -1802,11 +1805,15 @@ async function loadOppStats() {
   }
   const oppTbody = document.getElementById('opp-stats-body');
   if (!window._oppTeamId) {
-    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading game data first... try again in a moment.</td></tr>';
-    // Try again in 3 seconds
-    setTimeout(loadOppStats, 3000);
+    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Waiting for game data... tap this tab again in a moment.</td></tr>';
+    // Only retry once - don't create an infinite loop
+    if (!window._oppStatsRetryPending) {
+      window._oppStatsRetryPending = true;
+      setTimeout(() => { window._oppStatsRetryPending = false; loadOppStats(); }, 4000);
+    }
     return;
   }
+  window._oppStatsRetryPending = false;
   if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
   oppStatsTeamId = window._oppTeamId;
   const oppStats = await fetchRosterStats(window._oppTeamId);
@@ -1983,8 +1990,7 @@ function deleteGame(i) {
 }
 
 // ── OPPONENT SCORECARD ────────────────────────────────────
-let oppLineup = [], oppScores = {}, oppPlayerStats = {};
-let activeOppCell = null;
+// oppLineup, oppScores, oppPlayerStats, activeOppCell declared in STATE block
 
 function switchOppTab(t) {
   document.querySelectorAll('#sec-oppscore .sc-tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
@@ -2073,7 +2079,7 @@ async function fetchOppPlayerStats(ids) {
   for (const id of ids) {
     if (!id || oppPlayerStats[id] || playerStats[id]) continue;
     try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting`);
+      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
       const data = await res.json();
       const splits = data.stats?.[0]?.splits;
       if (splits?.length) oppPlayerStats[id] = splits[splits.length-1].stat;
