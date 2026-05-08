@@ -198,9 +198,9 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 /* NEXT GAME COUNTDOWN */
 .countdown-card{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:16px;padding:18px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.25);text-align:center;box-shadow:0 4px 16px rgba(26,43,94,0.2);}
 .countdown-label{font-size:11px;color:#c8a84b;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-weight:700;}
-.countdown-opp{font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);margin-bottom:4px;}
+.countdown-opp{font-size:13px;font-weight:600;color:#ffffff;margin-bottom:4px;}
 .countdown-time{font-size:28px;font-weight:800;color:#c8a84b;letter-spacing:-1px;margin-bottom:4px;}
-.countdown-date{font-size:11px;color:rgba(255,255,255,0.7);}
+.countdown-date{font-size:11px;color:#ffffff;}
 .countdown-units{display:flex;justify-content:center;gap:12px;margin-top:10px;}
 .countdown-unit{text-align:center;}
 .countdown-num{font-size:28px;font-weight:800;color:#ffffff;line-height:1;}
@@ -510,8 +510,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="section-title">Toledo Mud Hens — 2026 Pitching</div>
     <div style="overflow-x:auto;">
       <table class="stats-table">
-        <thead><tr><th>Player</th><th>G</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
-        <tbody id="hens-pitch-body"><tr><td colspan="9" class="stats-loading">Loading...</td></tr></tbody>
+        <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+        <tbody id="hens-pitch-body"><tr><td colspan="10" class="stats-loading">Loading...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -536,8 +536,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="section-title" id="opp-pitch-title">Opponent — 2026 Pitching</div>
     <div style="overflow-x:auto;">
       <table class="stats-table">
-        <thead><tr><th>Player</th><th>G</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
-        <tbody id="opp-pitch-body"><tr><td colspan="9" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
+        <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+        <tbody id="opp-pitch-body"><tr><td colspan="10" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -979,7 +979,7 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
     const findPitcherStats = async (name, teamId, eraId) => {
       if (!name || name === 'TBD' || !teamId) return;
       try {
-        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
+        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
         const res = await fetch(url);
         const data = await res.json();
         const splits = data.stats?.[0]?.splits || [];
@@ -1516,7 +1516,7 @@ async function checkForHalfInningEnd(gamePk) {
 async function fetchRosterStats(teamId) {
   try {
     // Use the stats endpoint with teamId and sportId for individual player stats
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
@@ -1524,7 +1524,7 @@ async function fetchRosterStats(teamId) {
     if (splits.length > 1) {
       // Individual player stats returned
       return splits
-        .filter(s => (s.stat?.atBats || 0) >= 1)
+        .filter(s => s.player?.fullName && (s.stat?.atBats || 0) >= 1)
         .map(s => ({
           name: s.player?.fullName || '—',
           num: '',
@@ -1575,18 +1575,19 @@ async function fetchRosterStats(teamId) {
 
 async function fetchPitcherStats(teamId) {
   try {
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=50`;
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
     
     if (splits.length > 0) {
       return splits
-        .filter(s => (s.stat?.inningsPitched || 0) >= 1)
+        .filter(s => s.player?.fullName && parseFloat(s.stat?.inningsPitched || 0) >= 0.1)
         .map(s => ({
           name: s.player?.fullName || '—',
           pos: s.position?.abbreviation || 'P',
           g: s.stat.gamesPlayed ?? 0,
+          gs: s.stat.gamesStarted ?? 0,
           ip: s.stat.inningsPitched || '0.0',
           era: s.stat.era || '—',
           w: s.stat.wins ?? 0,
@@ -1605,12 +1606,13 @@ function renderPitchTable(stats, bodyId) {
   const tbody = document.getElementById(bodyId);
   if (!tbody) return;
   if (!stats.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="stats-loading">No pitching stats available yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="stats-loading">No pitching stats available yet.</td></tr>';
     return;
   }
   tbody.innerHTML = stats.map(p => `<tr>
     <td>${p.name}</td>
     <td>${p.g}</td>
+    <td>${p.gs}</td>
     <td>${p.ip}</td>
     <td class="${parseFloat(p.era)<3.50?'highlight':''}">${p.era}</td>
     <td>${p.w}</td>
@@ -2122,8 +2124,10 @@ function scheduleMidnightReset() {
     scores = {}; oppScores = {}; lineup = []; oppLineup = [];
     playerStats = {}; oppPlayerStats = {};
     pitchCount = 0; lastInning = null; lastIsTop = null; currentGamePk = null;
-    window._gameStatus = null; window._gameTimeUTC = null;
+    window._gameStatus = null; window._gameTimeUTC = null; window._oppTeamId = null;
     standingsCache = null;
+    hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
+    hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
     renderScorecard(); renderOppScorecard();
     fetchGame();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
