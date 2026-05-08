@@ -23,9 +23,9 @@ body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Dis
 .card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid rgba(26,43,94,0.15);box-shadow:0 1px 4px rgba(26,43,94,0.08);}
 .card.gold{border-color:rgba(200,168,75,0.4);}
 .card.red{border-color:rgba(200,16,46,0.2);}
-.card-label{font-size:9px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-weight:600;}
-.card-val{font-size:14px;font-weight:700;color:#1a2b5e;}
-.card-sub{font-size:10px;color:rgba(26,43,94,0.4);margin-top:3px;}
+.card-label{font-size:9px;color:rgba(0,0,0,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-weight:600;}
+.card-val{font-size:14px;font-weight:700;color:#000000;}
+.card-sub{font-size:10px;color:rgba(0,0,0,0.6);margin-top:3px;font-weight:500;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .matchup-card{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:16px;padding:20px 16px 14px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.3);position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(26,43,94,0.25);}
 .matchup-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(200,16,46,0.1) 0%,transparent 70%);pointer-events:none;}
@@ -293,8 +293,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="wx-row" style="align-items:center;gap:8px;">
         <div class="wx-icon" id="wx-icon" style="font-size:28px;flex-shrink:0;">—</div>
         <div style="flex:1;">
-          <div class="wx-temp" id="wx-temp" style="font-size:20px;font-weight:800;color:#1a2b5e;">—</div>
-          <div id="wx-desc" style="font-size:10px;color:rgba(26,43,94,0.6);margin-top:2px;line-height:1.5;">—</div>
+          <div class="wx-temp" id="wx-temp" style="font-size:20px;font-weight:800;color:#000000;">—</div>
+          <div id="wx-desc" style="font-size:10px;color:rgba(0,0,0,0.55);margin-top:2px;line-height:1.5;">—</div>
         </div>
       </div>
     </div>
@@ -302,7 +302,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
   <div class="grid2">
     <div class="card">
-      <div class="card-label">Mud Hens Starter</div>
+      <div class="card-label">Toledo Mud Hens Starter</div>
       <div class="card-val" id="mud-starter">TBD</div>
       <div class="card-sub" id="mud-starter-era"></div>
     </div>
@@ -979,7 +979,7 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
     const findPitcherStats = async (name, teamId, eraId) => {
       if (!name || name === 'TBD' || !teamId) return;
       try {
-        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
+        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
         const res = await fetch(url);
         const data = await res.json();
         const splits = data.stats?.[0]?.splits || [];
@@ -1516,7 +1516,7 @@ async function checkForHalfInningEnd(gamePk) {
 async function fetchRosterStats(teamId) {
   try {
     // Use the stats endpoint with teamId and sportId for individual player stats
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
@@ -1575,7 +1575,7 @@ async function fetchRosterStats(teamId) {
 
 async function fetchPitcherStats(teamId) {
   try {
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=100&playerPool=ALL`;
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
