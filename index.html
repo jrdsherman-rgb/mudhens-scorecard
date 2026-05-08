@@ -210,9 +210,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .notation-key b{color:#1a2b5e;font-weight:700;}
 /* PLAYER STATS TABLE */
 .stats-table{width:100%;border-collapse:collapse;margin-bottom:14px;border-radius:10px;overflow:hidden;}
-.stats-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 5px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;cursor:pointer;}
-.stats-table th:first-child{text-align:left;padding-left:10px;min-width:110px;}
-.stats-table th:hover{background:#253e7a;}
+.stats-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 5px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;cursor:pointer;user-select:none;white-space:nowrap;}
+.stats-table th:first-child{text-align:left;padding-left:10px;min-width:130px;}
+.stats-table th:hover{background:#253e7a;color:#c8a84b;}
+.stats-table th.sort-asc::after{content:' ▲';font-size:8px;opacity:0.8;}
+.stats-table th.sort-desc::after{content:' ▼';font-size:8px;opacity:0.8;}
 .stats-table td{border-top:1px solid rgba(26,43,94,0.07);font-size:11px;text-align:center;padding:7px 4px;color:#1a2b5e;background:#fff;}
 .stats-table tr:nth-child(even) td{background:#f5f3ee;}
 .stats-table td:first-child{text-align:left;padding-left:10px;font-weight:600;color:#1a2b5e;}
@@ -1338,6 +1340,11 @@ async function fetchGame() {
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
     } else {
       lineup = mockLineup(); renderScorecard();
+      // Keep checking every 2 min pre-game for lineup to post
+      if (status !== 'Final' && !status.includes('Progress')) {
+        setTimeout(fetchGame, 120000);
+        return;
+      }
     }
 
     if (op?.length) {
@@ -1353,6 +1360,13 @@ async function fetchGame() {
     if (game.gamePk) {
       currentGamePk = game.gamePk;
       checkForHalfInningEnd(game.gamePk);
+      // During live games, poll linescore every 15s for half-inning changes
+      if (status.includes('Progress')) {
+        clearInterval(window._linescoreInterval);
+        window._linescoreInterval = setInterval(() => {
+          if (currentGamePk) checkForHalfInningEnd(currentGamePk);
+        }, 15000);
+      }
       // Hide countdown only if game is actually in progress or final
       const gStatus = game.status?.detailedState || '';
       if (gStatus.includes('Progress') || gStatus === 'Final') {
@@ -1362,7 +1376,9 @@ async function fetchGame() {
       if (!lp?.length) {
         setTimeout(fetchGame, 60000); // check every minute for lineup
       } else {
-        setTimeout(fetchGame, 30000); // normal 30s refresh
+        // During active game poll linescore more frequently
+    const activeGame = status.includes('Progress');
+    setTimeout(fetchGame, activeGame ? 20000 : 30000); // normal 30s refresh
       }
     } else {
       setTimeout(fetchGame, 30000);
@@ -1609,6 +1625,38 @@ async function fetchPitcherStats(teamId) {
   } catch(e) { console.log('Pitching stats error:', e); return []; }
 }
 
+// ── SORTABLE TABLES ──────────────────────────────────────
+function makeSortable(tableEl, data, renderFn, bodyId, numericCols) {
+  const headers = tableEl.querySelectorAll('th');
+  let sortCol = -1, sortAsc = false;
+  headers.forEach((th, i) => {
+    th.addEventListener('click', () => {
+      if (sortCol === i) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = i;
+        sortAsc = i === 0; // text cols sort A-Z first, numeric sort high-first
+      }
+      headers.forEach(h => { h.classList.remove('sort-asc','sort-desc'); });
+      th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+      const sorted = [...data].sort((a, b) => {
+        const vals = Object.values(a);
+        const valB = Object.values(b);
+        const av = vals[i], bv = valB[i];
+        const isNum = numericCols.includes(i);
+        if (isNum) {
+          const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
+          return sortAsc ? an - bn : bn - an;
+        }
+        return sortAsc
+          ? String(av).localeCompare(String(bv))
+          : String(bv).localeCompare(String(av));
+      });
+      renderFn(sorted, bodyId);
+    });
+  });
+}
+
 function renderPitchTable(stats, bodyId) {
   const tbody = document.getElementById(bodyId);
   if (!tbody) return;
@@ -1628,16 +1676,23 @@ function renderPitchTable(stats, bodyId) {
     <td>${p.whip}</td>
     <td>${p.sv}</td>
   </tr>`).join('');
+  // Wire up sorting - numeric cols: 1,2,3,4,5,6,7,8,9
+  const table = tbody.closest('table');
+  if (table && !table.dataset.sortable) {
+    table.dataset.sortable = '1';
+    makeSortable(table, stats, renderPitchTable, bodyId, [1,2,3,4,5,6,7,8,9]);
+  }
 }
 
 function renderStatsTable(stats, bodyId) {
   const tbody = document.getElementById(bodyId);
+  if (!tbody) return;
   if (!stats.length) {
     tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">No stats available yet.</td></tr>';
     return;
   }
   tbody.innerHTML = stats.map(p => `<tr>
-    <td>${p.num} ${p.name}</td>
+    <td>${p.name}</td>
     <td>${p.pos}</td>
     <td>${p.g}</td>
     <td>${p.ab}</td>
@@ -1649,11 +1704,12 @@ function renderStatsTable(stats, bodyId) {
     <td>${p.rbi}</td>
     <td>${p.sb}</td>
   </tr>`).join('');
+  const table = tbody.closest('table');
+  if (table && !table.dataset.sortable) {
+    table.dataset.sortable = '1';
+    makeSortable(table, stats, renderStatsTable, bodyId, [2,3,4,5,6,7,8,9,10]);
+  }
 }
-
-let hensStatsCache = null, oppStatsCache = null, oppStatsTeamId = null;
-
-let hensPitchCache = null;
 
 function switchStatTab(team, type, el) {
   const batView = document.getElementById(team + '-bat-view');
@@ -2135,6 +2191,7 @@ function scheduleMidnightReset() {
     standingsCache = null;
     hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
+    clearInterval(window._linescoreInterval);
     renderScorecard(); renderOppScorecard();
     fetchGame();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
