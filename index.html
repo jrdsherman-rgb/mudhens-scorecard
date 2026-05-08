@@ -1340,15 +1340,11 @@ async function fetchGame() {
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
     } else {
       lineup = mockLineup(); renderScorecard();
-      // Keep checking every 2 min pre-game for lineup to post
-      if (status !== 'Final' && !status.includes('Progress')) {
-        setTimeout(fetchGame, 120000);
-        return;
-      }
     }
 
     if (op?.length) {
       oppLineup = op.slice(0,15).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
+      renderOppScorecard(); // Show names immediately
       // Update opponent scorecard header
       const oppHeader = document.getElementById('opp-sc-header');
       if (oppHeader) oppHeader.textContent = oppTeam.name + ' Batter';
@@ -1367,6 +1363,9 @@ async function fetchGame() {
           if (currentGamePk) checkForHalfInningEnd(currentGamePk);
         }, 15000);
       }
+      // Pre-load stats in background when game loads
+      if (!hensStatsCache) loadHensStats();
+      if (!oppStatsCache && window._oppTeamId) loadOppStats();
       // Hide countdown only if game is actually in progress or final
       const gStatus = game.status?.detailedState || '';
       if (gStatus.includes('Progress') || gStatus === 'Final') {
