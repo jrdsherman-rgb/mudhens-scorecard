@@ -335,8 +335,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
         <th>R</th><th>H</th><th>E</th>
       </tr></thead>
       <tbody id="linescore-body">
-        <tr><td class="tn">Mud Hens</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
-        <tr><td class="tn">Opponent</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
+        <tr><td class="tn" id="ls-row1-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
+        <tr><td class="tn" id="ls-row2-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
       </tbody>
     </table>
   </div>
@@ -736,8 +736,9 @@ let oppTeamName = 'Opponent';
 function showSection(name, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('sec-' + name).classList.add('active');
-  el.classList.add('active');
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  if (el) el.classList.add('active');
   if (name === 'trivia') loadTrivia();
   if (name === 'history') loadHistory();
   if (name === 'promotions') loadPromos();
@@ -921,36 +922,19 @@ function updateLinescore(game, isHome) {
   const ls = game.linescore; if (!ls || !ls.innings) return;
   const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
   const oppName = oppTeamName || (isHome ? game.teams.away.team.name : game.teams.home.team.name);
-  // Convention: away team on top, home team on bottom
-  let topRow, botRow, topLabel, botLabel;
-  if (isHome) {
-    topLabel = oppName; botLabel = 'Toledo Mud Hens';
-  } else {
-    topLabel = 'Toledo Mud Hens'; botLabel = oppName;
-  }
-  let mRow = `<tr><td class="tn">${botLabel}</td>`, oRow = `<tr><td class="tn">${topLabel}</td>`;
-  // bot = mud hens row, oRow = opponent row
-  // Top of linescore = away, bottom = home
+  let mRow = `<tr><td class="tn">Toledo Mud Hens</td>`, oRow = `<tr><td class="tn">${oppName}</td>`;
+  // Baseball convention: away team on top, home on bottom
+  const mudRow = [], oppRowArr = [];
   for (let i = 0; i < 9; i++) {
     const inn = ls.innings[i];
-    if (isHome) {
-      oRow += `<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`; // away on top
-      mRow += `<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`; // home on bottom
-    } else {
-      oRow += `<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`; // mud hens away on top
-      mRow += `<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`; // home on bottom
-    }
+    mudRow.push(`<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`);
+    oppRowArr.push(`<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`);
   }
   const mt = game.teams[mi], ot = game.teams[oi];
-  if (isHome) {
-    oRow += `<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
-    mRow += `<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
-    document.getElementById('linescore-body').innerHTML = oRow + mRow; // away first
-  } else {
-    oRow += `<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
-    mRow += `<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
-    document.getElementById('linescore-body').innerHTML = mRow + oRow; // mud hens away first
-  }
+  const mudFull = `<tr><td class="tn">Toledo Mud Hens</td>${mudRow.join('')}<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
+  const oppFull = `<tr><td class="tn">${oppName}</td>${oppRowArr.join('')}<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
+  // Away on top, home on bottom
+  document.getElementById('linescore-body').innerHTML = isHome ? oppFull + mudFull : mudFull + oppFull;
 }
 
 // ── FORMAT TIME ────────────────────────────────────────────
@@ -1229,6 +1213,7 @@ async function fetchGame() {
 
     if (!data?.dates?.length || !data.dates[0].games?.length) {
       document.getElementById('s-inn').textContent = 'No game today';
+    document.getElementById('s-cnt').textContent = '';
       document.getElementById('fp-time').textContent = 'Off day — enjoy the rest!';
       document.getElementById('opp-nm').textContent = 'OFF DAY';
       document.getElementById('countdown-card').style.display = 'block';
@@ -1248,6 +1233,9 @@ async function fetchGame() {
     // Update opponent scorecard header
     const oppScHeader = document.getElementById('opp-sc-header');
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
+    // Update opp stats title
+    const oppStatsTitle = document.getElementById('opp-stats-title');
+    if (oppStatsTitle) oppStatsTitle.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
     // Update opponent tab label
     const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]');
     if (oppTab) oppTab.textContent = oppTeamName;
@@ -1917,8 +1905,20 @@ function startCountdown() {
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   
   // Find next game after today
-  const next = SCHEDULE.find(g => g.date >= todayStr);
-  if (!next) { document.getElementById('countdown-card').style.display = 'none'; return; }
+  // Find next upcoming game (today or future)
+  const next = SCHEDULE.find(g => {
+    if (g.date > todayStr) return true;
+    if (g.date === todayStr) {
+      // Check if game time has passed
+      const gameTime = new Date(`${g.date}T${g.time}:00`);
+      return new Date() < gameTime;
+    }
+    return false;
+  });
+  if (!next) { 
+    document.getElementById('countdown-card').style.display = 'none'; 
+    return; 
+  }
 
   document.getElementById('countdown-card').style.display = 'block';
   document.getElementById('countdown-opp').textContent = `vs ${next.opp}`;
