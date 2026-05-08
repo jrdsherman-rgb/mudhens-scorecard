@@ -270,13 +270,13 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="matchup-row">
       <div class="team-block">
         <div class="team-nm">Toledo Mud Hens</div>
-        <div class="team-rec" id="mud-rec">—</div>
+        <div class="team-rec" id="mud-rec" style="color:#ffffff !important;opacity:1;">—</div>
         <div class="team-sc" id="mud-sc">—</div>
       </div>
       <div class="vs" id="matchup-vs">vs</div>
       <div class="team-block">
         <div class="team-nm" id="opp-nm">OPPONENT</div>
-        <div class="team-rec" id="opp-rec">—</div>
+        <div class="team-rec" id="opp-rec" style="color:#ffffff !important;opacity:1;">—</div>
         <div class="team-sc" id="opp-sc">—</div>
       </div>
     </div>
@@ -1333,14 +1333,15 @@ async function fetchGame() {
     const op = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
 
     if (lp?.length) {
-      lineup = lp.slice(0,9).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
+      lineup = lp.slice(0,15).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
+      renderScorecard(); // Render immediately with names, stats load async
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
     } else {
       lineup = mockLineup(); renderScorecard();
     }
 
     if (op?.length) {
-      oppLineup = op.slice(0,9).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
+      oppLineup = op.slice(0,15).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
       // Update opponent scorecard header
       const oppHeader = document.getElementById('opp-sc-header');
       if (oppHeader) oppHeader.textContent = oppTeam.name + ' Batter';
@@ -1465,10 +1466,14 @@ async function autoFillHalfInning(gamePk, inning, isTop) {
 
     halfPlays.forEach(play => {
       const batterId = play.matchup?.batter?.id;
-      if (!batterId) return;
+      const batterName = play.matchup?.batter?.fullName;
+      if (!batterId && !batterName) return;
 
-      // Find batter index in lineup
-      const bi = targetLineup.findIndex(p => p.mlbId === batterId);
+      // Find batter index by ID first, then name as fallback
+      let bi = targetLineup.findIndex(p => p.mlbId === batterId);
+      if (bi === -1 && batterName) {
+        bi = targetLineup.findIndex(p => p.name === batterName);
+      }
       if (bi === -1) return;
 
       const key = `${bi}_${inning}`;
@@ -1493,9 +1498,11 @@ async function checkForHalfInningEnd(gamePk) {
   try {
     const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/linescore`);
     const data = await res.json();
-    const lsData = data.currentInning !== undefined ? data : data.linescore;
-    const inning = lsData?.currentInning;
-    const isTop = lsData?.isTopInning;
+    // MiLB linescore can return data directly or wrapped
+    const lsData = data.currentInning !== undefined ? data : (data.linescore || data);
+    const inning = lsData?.currentInning || data?.currentInning;
+    const isTop = lsData?.isTopInning !== undefined ? lsData.isTopInning : data?.isTopInning;
+    console.log('Linescore check - inning:', inning, 'isTop:', isTop, 'lastInning:', lastInning);
     if (!inning) return;
 
     // Detect half inning change
