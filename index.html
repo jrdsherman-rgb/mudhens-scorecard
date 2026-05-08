@@ -1363,9 +1363,17 @@ async function fetchGame() {
           if (currentGamePk) checkForHalfInningEnd(currentGamePk);
         }, 15000);
       }
-      // Pre-load stats in background when game loads
-      if (!hensStatsCache) loadHensStats();
-      if (!oppStatsCache && window._oppTeamId) loadOppStats();
+      // Pre-load stats in background when game loads (don't block rendering)
+      if (!hensStatsCache) {
+        fetchRosterStats(512).then(stats => {
+          if (stats.length) hensStatsCache = stats;
+        });
+      }
+      if (!oppStatsCache && window._oppTeamId) {
+        fetchRosterStats(window._oppTeamId).then(stats => {
+          if (stats.length) { oppStatsCache = stats; oppStatsTeamId = window._oppTeamId; }
+        });
+      }
       // Hide countdown only if game is actually in progress or final
       const gStatus = game.status?.detailedState || '';
       if (gStatus.includes('Progress') || gStatus === 'Final') {
@@ -1625,47 +1633,30 @@ async function fetchPitcherStats(teamId) {
 }
 
 // ── SORTABLE TABLES ──────────────────────────────────────
-function makeSortable(tableEl, data, renderFn, bodyId, numericCols) {
-  // Store data on the table so it stays fresh across re-renders
-  tableEl._sortData = data;
-  tableEl._sortRenderFn = renderFn;
-  tableEl._sortBodyId = bodyId;
-  tableEl._sortNumeric = numericCols;
-  tableEl._sortCol = -1;
-  tableEl._sortAsc = false;
-
-  // Only attach listeners once
-  if (tableEl.dataset.sortable === '1') {
-    tableEl._sortData = data; // just update the data reference
-    return;
-  }
+function makeSortable(tableEl, numericCols) {
+  if (tableEl.dataset.sortable === '1') return;
   tableEl.dataset.sortable = '1';
-
+  let sortCol = -1, sortAsc = true;
   const headers = tableEl.querySelectorAll('th');
   headers.forEach((th, i) => {
     th.style.cursor = 'pointer';
     th.addEventListener('click', () => {
-      const t = th.closest('table');
-      if (t._sortCol === i) {
-        t._sortAsc = !t._sortAsc;
-      } else {
-        t._sortCol = i;
-        t._sortAsc = i === 0;
-      }
+      if (sortCol === i) { sortAsc = !sortAsc; }
+      else { sortCol = i; sortAsc = numericCols.includes(i) ? false : true; }
       headers.forEach(h => h.classList.remove('sort-asc','sort-desc'));
-      th.classList.add(t._sortAsc ? 'sort-asc' : 'sort-desc');
-      const sorted = [...t._sortData].sort((a, b) => {
-        const av = Object.values(a)[i];
-        const bv = Object.values(b)[i];
-        if (t._sortNumeric.includes(i)) {
+      th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+      const tbody = tableEl.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const av = a.cells[i]?.textContent?.trim() || '';
+        const bv = b.cells[i]?.textContent?.trim() || '';
+        if (numericCols.includes(i)) {
           const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
-          return t._sortAsc ? an - bn : bn - an;
+          return sortAsc ? an - bn : bn - an;
         }
-        return t._sortAsc
-          ? String(av).localeCompare(String(bv))
-          : String(bv).localeCompare(String(av));
+        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
       });
-      t._sortRenderFn(sorted, t._sortBodyId);
+      rows.forEach(r => tbody.appendChild(r));
     });
   });
 }
@@ -1691,7 +1682,7 @@ function renderPitchTable(stats, bodyId) {
   </tr>`).join('');
   // Wire up sorting - numeric cols: 1,2,3,4,5,6,7,8,9
   const table = tbody.closest('table');
-  if (table) makeSortable(table, stats, renderPitchTable, bodyId, [1,2,3,4,5,6,7,8,9]);
+  if (table) makeSortable(table, [1,2,3,4,5,6,7,8,9]);
 }
 
 function renderStatsTable(stats, bodyId) {
@@ -1715,7 +1706,7 @@ function renderStatsTable(stats, bodyId) {
     <td>${p.sb}</td>
   </tr>`).join('');
   const table = tbody.closest('table');
-  if (table) makeSortable(table, stats, renderStatsTable, bodyId, [2,3,4,5,6,7,8,9,10]);
+  if (table) makeSortable(table, [2,3,4,5,6,7,8,9,10]);
 }
 
 function switchStatTab(team, type, el) {
@@ -1736,10 +1727,19 @@ function switchStatTab(team, type, el) {
 }
 
 async function loadHensStats() {
-  if (hensStatsCache) { renderStatsTable(hensStatsCache, 'hens-stats-body'); return; }
-  document.getElementById('hens-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
-  hensStatsCache = await fetchRosterStats(512);
-  renderStatsTable(hensStatsCache, 'hens-stats-body');
+  if (hensStatsCache && hensStatsCache.length) { 
+    renderStatsTable(hensStatsCache, 'hens-stats-body'); 
+    return; 
+  }
+  const tbody = document.getElementById('hens-stats-body');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
+  const stats = await fetchRosterStats(512);
+  if (stats.length) {
+    hensStatsCache = stats;
+    renderStatsTable(hensStatsCache, 'hens-stats-body');
+  } else {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Could not load stats — try again shortly.</td></tr>';
+  }
 }
 
 async function loadHensPitching() {
@@ -1758,18 +1758,24 @@ async function loadOppStats() {
   const pitTitleEl = document.getElementById('opp-pitch-title');
   if (pitTitleEl) pitTitleEl.textContent = `${oppName} — 2026 Pitching`;
 
-  if (oppStatsCache && oppStatsTeamId === window._oppTeamId) {
+  if (oppStatsCache && oppStatsCache.length && oppStatsTeamId === window._oppTeamId) {
     renderStatsTable(oppStatsCache, 'opp-stats-body');
     return;
   }
+  const oppTbody = document.getElementById('opp-stats-body');
   if (!window._oppTeamId) {
-    document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>';
+    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>';
     return;
   }
-  document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
+  if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
   oppStatsTeamId = window._oppTeamId;
-  oppStatsCache = await fetchRosterStats(window._oppTeamId);
-  renderStatsTable(oppStatsCache, 'opp-stats-body');
+  const oppStats = await fetchRosterStats(window._oppTeamId);
+  if (oppStats.length) {
+    oppStatsCache = oppStats;
+    renderStatsTable(oppStatsCache, 'opp-stats-body');
+  } else {
+    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Could not load stats — try again shortly.</td></tr>';
+  }
 }
 
 async function loadOppPitching() {
