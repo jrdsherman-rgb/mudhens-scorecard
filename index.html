@@ -12,11 +12,11 @@
 body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;min-height:100vh;padding:0 0 80px;}
 .app-header{padding:14px 16px 12px;background:linear-gradient(180deg,#1a2b5e 0%,#152349 100%);border-bottom:3px solid #c8102e;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .app-title{color:#c8a84b;font-size:16px;font-weight:700;letter-spacing:0.5px;}
-.app-sub{color:rgba(200,16,46,0.8);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
+.app-sub{color:rgba(255,255,255,0.7);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 .radio-btn{background:rgba(200,16,46,0.9);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;backdrop-filter:blur(10px);}
 .nav-tabs{display:flex;gap:0;margin-bottom:0;overflow-x:auto;padding:0;background:#1a2b5e;border-bottom:2px solid #c8102e;scrollbar-width:none;}
 .nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:0 0 auto;padding:10px 14px;font-size:10px;background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;border:none;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:all 0.2s;}
+.nav-tab{flex:0 0 auto;padding:10px 14px;font-size:10px;background:transparent;color:rgba(255,255,255,0.75);cursor:pointer;font-family:inherit;border:none;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:all 0.2s;}
 .nav-tab.active{color:#c8a84b;border-bottom-color:#c8a84b;background:rgba(255,255,255,0.05);}
 .section{display:none;}
 .section.active{display:block;padding:14px 14px 0;background:#e8e0cc;}
@@ -40,7 +40,7 @@ body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Dis
 .standings-info span{color:rgba(200,168,75,0.8);}
 .status-bar{display:flex;align-items:center;gap:10px;background:#1a2b5e;border-radius:12px;padding:10px 14px;margin-bottom:10px;border:1px solid rgba(200,16,46,0.4);}
 .s-inn{font-size:13px;font-weight:700;color:#c8a84b;}
-.s-cnt{font-size:11px;color:rgba(255,255,255,0.55);font-weight:500;}
+.s-cnt{font-size:11px;color:rgba(255,255,255,0.9);font-weight:500;}
 .auto-badge{margin-left:auto;background:rgba(200,168,75,0.2);color:#c8a84b;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:600;border:1px solid rgba(200,168,75,0.3);}
 .bases{display:flex;align-items:center;gap:3px;margin-left:4px;}
 .base{width:12px;height:12px;border:1.5px solid rgba(200,168,75,0.4);transform:rotate(45deg);background:transparent;border-radius:2px;}
@@ -171,7 +171,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .wx-row{display:flex;align-items:center;gap:10px;}
 .wx-icon{font-size:24px;}
 .wx-temp{font-size:20px;font-weight:800;color:#fff;}
-.wx-desc{font-size:10px;color:rgba(255,255,255,0.35);}
+.wx-desc{font-size:10px;color:rgba(26,43,94,0.65);line-height:1.5;}
 .loading-msg{text-align:center;padding:20px;color:rgba(26,43,94,0.35);font-size:12px;font-style:italic;background:transparent;}
 /* GAME SUMMARY CARD */
 .summary-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:400;align-items:center;justify-content:center;padding:20px;}
@@ -208,6 +208,16 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .section-title{font-size:10px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-weight:700;}
 .notation-key{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;font-size:10px;color:rgba(26,43,94,0.5);line-height:2;border:1px solid rgba(26,43,94,0.08);}
 .notation-key b{color:#1a2b5e;font-weight:700;}
+/* PLAYER STATS TABLE */
+.stats-table{width:100%;border-collapse:collapse;margin-bottom:14px;border-radius:10px;overflow:hidden;}
+.stats-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 5px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;cursor:pointer;}
+.stats-table th:first-child{text-align:left;padding-left:10px;min-width:110px;}
+.stats-table th:hover{background:#253e7a;}
+.stats-table td{border-top:1px solid rgba(26,43,94,0.07);font-size:11px;text-align:center;padding:7px 4px;color:#1a2b5e;background:#fff;}
+.stats-table tr:nth-child(even) td{background:#f5f3ee;}
+.stats-table td:first-child{text-align:left;padding-left:10px;font-weight:600;color:#1a2b5e;}
+.stats-table td.highlight{color:#c8102e;font-weight:700;}
+.stats-loading{text-align:center;padding:30px;color:rgba(26,43,94,0.4);font-style:italic;font-size:12px;}
 .standings-table{width:100%;border-collapse:collapse;margin-bottom:14px;border-radius:10px;overflow:hidden;}
 .standings-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 6px;text-align:center;border:none;letter-spacing:0.5px;font-weight:600;}
 .standings-table th.team-col{text-align:left;padding-left:12px;min-width:150px;}
@@ -226,18 +236,21 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="app-title">Mud Hens Scorecard</div>
     <div class="app-sub" id="app-venue-sub">Fifth Third Field &bull; Toledo, OH</div>
   </div>
-  <a class="radio-btn" href="https://thegamblertoledo.iheart.com/" target="_blank">&#9654; RADIO</a>
+  <a class="radio-btn" href="iheart://live/7480" onclick="setTimeout(()=>{window.open('https://www.iheart.com/live/the-gambler-1260-7480/','_blank')},500);return false;">&#9654; RADIO</a>
 </div>
 
 <div class="nav-tabs">
   <div class="nav-tab active" onclick="showSection('game',this)">Game</div>
-  <div class="nav-tab" onclick="showSection('scorecard',this)">Mud Hens</div>
+  <div class="nav-tab" onclick="showSection('scorecard',this)">Toledo Hens</div>
   <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
   <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
+  <div class="nav-tab" onclick="showSection('henstats',this)">Hens Stats</div>
+  <div class="nav-tab" onclick="showSection('oppstats',this)">Opp Stats</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
   <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
+  <div class="nav-tab" onclick="window.open('https://mudhens.com/tickets','_blank')">🎟 Tickets</div>
 </div>
 
 <!-- ══════════════ GAME ══════════════ -->
@@ -256,11 +269,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="matchup-card">
     <div class="matchup-row">
       <div class="team-block">
-        <div class="team-nm">Mud Hens</div>
+        <div class="team-nm">Toledo Mud Hens</div>
         <div class="team-rec" id="mud-rec">—</div>
         <div class="team-sc" id="mud-sc">—</div>
       </div>
-      <div class="vs">vs</div>
+      <div class="vs" id="matchup-vs">vs</div>
       <div class="team-block">
         <div class="team-nm" id="opp-nm">OPPONENT</div>
         <div class="team-rec" id="opp-rec">—</div>
@@ -340,7 +353,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="table-wrap">
       <table class="sc">
         <thead><tr>
-          <th class="ph">Batter</th>
+          <th class="ph">Toledo Mud Hens</th>
           <th class="ps">Pos</th>
           <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
           <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
@@ -476,6 +489,60 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div id="standings-il"></div>
   <div class="section-title" style="margin-top:16px;">Triple-A Pacific Coast League Standings</div>
   <div id="standings-pcl"></div>
+</div>
+
+<!-- ══════════════ HENS STATS ══════════════ -->
+<div class="section" id="sec-henstats">
+  <div class="section-title">Toledo Mud Hens — 2026 Season Batting Stats</div>
+  <div style="overflow-x:auto;">
+    <table class="stats-table" id="hens-stats-table">
+      <thead>
+        <tr>
+          <th>#&nbsp;Player</th>
+          <th>POS</th>
+          <th>G</th>
+          <th>AB</th>
+          <th>AVG</th>
+          <th>OBP</th>
+          <th>SLG</th>
+          <th>OPS</th>
+          <th>HR</th>
+          <th>RBI</th>
+          <th>SB</th>
+        </tr>
+      </thead>
+      <tbody id="hens-stats-body">
+        <tr><td colspan="11" class="stats-loading">Loading Toledo Mud Hens roster stats...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ OPP STATS ══════════════ -->
+<div class="section" id="sec-oppstats">
+  <div class="section-title" id="opp-stats-title">Opponent — 2026 Season Batting Stats</div>
+  <div style="overflow-x:auto;">
+    <table class="stats-table" id="opp-stats-table">
+      <thead>
+        <tr>
+          <th>#&nbsp;Player</th>
+          <th>POS</th>
+          <th>G</th>
+          <th>AB</th>
+          <th>AVG</th>
+          <th>OBP</th>
+          <th>SLG</th>
+          <th>OPS</th>
+          <th>HR</th>
+          <th>RBI</th>
+          <th>SB</th>
+        </tr>
+      </thead>
+      <tbody id="opp-stats-body">
+        <tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ══════════════ GAME SUMMARY CARD ══════════════ -->
@@ -676,6 +743,8 @@ function showSection(name, el) {
   if (name === 'promotions') loadPromos();
   if (name === 'archive') loadArchive();
   if (name === 'standings') loadStandingsTab();
+  if (name === 'henstats') loadHensStats();
+  if (name === 'oppstats') loadOppStats();
 }
 
 // ── COLOR ──────────────────────────────────────────────────
@@ -852,16 +921,36 @@ function updateLinescore(game, isHome) {
   const ls = game.linescore; if (!ls || !ls.innings) return;
   const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
   const oppName = oppTeamName || (isHome ? game.teams.away.team.name : game.teams.home.team.name);
-  let mRow = `<tr><td class="tn">Mud Hens</td>`, oRow = `<tr><td class="tn">${oppName}</td>`;
+  // Convention: away team on top, home team on bottom
+  let topRow, botRow, topLabel, botLabel;
+  if (isHome) {
+    topLabel = oppName; botLabel = 'Toledo Mud Hens';
+  } else {
+    topLabel = 'Toledo Mud Hens'; botLabel = oppName;
+  }
+  let mRow = `<tr><td class="tn">${botLabel}</td>`, oRow = `<tr><td class="tn">${topLabel}</td>`;
+  // bot = mud hens row, oRow = opponent row
+  // Top of linescore = away, bottom = home
   for (let i = 0; i < 9; i++) {
     const inn = ls.innings[i];
-    mRow += `<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`;
-    oRow += `<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`;
+    if (isHome) {
+      oRow += `<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`; // away on top
+      mRow += `<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`; // home on bottom
+    } else {
+      oRow += `<td>${inn ? inn[mi]?.runs ?? '' : ''}</td>`; // mud hens away on top
+      mRow += `<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`; // home on bottom
+    }
   }
   const mt = game.teams[mi], ot = game.teams[oi];
-  mRow += `<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
-  oRow += `<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
-  document.getElementById('linescore-body').innerHTML = mRow + oRow;
+  if (isHome) {
+    oRow += `<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
+    mRow += `<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
+    document.getElementById('linescore-body').innerHTML = oRow + mRow; // away first
+  } else {
+    oRow += `<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
+    mRow += `<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
+    document.getElementById('linescore-body').innerHTML = mRow + oRow; // mud hens away first
+  }
 }
 
 // ── FORMAT TIME ────────────────────────────────────────────
@@ -898,12 +987,15 @@ async function fetchStarters(gamePk, isHome) {
     const mN = mP?.person?.fullName || 'TBD', oN = oP?.person?.fullName || 'TBD';
     ['mud-starter','pc-mud-starter'].forEach(id => document.getElementById(id).textContent = mN);
     ['opp-starter','pc-opp-starter'].forEach(id => document.getElementById(id).textContent = oN);
-    document.getElementById('pc-pitcher-name').textContent = mN;
-    if (mP?.seasonStats?.pitching?.era) {
-      ['mud-starter-era','pc-mud-era'].forEach(id => document.getElementById(id).textContent = `ERA ${mP.seasonStats.pitching.era}`);
+    if (mP?.seasonStats?.pitching) {
+      const mp = mP.seasonStats.pitching;
+      const mStats = `ERA ${mp.era||'—'} · ${mp.wins||0}W-${mp.losses||0}L · ${mp.inningsPitched||'0'} IP`;
+      ['mud-starter-era','pc-mud-era'].forEach(id => document.getElementById(id).textContent = mStats);
     }
-    if (oP?.seasonStats?.pitching?.era) {
-      ['opp-starter-era','pc-opp-era'].forEach(id => document.getElementById(id).textContent = `ERA ${oP.seasonStats.pitching.era}`);
+    if (oP?.seasonStats?.pitching) {
+      const op = oP.seasonStats.pitching;
+      const oStats = `ERA ${op.era||'—'} · ${op.wins||0}W-${op.losses||0}L · ${op.inningsPitched||'0'} IP`;
+      ['opp-starter-era','pc-opp-era'].forEach(id => document.getElementById(id).textContent = oStats);
     }
   } catch(e) {}
 }
@@ -1150,6 +1242,9 @@ async function fetchGame() {
 
     oppTeamName = oppTeam.name || 'Opponent';
     document.getElementById('opp-nm').textContent = oppTeamName.toUpperCase();
+    // Update vs/@  indicator
+    const vsEl = document.getElementById('matchup-vs');
+    if (vsEl) vsEl.textContent = isHome ? 'vs' : '@';
     // Update opponent scorecard header
     const oppScHeader = document.getElementById('opp-sc-header');
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
@@ -1174,6 +1269,7 @@ async function fetchGame() {
       status.includes('Progress') ? '▶ In Progress' :
       `First Pitch: ${fmtTime(game.gameDate)} ET`;
 
+    window._oppTeamId = oppTeam.id;
     fetchStandings(TEAM_ID, oppTeam.id);
     // Update all opponent labels with real team name
     const pcOppLabel = document.getElementById('pc-opp-label');
@@ -1223,8 +1319,15 @@ async function fetchGame() {
       if (gStatus.includes('Progress') || gStatus === 'Final') {
         document.getElementById('countdown-card').style.display = 'none';
       }
+      // If lineups still pending, poll more frequently
+      if (!lp?.length) {
+        setTimeout(fetchGame, 60000); // check every minute for lineup
+      } else {
+        setTimeout(fetchGame, 30000); // normal 30s refresh
+      }
+    } else {
+      setTimeout(fetchGame, 30000);
     }
-    setTimeout(fetchGame, 30000);
   } catch(e) {
     document.getElementById('s-inn').textContent='Demo mode';
     document.getElementById('fp-time').textContent='Could not load game data';
@@ -1362,6 +1465,96 @@ async function checkForHalfInningEnd(gamePk) {
   } catch(e) {}
 }
 
+// ── PLAYER STATS TABS ─────────────────────────────────────
+async function fetchRosterStats(teamId) {
+  try {
+    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/roster?rosterType=active&season=2026`);
+    const data = await res.json();
+    const roster = data.roster || [];
+    const stats = [];
+    // Fetch stats for each player (batch in parallel)
+    await Promise.all(roster.map(async p => {
+      if (p.status?.code !== 'A') return; // active only
+      try {
+        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting`);
+        const sd = await sr.json();
+        const splits = sd.stats?.[0]?.splits;
+        if (splits?.length) {
+          const st = splits[splits.length-1].stat;
+          if ((st.atBats || 0) > 0) {
+            stats.push({
+              name: p.person.fullName,
+              num: p.jerseyNumber || '—',
+              pos: p.position?.abbreviation || '—',
+              g: st.gamesPlayed ?? 0,
+              ab: st.atBats ?? 0,
+              avg: st.avg || '.000',
+              obp: st.obp || '.000',
+              slg: st.slg || '.000',
+              ops: st.ops || '.000',
+              hr: st.homeRuns ?? 0,
+              rbi: st.rbi ?? 0,
+              sb: st.stolenBases ?? 0,
+            });
+          }
+        }
+      } catch(e) {}
+    }));
+    // Sort by AB descending
+    stats.sort((a,b) => b.ab - a.ab);
+    return stats;
+  } catch(e) { return []; }
+}
+
+function renderStatsTable(stats, bodyId) {
+  const tbody = document.getElementById(bodyId);
+  if (!stats.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">No stats available yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = stats.map(p => `<tr>
+    <td>${p.num} ${p.name}</td>
+    <td>${p.pos}</td>
+    <td>${p.g}</td>
+    <td>${p.ab}</td>
+    <td class="${parseFloat(p.avg)>=0.300?'highlight':''}">${p.avg}</td>
+    <td>${p.obp}</td>
+    <td>${p.slg}</td>
+    <td class="${parseFloat(p.ops)>=0.850?'highlight':''}">${p.ops}</td>
+    <td>${p.hr}</td>
+    <td>${p.rbi}</td>
+    <td>${p.sb}</td>
+  </tr>`).join('');
+}
+
+let hensStatsCache = null, oppStatsCache = null, oppStatsTeamId = null;
+
+async function loadHensStats() {
+  if (hensStatsCache) { renderStatsTable(hensStatsCache, 'hens-stats-body'); return; }
+  document.getElementById('hens-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading stats...</td></tr>';
+  hensStatsCache = await fetchRosterStats(512);
+  renderStatsTable(hensStatsCache, 'hens-stats-body');
+}
+
+async function loadOppStats() {
+  const titleEl = document.getElementById('opp-stats-title');
+  if (oppTeamName && oppTeamName !== 'Opponent') {
+    if (titleEl) titleEl.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
+  }
+  if (oppStatsCache && oppStatsTeamId === window._oppTeamId) {
+    renderStatsTable(oppStatsCache, 'opp-stats-body');
+    return;
+  }
+  if (!window._oppTeamId) {
+    document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Load the game first to see opponent stats.</td></tr>';
+    return;
+  }
+  document.getElementById('opp-stats-body').innerHTML = '<tr><td colspan="11" class="stats-loading">Loading opponent stats...</td></tr>';
+  oppStatsTeamId = window._oppTeamId;
+  oppStatsCache = await fetchRosterStats(window._oppTeamId);
+  renderStatsTable(oppStatsCache, 'opp-stats-body');
+}
+
 // ── TRIVIA ─────────────────────────────────────────────────
 const TRIVIA = [
   {q:"Which famous TV show featured a character who was a die-hard Mud Hens fan?",a:"M*A*S*H — Corporal Klinger, played by Toledo native Jamie Farr, wore a Mud Hens jersey throughout the series and constantly referenced the team."},
@@ -1391,20 +1584,31 @@ function revealTrivia() { document.getElementById('trivia-a').classList.add('sho
 function nextTrivia() { triviaIdx = (triviaIdx+1)%TRIVIA.length; loadTrivia(); }
 
 // ── HISTORY ────────────────────────────────────────────────
-const HISTORY = [
-  {month:1,day:1,year:1896,title:'Franchise Founded',desc:'The Toledo Mud Hens were established as a professional baseball franchise, one of the oldest in minor league history.'},
-  {month:4,day:7,year:2026,title:'2026 Opening Day',desc:'The Mud Hens opened their 2026 season at Fifth Third Field vs. the St. Paul Saints, kicking off another summer of baseball in Toledo.'},
-  {month:5,day:14,year:2002,title:'Fifth Third Field Opens',desc:'The Mud Hens played their first game at brand new Fifth Third Field in downtown Toledo, beginning a new era for the franchise in a world-class ballpark.'},
-  {month:6,day:4,year:1987,title:'Tigers Affiliation Begins',desc:'Toledo became the Triple-A affiliate of the Detroit Tigers, starting one of the longest and most successful affiliate relationships in MiLB history.'},
-  {month:7,day:4,year:1953,title:'Governors Cup Champions',desc:'The Mud Hens captured the International League Governors Cup championship, one of five titles in franchise history.'},
-  {month:8,day:11,year:1984,title:'Future Tigers Champions Develop in Toledo',desc:'The 1984 World Series champion Detroit Tigers featured several players who came through the Toledo system, including Trammell, Whitaker, and Gibson.'},
-  {month:9,day:21,year:2010,title:'Triple-A Championship',desc:'The Mud Hens won the Triple-A championship — their most recent title and one of the proudest moments in modern franchise history.'},
-  {month:10,day:1,year:1963,title:'Back-to-Back Championships',desc:'Toledo won their third Governors Cup in 1963, part of a dominant run in the 1960s that cemented the Mud Hens as a MiLB powerhouse.'},
+const MH_HISTORY = [
+  {year:'1896',title:'Franchise Founded',desc:'The Toledo Mud Hens are established as a professional baseball franchise, making them one of the oldest teams in minor league history. The team plays at Bay View Park near the marshes of the Maumee River — home to American Coots, locally called "mud hens," which gives the team its iconic name.'},
+  {year:'1900s–1920s',title:'Early Championship Era',desc:'Toledo becomes a powerhouse in early professional baseball. The team wins its first Governors' Cup in 1927, establishing a tradition of winning that would define the franchise for decades.'},
+  {year:'1927',title:'First Governors' Cup Championship',desc:'The Toledo Mud Hens win the International League Governors' Cup for the first time, cementing their status as one of minor league baseball's premier franchises.'},
+  {year:'1953',title:'Governors' Cup Champions',desc:'Toledo wins its second Governors' Cup championship, continuing a remarkable run of success in the International League.'},
+  {year:'1963',title:'Third Governors' Cup',desc:'The Mud Hens win another International League title. The 1960s are a golden era for Toledo baseball with back-to-back championship appearances.'},
+  {year:'1967',title:'Fourth Governors' Cup',desc:'Toledo adds a fourth Governors' Cup championship to its trophy case in another dominant season, making the 1960s the most successful decade in franchise history.'},
+  {year:'1970s',title:'M*A*S*H Puts Toledo on the Map',desc:'Corporal Maxwell Q. Klinger, played by Toledo native Jamie Farr on the hit TV show M*A*S*H, becomes the most famous fictional Mud Hens fan in history. Klinger's devotion to the team — wearing their jersey on the show — brings national attention to Toledo baseball and cements the Mud Hens as a pop culture icon.'},
+  {year:'1987',title:'Detroit Tigers Affiliation Begins',desc:'The Toledo Mud Hens become the Triple-A affiliate of the Detroit Tigers, beginning one of the longest and most successful continuous affiliate relationships in Minor League Baseball history — a partnership that continues to this day.'},
+  {year:'1984',title:'Tigers World Series Pipeline',desc:'Many of the 1984 World Series champion Detroit Tigers developed in Toledo, including Hall of Famers Alan Trammell and Lou Whitaker, plus Kirk Gibson, Jack Morris, and others who came through the Mud Hens system.'},
+  {year:'2002',title:'Fifth Third Field Opens',desc:'The Toledo Mud Hens move into brand new Fifth Third Field in the heart of downtown Toledo, immediately recognized as one of the finest minor league ballparks in America. The $39 million stadium transforms the Hensville district and anchors a downtown revitalization. It wins numerous awards for design and fan experience.'},
+  {year:'2010',title:'Triple-A Championship',desc:'The Toledo Mud Hens win the Triple-A championship — their fifth and most recent title — in one of the most celebrated seasons in franchise history. The championship caps a memorable run through the International League playoffs.'},
+  {year:'2013',title:'Hall of Fame Connection',desc:'Alan Trammell and Lou Whitaker, two of the most celebrated Mud Hens alumni, remain central figures in Baseball Hall of Fame discussions. Both spent time developing in Toledo before becoming Detroit Tigers legends.'},
+  {year:'2021',title:'MiLB Restructuring',desc:'Minor League Baseball undergoes its largest restructuring in history. Toledo retains its Triple-A status and continues as the Tigers' top affiliate in the newly organized International League, maintaining their place as one of MiLB's marquee franchises.'},
+  {year:'2026',title:'New Season, New Prospects',desc:'The 2026 Toledo Mud Hens feature some of the Detroit Tigers' top prospects including Kevin McGonigle, Max Clark, Thayron Liranzo, and Josue Briceño, managed by returning skipper Gabe Alvarez. The Mud Hens open the season April 7 at Fifth Third Field with high expectations for another championship run.'},
 ];
 function loadHistory() {
-  const today = new Date();
-  const m = today.getMonth()+1;
-  document.getElementById('history-title').textContent = `On This Date in Mud Hens History — ${today.toLocaleDateString('en-US',{month:'long',day:'numeric'})}`;
+  document.getElementById('history-title').textContent = 'Toledo Mud Hens — Franchise History';
+  const el = document.getElementById('history-list');
+  el.innerHTML = MH_HISTORY.map(h=>`<div class="history-card">
+    <div class="history-year">${h.year}</div>
+    <div class="history-title">${h.title}</div>
+    <div class="history-desc">${h.desc}</div>
+  </div>`).join('');
+})}`;
   const relevant = HISTORY.filter(h => h.month === m);
   const el = document.getElementById('history-list');
   if (!relevant.length) {
@@ -1420,25 +1624,38 @@ function loadHistory() {
 
 // ── PROMOTIONS ─────────────────────────────────────────────
 const PROMOS = [
-  {date:'2026-05-06',name:'Star Wars Night',desc:'Dress in your best Star Wars costume. Lightsaber giveaway for first 1,000 fans.',badge:'Giveaway'},
-  {date:'2026-05-09',name:'Nurses Appreciation Night',desc:'Discounted tickets for healthcare workers. Special on-field ceremony honoring local nurses.',badge:'Theme Night'},
-  {date:'2026-05-16',name:'Fireworks Friday',desc:'Post-game fireworks show. Gates open 90 minutes before first pitch.',badge:'Fireworks'},
-  {date:'2026-05-23',name:'Education Day',desc:'School groups welcome. Kids activities and learning stations throughout the ballpark.',badge:'Theme Night'},
-  {date:'2026-05-30',name:'Bark in the Park',desc:'Bring your dog! Dog-friendly seating section available in the outfield.',badge:'Special Event'},
-  {date:'2026-06-06',name:'Military Appreciation Night',desc:'Discounted tickets for active duty and veterans. National anthem ceremony and on-field recognition.',badge:'Theme Night'},
-  {date:'2026-06-13',name:'Fireworks Friday',desc:'Post-game fireworks show.',badge:'Fireworks'},
-  {date:'2026-06-20',name:'1980s Night',desc:'80s music all night, costumes welcome. Retro jersey giveaway for first 1,500 fans.',badge:'Giveaway'},
-  {date:'2026-06-27',name:'Autism Awareness Night',desc:'Sensory-friendly accommodations available. Special pregame ceremony.',badge:'Theme Night'},
-  {date:'2026-07-04',name:'Independence Day Fireworks Spectacular',desc:'Biggest fireworks show of the year! Gates open early. Patriotic pregame ceremony.',badge:'Fireworks'},
-  {date:'2026-07-11',name:'Replica Jersey Giveaway',desc:'First 2,000 fans receive a replica Mud Hens jersey.',badge:'Giveaway'},
-  {date:'2026-07-18',name:'Fireworks Friday',desc:'Post-game fireworks show.',badge:'Fireworks'},
-  {date:'2026-07-25',name:'Christmas in July',desc:'Holiday-themed night in the middle of summer. Ugly sweater contest with prizes.',badge:'Theme Night'},
-  {date:'2026-08-01',name:'Jeep Fest Weekend — Duck Night',desc:'Special Jeep-themed night honoring Toledo Jeep Fest! Rubber duck giveaway for first 1,000 fans.',badge:'Giveaway'},
-  {date:'2026-08-08',name:'Fireworks Friday',desc:'Post-game fireworks show.',badge:'Fireworks'},
-  {date:'2026-08-15',name:'Hall of Fame Night',desc:'Mud Hens Hall of Fame induction ceremony. Past players return to Fifth Third Field.',badge:'Special Event'},
-  {date:'2026-08-22',name:'Back to School Night',desc:'Kids 12 and under admitted free with a paying adult.',badge:'Theme Night'},
-  {date:'2026-08-29',name:'Fireworks Friday',desc:'Post-game fireworks show.',badge:'Fireworks'},
-  {date:'2026-09-05',name:'Fan Appreciation Night',desc:'End of season celebration. Giveaways throughout the game. Post-game autograph session with players.',badge:'Special Event'},
+  // May 2026
+  {date:'2026-05-10',name:"Mother's Day — Kids Run the Bases",desc:"Special Mother's Day celebration at Fifth Third Field. Kids Run the Bases postgame. Family Sunday fun.",badge:'Holiday'},
+  {date:'2026-05-22',name:'Military Appreciation Night',desc:'Honoring past and present military with a specialty jersey giveaway and special on-field recognition ceremony.',badge:'Theme Night'},
+  {date:'2026-05-23',name:'"The Paper" Night + Fireworks',desc:'Theme night inspired by Peacock's hit comedy set in Toledo, with a special appearance by series star Oscar Nuñez! Clips from the show throughout the night. First postgame fireworks show of the season.',badge:'Special Event'},
+  {date:'2026-05-24',name:'Kids Day — Bluey & Bingo Visit',desc:'Bluey and Bingo visit Fifth Third Field! Kids Run the Bases postgame. Sunday Family Day.',badge:'Kids Event'},
+  {date:'2026-05-25',name:'Memorial Day',desc:'Special Memorial Day game. Patriotic ceremonies and family fun at the ballpark.',badge:'Holiday'},
+  {date:'2026-05-29',name:"Boots & Baseball Festival",desc:'Hensville comes alive with country music, food, and drinks for the Boots & Baseball festival weekend.',badge:'Festival'},
+  {date:'2026-05-30',name:"Boots & Baseball + Hens & Hounds",desc:'Dog-friendly Tuesday! Bring your dog to the ballpark for Hens & Hounds Night. Supported by Perrysburg & West Toledo Animal Hospital.',badge:'Special Event'},
+  {date:'2026-05-31',name:"Boots & Baseball Festival",desc:'Final night of the Boots & Baseball festival weekend in Hensville.',badge:'Festival'},
+  // June 2026
+  {date:'2026-06-12',name:"80s Night",desc:'Turn back the clock! 80s music all night, costumes welcome. Brand new theme night in 2026.',badge:'Theme Night'},
+  {date:'2026-06-13',name:'WWE Night',desc:'Wrestling comes to Fifth Third Field! WWE Night is a brand new theme night for 2026.',badge:'Theme Night'},
+  {date:'2026-06-14',name:'Backyard Baseball Night — Pablo Sanchez Visit',desc:'The legend himself, Pablo Sanchez of Backyard Baseball, visits Fifth Third Field! Kids Sunday Family Day.',badge:'Special Event'},
+  // July 2026
+  {date:'2026-07-03',name:"Rock N Blast Festival — Night 1",desc:'Rock N Blast is back for two nights! Extended postgame fireworks show celebrating America 250. Specialty jersey and sound-reactive light-up bracelets.',badge:'Fireworks'},
+  {date:'2026-07-04',name:"Independence Day — Rock N Blast Night 2",desc:'Fourth of July at Fifth Third Field! Rock N Blast Night 2 with extended extravagant postgame fireworks celebrating America 250. Specialty jersey and sound-reactive bracelets.',badge:'Fireworks'},
+  {date:'2026-07-05',name:'Kids Run the Bases Sunday',desc:'Sunday Family Day. Kids Run the Bases postgame.',badge:'Kids Event'},
+  {date:'2026-07-17',name:"Margaritaville Festival Night 1",desc:'Hensville transforms into Margaritaville for a weekend festival. Live entertainment, tropical vibes, food and drinks.',badge:'Festival'},
+  {date:'2026-07-18',name:"Margaritaville Festival Night 2",desc:'Night 2 of the Margaritaville festival weekend in Hensville.',badge:'Festival'},
+  {date:'2026-07-19',name:'Peanuts Night — Snoopy Visit',desc:'Snoopy visits Fifth Third Field for Peanuts Night! Kids Run the Bases Sunday.',badge:'Special Event'},
+  {date:'2026-07-24',name:'Harry Potter Night',desc:'Magic comes to Fifth Third Field for Harry Potter Night. Costumes encouraged!',badge:'Theme Night'},
+  {date:'2026-07-25',name:'Christmas in July',desc:'Holiday-themed night in the middle of summer. Classic fan favorite returning for 2026.',badge:'Theme Night'},
+  // August 2026
+  {date:'2026-08-07',name:'Toledo Jeep Fest Weekend — Night 1',desc:'Jeeps take over St. Clair St. outside the ballpark! Toledo Jeep Fest Weekend at Fifth Third Field.',badge:'Festival'},
+  {date:'2026-08-08',name:'Toledo Jeep Fest Weekend — Night 2',desc:'Night 2 of Toledo Jeep Fest Weekend. One of the biggest events of the Mud Hens season.',badge:'Festival'},
+  {date:'2026-08-09',name:'Toledo Jeep Fest Weekend — Sunday',desc:'Final day of Toledo Jeep Fest Weekend. Kids Run the Bases postgame.',badge:'Festival'},
+  {date:'2026-08-23',name:'Crayola Night',desc:'Brand new in 2026 — Crayola Night at Fifth Third Field! Colorful fun for the whole family.',badge:'Theme Night'},
+  // September 2026
+  {date:'2026-09-04',name:"Star Wars Night — Labor Day Weekend",desc:'Star Wars Night returns! Labor Day weekend game. May the force be with the Mud Hens.',badge:'Theme Night'},
+  {date:'2026-09-05',name:"Labor Day Kids Day",desc:'Labor Day weekend Sunday. Kids Run the Bases postgame. Final weeks of the 2026 season.',badge:'Kids Event'},
+  {date:'2026-09-06',name:"Labor Day",desc:'Labor Day game at Fifth Third Field to close out the Labor Day holiday weekend.',badge:'Holiday'},
+  {date:'2026-09-18',name:'Tigers Affiliate Night',desc:'Celebrating the Detroit Tigers affiliation. Special ceremonies honoring the Tigers-Mud Hens partnership. Final homestand of the 2026 season.',badge:'Special Event'},
 ];
 function loadPromos() {
   const today = new Date().toISOString().slice(0,10);
@@ -1733,6 +1950,52 @@ fetchGame();
 fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
 loadTrivia();
 startCountdown();
+
+// ── MIDNIGHT RESET ─────────────────────────────────────────
+function scheduleMidnightReset() {
+  const now = new Date();
+  const est = new Date(now.toLocaleString('en-US', {timeZone:'America/New_York'}));
+  const midnight = new Date(est);
+  midnight.setHours(24, 0, 0, 0);
+  const msUntilMidnight = midnight - est;
+  setTimeout(() => {
+    // Reset all game state
+    scores = {}; oppScores = {}; lineup = []; oppLineup = [];
+    playerStats = {}; oppPlayerStats = {};
+    pitchCount = 0; lastInning = null; lastIsTop = null; currentGamePk = null;
+    window._gameStatus = null; window._gameTimeUTC = null;
+    standingsCache = null;
+    renderScorecard(); renderOppScorecard();
+    fetchGame();
+    fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
+    startCountdown();
+    scheduleMidnightReset(); // schedule next reset
+  }, msUntilMidnight);
+  console.log(`Midnight reset scheduled in ${Math.round(msUntilMidnight/60000)} minutes`);
+}
+scheduleMidnightReset();
 </script>
+<!-- DISCLAIMER MODAL -->
+<div class="modal-overlay" id="disclaimer-modal" style="z-index:500;">
+  <div class="modal" style="border-top-color:#1a2b5e;max-height:80vh;overflow-y:auto;">
+    <h3 style="margin-bottom:10px;">⚖️ Legal Disclaimer</h3>
+    <div style="font-size:11px;color:rgba(26,43,94,0.7);line-height:1.8;">
+      <p style="margin-bottom:8px;"><strong>This is an independent fan-created application.</strong> It is not affiliated with, sponsored by, endorsed by, or connected in any way to the Toledo Mud Hens, Minor League Baseball (MiLB), Major League Baseball (MLB), the Detroit Tigers, or any of their respective affiliates, subsidiaries, or partners.</p>
+      <p style="margin-bottom:8px;">All team names, player names, statistics, logos, and related marks referenced in this application are the property of their respective owners. Their use here is for informational and fan purposes only and does not imply any association with or endorsement by those organizations.</p>
+      <p style="margin-bottom:8px;">Game data, statistics, and schedules are sourced from publicly available APIs. This application makes no guarantees as to the accuracy, completeness, or timeliness of any information displayed.</p>
+      <p style="margin-bottom:8px;">Toledo Mud Hens® and Fifth Third Field® are registered trademarks. This application is not an official Toledo Mud Hens product.</p>
+      <p style="margin-bottom:12px;font-size:10px;color:rgba(26,43,94,0.4);">For official team information, tickets, and merchandise, visit <strong>mudhens.com</strong>.</p>
+    </div>
+    <button class="save-btn" onclick="document.getElementById('disclaimer-modal').classList.remove('open');localStorage.setItem('disclaimerSeen','1');">I Understand</button>
+  </div>
+</div>
+
+<script>
+// Show disclaimer on first visit
+if (!localStorage.getItem('disclaimerSeen')) {
+  document.getElementById('disclaimer-modal').classList.add('open');
+}
+</script>
+
 </body>
 </html>
