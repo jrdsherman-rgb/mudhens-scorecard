@@ -1627,32 +1627,46 @@ async function fetchPitcherStats(teamId) {
 
 // ── SORTABLE TABLES ──────────────────────────────────────
 function makeSortable(tableEl, data, renderFn, bodyId, numericCols) {
+  // Store data on the table so it stays fresh across re-renders
+  tableEl._sortData = data;
+  tableEl._sortRenderFn = renderFn;
+  tableEl._sortBodyId = bodyId;
+  tableEl._sortNumeric = numericCols;
+  tableEl._sortCol = -1;
+  tableEl._sortAsc = false;
+
+  // Only attach listeners once
+  if (tableEl.dataset.sortable === '1') {
+    tableEl._sortData = data; // just update the data reference
+    return;
+  }
+  tableEl.dataset.sortable = '1';
+
   const headers = tableEl.querySelectorAll('th');
-  let sortCol = -1, sortAsc = false;
   headers.forEach((th, i) => {
+    th.style.cursor = 'pointer';
     th.addEventListener('click', () => {
-      if (sortCol === i) {
-        sortAsc = !sortAsc;
+      const t = th.closest('table');
+      if (t._sortCol === i) {
+        t._sortAsc = !t._sortAsc;
       } else {
-        sortCol = i;
-        sortAsc = i === 0; // text cols sort A-Z first, numeric sort high-first
+        t._sortCol = i;
+        t._sortAsc = i === 0;
       }
-      headers.forEach(h => { h.classList.remove('sort-asc','sort-desc'); });
-      th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
-      const sorted = [...data].sort((a, b) => {
-        const vals = Object.values(a);
-        const valB = Object.values(b);
-        const av = vals[i], bv = valB[i];
-        const isNum = numericCols.includes(i);
-        if (isNum) {
+      headers.forEach(h => h.classList.remove('sort-asc','sort-desc'));
+      th.classList.add(t._sortAsc ? 'sort-asc' : 'sort-desc');
+      const sorted = [...t._sortData].sort((a, b) => {
+        const av = Object.values(a)[i];
+        const bv = Object.values(b)[i];
+        if (t._sortNumeric.includes(i)) {
           const an = parseFloat(av) || 0, bn = parseFloat(bv) || 0;
-          return sortAsc ? an - bn : bn - an;
+          return t._sortAsc ? an - bn : bn - an;
         }
-        return sortAsc
+        return t._sortAsc
           ? String(av).localeCompare(String(bv))
           : String(bv).localeCompare(String(av));
       });
-      renderFn(sorted, bodyId);
+      t._sortRenderFn(sorted, t._sortBodyId);
     });
   });
 }
@@ -1678,10 +1692,7 @@ function renderPitchTable(stats, bodyId) {
   </tr>`).join('');
   // Wire up sorting - numeric cols: 1,2,3,4,5,6,7,8,9
   const table = tbody.closest('table');
-  if (table && !table.dataset.sortable) {
-    table.dataset.sortable = '1';
-    makeSortable(table, stats, renderPitchTable, bodyId, [1,2,3,4,5,6,7,8,9]);
-  }
+  if (table) makeSortable(table, stats, renderPitchTable, bodyId, [1,2,3,4,5,6,7,8,9]);
 }
 
 function renderStatsTable(stats, bodyId) {
@@ -1705,10 +1716,7 @@ function renderStatsTable(stats, bodyId) {
     <td>${p.sb}</td>
   </tr>`).join('');
   const table = tbody.closest('table');
-  if (table && !table.dataset.sortable) {
-    table.dataset.sortable = '1';
-    makeSortable(table, stats, renderStatsTable, bodyId, [2,3,4,5,6,7,8,9,10]);
-  }
+  if (table) makeSortable(table, stats, renderStatsTable, bodyId, [2,3,4,5,6,7,8,9,10]);
 }
 
 function switchStatTab(team, type, el) {
