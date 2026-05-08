@@ -290,12 +290,12 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     </div>
     <div class="card gold">
       <div class="card-label" id="wx-label">Weather at Fifth Third</div>
-      <div class="wx-row">
+      <div class="wx-row" style="align-items:center;gap:8px;">
+        <div class="wx-icon" id="wx-icon" style="font-size:28px;flex-shrink:0;">—</div>
         <div style="flex:1;">
-          <div class="wx-temp" id="wx-temp" style="font-size:22px;font-weight:800;">—</div>
+          <div class="wx-temp" id="wx-temp" style="font-size:20px;font-weight:800;color:#1a2b5e;">—</div>
           <div id="wx-desc" style="font-size:10px;color:rgba(26,43,94,0.6);margin-top:2px;line-height:1.5;">—</div>
         </div>
-        <div class="wx-icon" id="wx-icon" style="font-size:32px;margin-left:8px;">—</div>
       </div>
     </div>
   </div>
@@ -307,7 +307,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="card-sub" id="mud-starter-era"></div>
     </div>
     <div class="card">
-      <div class="card-label">Opp Starter</div>
+      <div class="card-label" id="opp-starter-card-label">Opp Starter</div>
       <div class="card-val" id="opp-starter">TBD</div>
       <div class="card-sub" id="opp-starter-era"></div>
     </div>
@@ -968,18 +968,47 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
     const oPid = data.teams?.[ok]?.pitchers?.[0];
     const mP = mPid ? data.teams[mk].players['ID'+mPid] : null;
     const oP = oPid ? data.teams[ok].players['ID'+oPid] : null;
-    const mN = mP?.person?.fullName || 'TBD', oN = oP?.person?.fullName || 'TBD';
-    ['mud-starter','pc-mud-starter'].forEach(id => document.getElementById(id).textContent = mN);
-    ['opp-starter','pc-opp-starter'].forEach(id => document.getElementById(id).textContent = oN);
+    // Update names if we have actual game pitchers (overrides probable)
+    const mN = mP?.person?.fullName || mudFallback || 'TBD';
+    const oN = oP?.person?.fullName || oppFallback || 'TBD';
+    if (mN !== 'TBD') {
+      ['mud-starter'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = mN; });
+    }
+    if (oN !== 'TBD') {
+      ['opp-starter'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = oN; });
+    }
+    // Try to get pitcher season stats from person endpoint
+    const fetchPitcherStats = async (name, eraId) => {
+      if (!name || name === 'TBD') return;
+      try {
+        // Search for player by name
+        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/search?names=${encodeURIComponent(name)}`);
+        const sd = await sr.json();
+        const pid = sd.people?.[0]?.id;
+        if (!pid) return;
+        const pr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${pid}/stats?stats=season&season=2026&group=pitching&gameType=R`);
+        const pd = await pr.json();
+        const sp = pd.stats?.[0]?.splits?.[0]?.stat;
+        if (sp) {
+          const el = document.getElementById(eraId);
+          if (el) el.textContent = `ERA ${sp.era||'—'} · ${sp.wins||0}-${sp.losses||0} · ${sp.strikeOuts||0} K`;
+        }
+      } catch(e) {}
+    };
+    // Get stats from boxscore seasonStats if available
     if (mP?.seasonStats?.pitching) {
       const mp = mP.seasonStats.pitching;
-      const mStats = `ERA ${mp.era||'—'} · ${mp.wins||0}W-${mp.losses||0}L · ${mp.inningsPitched||'0'} IP`;
-      ['mud-starter-era','pc-mud-era'].forEach(id => document.getElementById(id).textContent = mStats);
+      const el = document.getElementById('mud-starter-era');
+      if (el) el.textContent = `ERA ${mp.era||'—'} · ${mp.wins||0}-${mp.losses||0} · ${mp.strikeOuts||0} K`;
+    } else {
+      fetchPitcherStats(mN, 'mud-starter-era');
     }
     if (oP?.seasonStats?.pitching) {
       const op = oP.seasonStats.pitching;
-      const oStats = `ERA ${op.era||'—'} · ${op.wins||0}W-${op.losses||0}L · ${op.inningsPitched||'0'} IP`;
-      ['opp-starter-era','pc-opp-era'].forEach(id => document.getElementById(id).textContent = oStats);
+      const el = document.getElementById('opp-starter-era');
+      if (el) el.textContent = `ERA ${op.era||'—'} · ${op.wins||0}-${op.losses||0} · ${op.strikeOuts||0} K`;
+    } else {
+      fetchPitcherStats(oN, 'opp-starter-era');
     }
   } catch(e) {}
 }
@@ -1227,6 +1256,9 @@ async function fetchGame() {
 
     oppTeamName = oppTeam.name || 'Opponent';
     document.getElementById('opp-nm').textContent = oppTeamName.toUpperCase();
+    // Update all opp starter labels
+    const oscl = document.getElementById('opp-starter-card-label');
+    if (oscl) oscl.textContent = oppTeamName + ' Starter';
     // Update vs/@  indicator
     const vsEl = document.getElementById('matchup-vs');
     if (vsEl) vsEl.textContent = isHome ? 'vs' : '@';
@@ -1266,16 +1298,20 @@ async function fetchGame() {
     // Try to get probable pitchers from schedule data first
     const mudProbable = game.teams[mi]?.probablePitcher;
     const oppProbable = game.teams[oi]?.probablePitcher;
-    if (mudProbable?.fullName) {
-      document.getElementById('mud-starter').textContent = mudProbable.fullName;
-      if (document.getElementById('pc-mud-starter')) document.getElementById('pc-mud-starter').textContent = mudProbable.fullName;
-    }
-    if (oppProbable?.fullName) {
-      document.getElementById('opp-starter').textContent = oppProbable.fullName;
-      if (document.getElementById('pc-opp-starter')) document.getElementById('pc-opp-starter').textContent = oppProbable.fullName;
-    }
-    // Also fetch boxscore for in-game pitcher stats
-    fetchStarters(game.gamePk, isHome, mudProbable, oppProbable);
+    const mudName = mudProbable?.fullName || null;
+    const oppName2 = oppProbable?.fullName || null;
+    document.getElementById('mud-starter').textContent = mudName || 'TBD';
+    document.getElementById('opp-starter').textContent = oppName2 || 'TBD';
+    // Update opp starter label to team name
+    const oppStarterLabel = document.querySelector('#sec-game .card-label:last-of-type');
+    const allLabels = document.querySelectorAll('#sec-game .card-label');
+    allLabels.forEach(el => {
+      if (el.textContent === 'OPP STARTER' || el.textContent === 'Opp Starter' || el.id === 'pc-opp-label') {
+        el.textContent = (oppTeamName || 'Opp') + ' Starter';
+      }
+    });
+    // Fetch boxscore for actual pitcher stats during/after game
+    fetchStarters(game.gamePk, isHome, mudName, oppName2);
     updateLinescore(game, isHome);
 
     const ls = game.linescore;
@@ -1477,42 +1513,62 @@ async function checkForHalfInningEnd(gamePk) {
 // ── PLAYER STATS TABS ─────────────────────────────────────
 async function fetchRosterStats(teamId) {
   try {
-    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/roster?rosterType=active&season=2026`);
+    // Use the team stats endpoint directly - much more reliable than individual calls
+    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/stats?stats=season&season=2026&group=hitting&gameType=R`;
+    const res = await fetch(url);
     const data = await res.json();
-    const roster = data.roster || [];
+    const splits = data.stats?.[0]?.splits || [];
+    
+    if (splits.length) {
+      const stats = splits
+        .filter(s => (s.stat?.atBats || 0) >= 1)
+        .map(s => ({
+          name: s.player?.fullName || '—',
+          num: s.player?.id ? '' : '—',
+          pos: s.position?.abbreviation || '—',
+          g: s.stat.gamesPlayed ?? 0,
+          ab: s.stat.atBats ?? 0,
+          avg: s.stat.avg || '.000',
+          obp: s.stat.obp || '.000',
+          slg: s.stat.slg || '.000',
+          ops: s.stat.ops || '.000',
+          hr: s.stat.homeRuns ?? 0,
+          rbi: s.stat.rbi ?? 0,
+          sb: s.stat.stolenBases ?? 0,
+        }))
+        .sort((a,b) => b.ab - a.ab);
+      return stats;
+    }
+    
+    // Fallback: try roster + individual stats
+    const rRes = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/roster?season=2026&rosterType=fullRoster`);
+    const rData = await rRes.json();
+    const roster = rData.roster || [];
     const stats = [];
-    // Fetch stats for each player (batch in parallel)
-    await Promise.all(roster.map(async p => {
-      // Include all roster members
+    await Promise.all(roster.slice(0,30).map(async p => {
       try {
-        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting`);
+        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting&gameType=R`);
         const sd = await sr.json();
-        const splits = sd.stats?.[0]?.splits;
-        if (splits?.length) {
-          const st = splits[splits.length-1].stat;
-          if ((st.atBats || 0) > 0) {
+        const sp = sd.stats?.[0]?.splits;
+        if (sp?.length) {
+          const st = sp[sp.length-1].stat;
+          if ((st.atBats||0) >= 1) {
             stats.push({
               name: p.person.fullName,
-              num: p.jerseyNumber || '—',
+              num: p.jerseyNumber || '',
               pos: p.position?.abbreviation || '—',
-              g: st.gamesPlayed ?? 0,
-              ab: st.atBats ?? 0,
-              avg: st.avg || '.000',
-              obp: st.obp || '.000',
-              slg: st.slg || '.000',
-              ops: st.ops || '.000',
-              hr: st.homeRuns ?? 0,
-              rbi: st.rbi ?? 0,
-              sb: st.stolenBases ?? 0,
+              g: st.gamesPlayed??0, ab: st.atBats??0,
+              avg: st.avg||'.000', obp: st.obp||'.000',
+              slg: st.slg||'.000', ops: st.ops||'.000',
+              hr: st.homeRuns??0, rbi: st.rbi??0, sb: st.stolenBases??0,
             });
           }
         }
       } catch(e) {}
     }));
-    // Sort by AB descending
     stats.sort((a,b) => b.ab - a.ab);
     return stats;
-  } catch(e) { return []; }
+  } catch(e) { console.log('Stats fetch error:', e); return []; }
 }
 
 function renderStatsTable(stats, bodyId) {
