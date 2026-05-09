@@ -228,7 +228,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .standings-table td.team-cell{text-align:left;padding-left:12px;color:#1a2b5e;font-size:11px;font-weight:500;}
 .standings-table td.team-cell.mud-hens{color:#c8102e;font-weight:700;}
 .standings-table tr.div-header td{background:#e8e0cc;color:rgba(26,43,94,0.5);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
-.standings-div-title{font-size:10px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 6px;font-weight:700;}
+.nm-wrap{display:flex;align-items:center;gap:4px;}
+.nm[contenteditable]{outline:none;cursor:text;border-bottom:1px dashed rgba(26,43,94,0.25);min-width:60px;}
+.nm[contenteditable]:focus{border-bottom:1px solid #c8102e;background:rgba(200,16,46,0.04);border-radius:2px;}
+.nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:rgba(26,43,94,0.25);line-height:1;flex-shrink:0;}
+.nm-stats:hover{color:#1a2b5e;}
 </style>
 </head>
 <body>
@@ -364,9 +368,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
           <th class="pst">AB</th><th class="pst">H</th>
           <th class="pst">R</th><th class="pst">RBI</th>
         </tr></thead>
-        <tbody id="sc-body">
-          <tr><td colspan="15" class="loading-msg">Loading lineup...</td></tr>
-        </tbody>
+        <tbody id="sc-body"></tbody>
       </table>
     </div>
     <div class="legend">
@@ -376,7 +378,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
       <div class="leg">🔥 Hot</div>
       <div class="leg">❄️ Cold</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name = stats · Tap cell = score</span>
+      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name to edit · 📊 = stats · Tap cell = score</span>
     </div>
   </div>
 
@@ -415,9 +417,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
           <th class="pst">AB</th><th class="pst">H</th>
           <th class="pst">R</th><th class="pst">RBI</th>
         </tr></thead>
-        <tbody id="opp-sc-body">
-          <tr><td colspan="15" class="loading-msg">Loading opponent lineup...</td></tr>
-        </tbody>
+        <tbody id="opp-sc-body"></tbody>
       </table>
     </div>
     <div class="legend">
@@ -425,7 +425,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
       <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
       <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name = stats · Tap cell = score</span>
+      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name to edit · 📊 = stats · Tap cell = score</span>
     </div>
   </div>
 
@@ -806,23 +806,69 @@ function getStats(bi) {
   r = scores[`${bi}_rTotal`] || 0;
   return {ab, h, r, rbi};
 }
-function renderScorecard() {
-  const tbody = document.getElementById('sc-body');
-  if (!lineup.length) {
-    tbody.innerHTML = '<tr><td colspan="15" class="loading-msg">No lineup yet — check the Game tab.</td></tr>';
+// ── EDITABLE PLAYER NAMES ─────────────────────────────────
+// Called on blur of the contenteditable name span
+function editName(bi, el) {
+  const newName = el.textContent.trim();
+  // Ignore if blank or still showing placeholder text
+  if (!newName || newName === 'Tap to enter name') {
+    el.textContent = lineup[bi]?.name || '';
     return;
   }
+  if (!lineup[bi]) lineup[bi] = { name: newName, pos: '—', num: '', mlbId: null };
+  else lineup[bi].name = newName;
+}
+function editOppName(bi, el) {
+  const newName = el.textContent.trim();
+  if (!newName || newName === 'Tap to enter name') {
+    el.textContent = oppLineup[bi]?.name || '';
+    return;
+  }
+  if (!oppLineup[bi]) oppLineup[bi] = { name: newName, pos: '—', num: '', mlbId: null };
+  else oppLineup[bi].name = newName;
+}
+
+function renderScorecard() {
+  const tbody = document.getElementById('sc-body');
+
+  // Don't re-render if a name cell is actively being edited
+  if (tbody.querySelector('.nm:focus')) return;
+
+  // Always show 9 editable rows — even if lineup is empty
+  if (!lineup.length) {
+    lineup = Array.from({length:9}, () => ({ name: '', pos: '—', num: '', mlbId: null }));
+  }
+
   let html = '';
   lineup.forEach((p, i) => {
     const s = getStats(i);
     const badge = streakBadge(p.mlbId);
+    const displayName = p.name || '';
+    const placeholder = displayName ? '' : 'style="color:rgba(26,43,94,0.3);"';
     html += `<tr>
-      <td class="pn"><div class="nm" onclick="openPlayerModal(${i})">${p.name}${badge}</div><div class="av">${p.pos}</div></td>
+      <td class="pn">
+        <div class="nm-wrap">
+          <span class="nm" contenteditable="true" spellcheck="false"
+            onblur="editName(${i},this)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+            ${placeholder}>${displayName || 'Tap to enter name'}</span>
+          ${p.mlbId ? `<button class="nm-stats" onclick="openPlayerModal(${i})" title="Stats">📊</button>` : ''}
+        </div>
+        <div class="av">${p.pos}</div>
+      </td>
       <td class="pp">${p.pos}</td>`;
     for (let n = 1; n <= INNINGS; n++) html += `<td>${cellHTML(i, n)}</td>`;
-    html += `<td class="pst">${s.ab}</td><td class="pst">${s.h}</td><td class="pst">${s.r}</td><td class="pst">${s.rbi}</td></tr>`;
+    html += `<td class="pst">${s.ab??'—'}</td><td class="pst">${s.h??'—'}</td><td class="pst">${s.r??'—'}</td><td class="pst">${s.rbi??'—'}</td></tr>`;
   });
   tbody.innerHTML = html;
+  // Add badge text after innerHTML set (avoids XSS via player name)
+  lineup.forEach((p, i) => {
+    if (!p.mlbId) return;
+    const b = streakBadge(p.mlbId);
+    if (!b) return;
+    const span = tbody.querySelector(`tr:nth-child(${i+1}) .nm`);
+    if (span) span.insertAdjacentText('beforeend', b);
+  });
 }
 function switchScTab(t) {
   document.querySelectorAll('.sc-tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
@@ -838,7 +884,7 @@ function showStep(id) {
 function openScModal(bi, inn) {
   activeCell = {bi, inn};
   const p = lineup[bi];
-  document.getElementById('sc-modal-title').textContent = p ? p.name : 'Batter';
+  document.getElementById('sc-modal-title').textContent = (p?.name) || 'Batter';
   document.getElementById('sc-modal-sub').textContent = `Inning ${inn}`;
   pendingPrefix = ''; goFirst = null;
   document.getElementById('sc-modal').dataset.mode = 'mud';
@@ -899,7 +945,7 @@ function finalRec(r) {
 function openPlayerModal(bi) {
   const p = lineup[bi]; if (!p) return;
   const st = playerStats[p.mlbId] || {};
-  document.getElementById('psp-name').textContent = p.name;
+  document.getElementById('psp-name').textContent = p.name || 'Unknown Player';
   document.getElementById('psp-meta').textContent = `#${p.num||'—'} · ${p.pos||'—'} · 2026 Season`;
   const f = (v, d='.---') => v || d;
   document.getElementById('psp-stats').innerHTML = `
@@ -914,8 +960,6 @@ function openPlayerModal(bi) {
   document.getElementById('player-modal').classList.add('open');
 }
 function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); }
-
-// ── PITCH COUNT ────────────────────────────────────────────
 function adjustPC(n) {
   pitchCount = Math.max(0, pitchCount + n);
   const el = document.getElementById('pc-display');
@@ -1343,8 +1387,11 @@ async function pollLiveFeed(gamePk) {
         lineup = extracted;
         lineupIsReal = true;
         renderScorecard();
-        // Kick off async player stats fetch (non-blocking)
         fetchPlayerStats(lineup.map(p => p.mlbId).filter(Boolean));
+        // Run catch-up now that we have a real lineup — may have missed completed innings
+        if (ld?.plays?.allPlays && ls?.currentInning) {
+          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome);
+        }
       }
     }
 
@@ -1355,6 +1402,10 @@ async function pollLiveFeed(gamePk) {
         oppLineupIsReal = true;
         renderOppScorecard();
         fetchOppPlayerStats(oppLineup.map(p => p.mlbId).filter(Boolean));
+        // Same for opp — catch up any completed innings
+        if (ld?.plays?.allPlays && ls?.currentInning) {
+          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome);
+        }
       }
     }
 
@@ -1410,12 +1461,6 @@ async function pollLiveFeed(gamePk) {
         }
       }
 
-      // Catch up completed innings on first poll — but only after lineups are real
-      // (deferred: if lineups just got extracted above, they're now set)
-      if (inn && lastInning === null && (lineupIsReal || oppLineupIsReal)) {
-        catchUpInnings(ld.plays?.allPlays || [], inn, isTop, isHome);
-      }
-
       lastInning = inn;
       lastIsTop  = isTop;
     }
@@ -1463,9 +1508,9 @@ function updateLinescoreFromFeed(ls, isHome) {
   const innings = ls.innings || [];
   const numInnings = Math.max(9, innings.length); // support extra innings
 
-  // Rebuild header if extra innings have appeared
+  // Rebuild header only if extra innings have appeared (avoids flicker every poll)
   const headEl = document.getElementById('linescore-head');
-  if (headEl) {
+  if (headEl && numInnings > 9) {
     let hCols = '<th class="tc">Team</th>';
     for (let i = 1; i <= numInnings; i++) hCols += `<th>${i}</th>`;
     hCols += '<th>R</th><th>H</th><th>E</th>';
@@ -1657,15 +1702,15 @@ async function fetchGame() {
       setTimeout(fetchGame, 300000);
     }
 
-    // Show mock lineups only if still empty after everything above
-    if (!lineup.length) { lineup = mockLineup(); renderScorecard(); }
-    if (!oppLineup.length) { oppLineup = mockOppLineup(); renderOppScorecard(); }
+    // Scorecards always have 9 rows (initialized in renderScorecard)
+    // so no mock fallback needed here
 
   } catch(e) {
     console.error('fetchGame error:', e);
     document.getElementById('s-inn').textContent = 'Retrying...';
     document.getElementById('fp-time').textContent = 'Reconnecting...';
-    lineup = mockLineup(); renderScorecard();
+    // Don't overwrite lineup — blank rows are fine; user may have entered names already
+    renderScorecard();
     setTimeout(fetchGame, 15000);
   }
 }
@@ -2046,25 +2091,34 @@ function getOppStats(bi) {
 
 function renderOppScorecard() {
   const tbody = document.getElementById('opp-sc-body');
+
+  // Don't re-render if a name cell is actively being edited
+  if (tbody.querySelector('.nm:focus')) return;
+
+  // Always show 9 editable rows
   if (!oppLineup.length) {
-    let html = '';
-    for (let i = 0; i < 9; i++) {
-      html += `<tr><td class="pn"><div class="nm" style="cursor:default;text-decoration:none;color:rgba(26,43,94,0.35);">Lineup pending...</div><div class="av">—</div></td><td class="pp">—</td>`;
-      for (let n = 1; n <= INNINGS; n++) html += `<td><div class="ab" style="cursor:default;"><span class="ab-dot">·</span></div></td>`;
-      html += `<td class="pst">—</td><td class="pst">—</td><td class="pst">—</td><td class="pst">—</td></tr>`;
-    }
-    tbody.innerHTML = html;
-    return;
+    oppLineup = Array.from({length:9}, () => ({ name: '', pos: '—', num: '', mlbId: null }));
   }
+
   let html = '';
   oppLineup.forEach((p, i) => {
     const s = getOppStats(i);
-    const badge = oppPlayerStats[p.mlbId] ? streakBadge(p.mlbId) : '';
+    const displayName = p.name || '';
     html += `<tr>
-      <td class="pn"><div class="nm" onclick="openOppPlayerModal(${i})">${p.name}${badge}</div><div class="av">${p.pos}</div></td>
+      <td class="pn">
+        <div class="nm-wrap">
+          <span class="nm" contenteditable="true" spellcheck="false"
+            onblur="editOppName(${i},this)"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+            ${displayName || '<span style="color:rgba(26,43,94,0.3)">Tap to enter name</span>'}
+          </span>
+          ${p.mlbId ? `<button class="nm-stats" onclick="openOppPlayerModal(${i})" title="Stats">📊</button>` : ''}
+        </div>
+        <div class="av">${p.pos}</div>
+      </td>
       <td class="pp">${p.pos}</td>`;
     for (let n = 1; n <= INNINGS; n++) html += `<td>${oppCellHTML(i, n)}</td>`;
-    html += `<td class="pst">${s.ab}</td><td class="pst">${s.h}</td><td class="pst">${s.r}</td><td class="pst">${s.rbi}</td></tr>`;
+    html += `<td class="pst">${s.ab??'—'}</td><td class="pst">${s.h??'—'}</td><td class="pst">${s.r??'—'}</td><td class="pst">${s.rbi??'—'}</td></tr>`;
   });
   tbody.innerHTML = html;
 }
@@ -2072,7 +2126,7 @@ function renderOppScorecard() {
 function openOppScModal(bi, inn) {
   activeOppCell = {bi, inn};
   const p = oppLineup[bi];
-  document.getElementById('sc-modal-title').textContent = p ? p.name : 'Batter';
+  document.getElementById('sc-modal-title').textContent = (p?.name) || 'Batter';
   document.getElementById('sc-modal-sub').textContent = `Inning ${inn}`;
   pendingPrefix = ''; goFirst = null;
   document.getElementById('sc-modal').dataset.mode = 'opp';
@@ -2083,7 +2137,7 @@ function openOppScModal(bi, inn) {
 function openOppPlayerModal(bi) {
   const p = oppLineup[bi]; if (!p) return;
   const st = oppPlayerStats[p.mlbId] || playerStats[p.mlbId] || {};
-  document.getElementById('psp-name').textContent = p.name;
+  document.getElementById('psp-name').textContent = p.name || 'Unknown Player';
   document.getElementById('psp-meta').textContent = `#${p.num||'—'} · ${p.pos||'—'} · 2026 Season`;
   const f = (v, d='.---') => v || d;
   document.getElementById('psp-stats').innerHTML = `
@@ -2223,6 +2277,8 @@ function startCountdown() {
 });
 
 // ── INIT ───────────────────────────────────────────────────
+renderScorecard();      // show 9 editable rows immediately
+renderOppScorecard();   // same for opponent
 fetchGame();
 fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
 loadTrivia();
