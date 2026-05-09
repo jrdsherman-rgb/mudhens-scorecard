@@ -1793,8 +1793,8 @@ async function fetchGame() {
       if (isFinal) {
         document.getElementById('countdown-card').style.display = 'none';
         clearInterval(window._liveFeedInterval);
-        // Game over — do one final poll then slow-check in case of extra data
-        setTimeout(fetchGame, 120000);
+        clearTimeout(window._fetchGameTimeout);
+        window._fetchGameTimeout = setTimeout(fetchGame, 120000);
       } else if (isLive) {
         document.getElementById('countdown-card').style.display = 'none';
         // Set up interval-based live feed polling (every 20s)
@@ -1816,7 +1816,9 @@ async function fetchGame() {
         window._fetchGameTimeout = setTimeout(fetchGame, 300000);
       }
     } else {
-      setTimeout(fetchGame, 300000);
+      // No gamePk — off day check every 5 min
+      clearTimeout(window._fetchGameTimeout);
+      window._fetchGameTimeout = setTimeout(fetchGame, 300000);
     }
 
     // Scorecards always have 9 rows (initialized in renderScorecard)
@@ -1828,7 +1830,8 @@ async function fetchGame() {
     document.getElementById('fp-time').textContent = 'Reconnecting...';
     // Don't overwrite lineup — blank rows are fine; user may have entered names already
     renderScorecard();
-    setTimeout(fetchGame, 15000);
+    clearTimeout(window._fetchGameTimeout);
+    window._fetchGameTimeout = setTimeout(fetchGame, 15000);
   }
 }
 
@@ -2363,13 +2366,23 @@ function startCountdown() {
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const next = SCHEDULE.find(g => {
     if (g.date > todayStr) return true;
-    if (g.date === todayStr) return new Date() < new Date(`${g.date}T${g.time}:00`);
+    if (g.date === todayStr) {
+      // Parse time components explicitly to avoid iOS Safari UTC interpretation
+      const [h, min] = g.time.split(':').map(Number);
+      const gameTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min, 0);
+      return now < gameTime;
+    }
     return false;
   });
   if (!next) { document.getElementById('countdown-card').style.display = 'none'; return; }
   document.getElementById('countdown-card').style.display = 'block';
   document.getElementById('countdown-opp').textContent = `vs ${next.opp}`;
-  const d = new Date(`${next.date}T${next.time}:00`);
+
+  // Build the game Date object explicitly from components (iOS-safe)
+  const [gameH, gameMin] = next.time.split(':').map(Number);
+  const [gameYear, gameMon, gameDay] = next.date.split('-').map(Number);
+  const d = new Date(gameYear, gameMon - 1, gameDay, gameH, gameMin, 0);
+
   document.getElementById('countdown-date').textContent =
     d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' at ' +
     d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
@@ -2408,6 +2421,8 @@ async function fetchGameNotes() {
   // If cached within the last 30 minutes, show cached version
   if (gameNotesCache && (Date.now() - gameNotesCache.fetchedAt < 30 * 60 * 1000)) {
     renderGameNotes(gameNotesCache.parsed, gameNotesCache.date, gameNotesCache.pdfUrl);
+    btn.textContent = '🔄 Refresh Game Notes';
+    btn.disabled = false;
     return;
   }
 
@@ -2417,71 +2432,121 @@ async function fetchGameNotes() {
   pdfLink.style.display = 'none';
 
   try {
-    // Step 1: Get today's PDF URL from the Worker
-    let notesData;
+    // Step 1: Fetch the MiLB game notes page via CORS proxy
+    // allorigins.win is a free public CORS proxy — wraps any URL with CORS headers
+    const gameNotesUrl = 'https://www.milb.com/toledo/team/game-notes';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(gameNotesUrl)}`;
+
+    let pageHtml;
     try {
-      const notesRes = await fetch(`${WORKER}/game-notes-url`);
-      if (!notesRes.ok) throw new Error(`Worker returned ${notesRes.status}`);
-      const contentType = notesRes.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        // Worker returned HTML (Okta login page) instead of JSON
-        // This means the /game-notes-url route isn't deployed yet
-        throw new Error('WORKER_NOT_DEPLOYED');
-      }
-      notesData = await notesRes.json();
-    } catch (workerErr) {
-      if (workerErr.message === 'WORKER_NOT_DEPLOYED' || workerErr.message.includes('SyntaxError') || workerErr.message.includes('JSON')) {
-        throw new Error('The Cloudflare Worker needs to be updated first. Deploy the new worker.js from the Cloudflare dashboard, then try again.');
-      }
-      throw workerErr;
+      const proxyRes = await fetch(proxyUrl);
+      if (!proxyRes.ok) throw new Error(`Proxy HTTP ${proxyRes.status}`);
+      const proxyData = await proxyRes.json();
+      pageHtml = proxyData.contents;
+    } catch (proxyErr) {
+      throw new Error(`Could not reach MiLB.com (${proxyErr.message}). Check your connection and try again.`);
     }
 
-    if (!notesData.pdfUrl) {
+    if (!pageHtml || pageHtml.length < 500) {
+      throw new Error('MiLB.com returned an empty page. Try again in a moment.');
+    }
+
+    // Step 2: Find today's PDF link in the page HTML
+    // Links appear as: href="https://img.mlbstatic.com/milb-images/image/upload/milb/{hash}.pdf"
+    // with anchor text like "Saturday, May 9" or "Friday, May 9"
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const dayNames   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const monthNames = ['January','February','March','April','May','June','July',
+                        'August','September','October','November','December'];
+    const dayName   = dayNames[now.getDay()];
+    const monthName = monthNames[now.getMonth()];
+    const dayNum    = now.getDate();
+
+    // Extract all milbstatic PDF links with their surrounding text
+    const linkRegex = /href="(https:\/\/img\.mlbstatic\.com\/milb-images\/image\/upload\/[^"]+\.pdf)"[^>]*>([^<]+)<\/a>/gi;
+    const mdRegex   = /\[([^\]]+)\]\((https:\/\/img\.mlbstatic\.com\/milb-images\/image\/upload\/[^)]+\.pdf)\)/g;
+
+    const allLinks = [];
+    let m;
+    while ((m = linkRegex.exec(pageHtml)) !== null) {
+      allLinks.push({ url: m[1], text: m[2].trim() });
+    }
+    while ((m = mdRegex.exec(pageHtml)) !== null) {
+      allLinks.push({ url: m[2], text: m[1].trim() });
+    }
+
+    if (!allLinks.length) {
+      throw new Error('No game notes links found on MiLB.com. The page format may have changed.');
+    }
+
+    // Deduplicate by URL (both regex passes may match the same link)
+    const seen = new Set();
+    const uniqueLinks = allLinks.filter(l => {
+      if (seen.has(l.url)) return false;
+      seen.add(l.url);
+      return true;
+    });
+
+    // Find today's link — try exact day name match, then day number match
+    const todayPatterns = [
+      `${dayName}, ${monthName} ${dayNum}`,
+      `${dayName}, ${monthName} ${String(dayNum).padStart(2,'0')}`,
+    ];
+    let todayLink = uniqueLinks.find(l => todayPatterns.some(p => l.text.includes(p)));
+    const mostRecent = uniqueLinks[uniqueLinks.length - 1];
+    const isToday = !!todayLink;
+    const chosenLink = todayLink || mostRecent;
+
+    if (!chosenLink) {
       throw new Error('No game notes found for today. They\'re posted ~3 hours before first pitch.');
     }
 
-    const isToday = notesData.found;
-    const dateLabel = notesData.date || 'Recent Game';
-    const pdfUrl = notesData.pdfUrl;
+    const dateLabel = chosenLink.text;
+    const pdfUrl    = chosenLink.url;
 
     btn.textContent = `⏳ Reading ${isToday ? 'today\'s' : 'most recent'} notes...`;
 
-    // Step 2: Fetch the PDF and extract text using pdf.js
+    // Step 3: Fetch the PDF and extract text using pdf.js
     const pdfText = await extractPdfText(pdfUrl);
     if (!pdfText || pdfText.length < 100) {
-      throw new Error('Could not read the PDF content. Try again in a moment.');
+      throw new Error('Could not read the PDF. Try again in a moment.');
     }
 
     btn.textContent = '⏳ Parsing with AI...';
 
-    // Step 3: Send to Claude API for structured parsing
+    // Step 4: Send to Claude API for structured parsing
     const parsed = await parseGameNotesWithAI(pdfText, dateLabel);
 
     // Cache the result
     gameNotesCache = { pdfUrl, date: dateLabel, parsed, fetchedAt: Date.now() };
 
-    // Step 4: Render
+    // Step 5: Render
     renderGameNotes(parsed, dateLabel, pdfUrl);
 
     btn.disabled = false;
     btn.textContent = isToday
       ? '🔄 Refresh Game Notes'
-      : `📋 Notes from ${dateLabel} (tap to refresh)`;
+      : `📋 ${dateLabel} (tap to refresh)`;
+
+    if (!isToday) {
+      // Show a note that today's aren't posted yet
+      const notYetBanner = document.createElement('div');
+      notYetBanner.style.cssText = 'background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:rgba(26,43,94,0.6);';
+      notYetBanner.textContent = `📌 Today's notes aren't posted yet — showing ${dateLabel}. Notes are posted ~3 hours before first pitch.`;
+      const contentEl = document.getElementById('gn-content');
+      contentEl.insertBefore(notYetBanner, contentEl.firstChild);
+    }
 
   } catch (err) {
     console.error('Game notes error:', err);
-    const isWorkerMsg = err.message.includes('Worker') || err.message.includes('Cloudflare');
     content.innerHTML = `
       <div class="gn-error">
         <div class="gn-error-title">Couldn't load game notes</div>
         <div class="gn-error-msg">${esc(err.message)}</div>
       </div>
       <div class="gn-status">
-        ${isWorkerMsg
-          ? 'Deploy the new <strong>worker.js</strong> in your Cloudflare dashboard to enable this feature.'
-          : 'Game notes are posted ~3 hours before first pitch.'
-        }<br><br>
-        You can always view them directly at:<br>
+        Game notes are posted ~3 hours before first pitch.<br><br>
+        View them directly at:<br>
         <a href="https://www.milb.com/toledo/team/game-notes" target="_blank"
            style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes ↗</a>
       </div>`;
@@ -2505,31 +2570,25 @@ async function extractPdfText(pdfUrl) {
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
-  // Try direct URL first; if CORS blocks it, fall back to Worker proxy
-  let fetchUrl = pdfUrl;
+  // img.mlbstatic.com (Cloudinary CDN) supports CORS — try direct first
+  // If that fails (network error or CORS block), use allorigins proxy as fallback
   try {
-    const testRes = await fetch(pdfUrl, { method: 'HEAD' });
-    if (!testRes.ok) throw new Error('HEAD failed');
-  } catch (corsErr) {
-    // mlbstatic.com may block direct browser fetch — route through Worker
-    fetchUrl = `${WORKER}/proxy-pdf?url=${encodeURIComponent(pdfUrl)}`;
-  }
-
-  let pdf;
-  try {
-    pdf = await window.pdfjsLib.getDocument(fetchUrl).promise;
+    return await _loadPdfText(pdfUrl);
   } catch (e) {
-    // Last resort: try direct URL anyway (pdf.js handles CORS differently)
-    pdf = await window.pdfjsLib.getDocument(pdfUrl).promise;
+    console.log('Direct PDF fetch failed, trying proxy:', e.message);
+    const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
+    return await _loadPdfText(proxied);
   }
+}
 
+async function _loadPdfText(url) {
+  const pdf = await window.pdfjsLib.getDocument(url).promise;
   let fullText = '';
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
     fullText += textContent.items.map(item => item.str).join(' ') + '\n';
   }
-
   return fullText.trim();
 }
 
@@ -2793,7 +2852,6 @@ function renderFood() {
     return;
   }
 
-  const pinColors = { restaurant: '#c8a84b', cart: '#c8102e', club: '#1a2b5e' };
   const typeLabels = { restaurant: 'Ballpark Restaurant', cart: 'Portable Cart', club: 'Club Level' };
 
   resultsEl.innerHTML = filtered.map(loc => {
