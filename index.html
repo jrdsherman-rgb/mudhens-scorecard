@@ -2418,9 +2418,23 @@ async function fetchGameNotes() {
 
   try {
     // Step 1: Get today's PDF URL from the Worker
-    const notesRes = await fetch(`${WORKER}/game-notes-url`);
-    if (!notesRes.ok) throw new Error(`Worker error: ${notesRes.status}`);
-    const notesData = await notesRes.json();
+    let notesData;
+    try {
+      const notesRes = await fetch(`${WORKER}/game-notes-url`);
+      if (!notesRes.ok) throw new Error(`Worker returned ${notesRes.status}`);
+      const contentType = notesRes.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        // Worker returned HTML (Okta login page) instead of JSON
+        // This means the /game-notes-url route isn't deployed yet
+        throw new Error('WORKER_NOT_DEPLOYED');
+      }
+      notesData = await notesRes.json();
+    } catch (workerErr) {
+      if (workerErr.message === 'WORKER_NOT_DEPLOYED' || workerErr.message.includes('SyntaxError') || workerErr.message.includes('JSON')) {
+        throw new Error('The Cloudflare Worker needs to be updated first. Deploy the new worker.js from the Cloudflare dashboard, then try again.');
+      }
+      throw workerErr;
+    }
 
     if (!notesData.pdfUrl) {
       throw new Error('No game notes found for today. They\'re posted ~3 hours before first pitch.');
@@ -2456,16 +2470,20 @@ async function fetchGameNotes() {
 
   } catch (err) {
     console.error('Game notes error:', err);
+    const isWorkerMsg = err.message.includes('Worker') || err.message.includes('Cloudflare');
     content.innerHTML = `
       <div class="gn-error">
         <div class="gn-error-title">Couldn't load game notes</div>
         <div class="gn-error-msg">${esc(err.message)}</div>
       </div>
       <div class="gn-status">
-        Game notes are posted ~3 hours before first pitch.<br>
-        You can also view them at:<br>
+        ${isWorkerMsg
+          ? 'Deploy the new <strong>worker.js</strong> in your Cloudflare dashboard to enable this feature.'
+          : 'Game notes are posted ~3 hours before first pitch.'
+        }<br><br>
+        You can always view them directly at:<br>
         <a href="https://www.milb.com/toledo/team/game-notes" target="_blank"
-           style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes</a>
+           style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes ↗</a>
       </div>`;
     btn.disabled = false;
     btn.textContent = '📋 Try Again';
