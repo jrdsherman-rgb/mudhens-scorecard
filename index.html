@@ -283,6 +283,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
       </div>
     </div>
     <div class="fp" id="fp-time">Loading...</div>
+    <div class="standings-info" id="standings-info"></div>
   </div>
 
   <div class="grid2">
@@ -330,7 +331,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
   <div class="inning-score">
     <table>
-      <thead><tr>
+      <thead id="linescore-head"><tr>
         <th class="tc">Team</th>
         <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
         <th>6</th><th>7</th><th>8</th><th>9</th>
@@ -734,6 +735,7 @@ let pitchCount = 0;
 let pendingPrefix = '', goFirst = null;
 let oppTeamName = 'Opponent';
 let currentGamePk = null, lastInning = null, lastIsTop = null;
+let lineupIsReal = false, oppLineupIsReal = false; // true once we have actual announced lineup
 let hensStatsCache = null, oppStatsCache = null, oppStatsTeamId = null;
 let hensPitchCache = null, oppPitchCache = null, oppPitchTeamId = null;
 let standingsCache = null;
@@ -799,7 +801,9 @@ function getStats(bi) {
     if (!v) continue;
     if (!walks.includes(v)) ab++;
     if (hits.includes(v)) h++;
+    rbi += scores[`${bi}_${i}_rbi`] || 0;
   }
+  r = scores[`${bi}_rTotal`] || 0;
   return {ab, h, r, rbi};
 }
 function renderScorecard() {
@@ -932,8 +936,13 @@ function updateLinescore(game, isHome) {
     oppRowArr.push(`<td>${inn ? inn[oi]?.runs ?? '' : ''}</td>`);
   }
   const mt = game.teams[mi], ot = game.teams[oi];
-  const mudFull = `<tr><td class="tn">Toledo Mud Hens</td>${mudRow.join('')}<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
-  const oppFull = `<tr><td class="tn">${oppName}</td>${oppRowArr.join('')}<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
+  // .score comes from schedule endpoint; .runs comes from feed linescore — handle both
+  const mudR = mt.score ?? mt.runs ?? 0;
+  const oppR = ot.score ?? ot.runs ?? 0;
+  const mudH = mt.hits ?? 0, mudE = mt.errors ?? 0;
+  const oppH = ot.hits ?? 0, oppE = ot.errors ?? 0;
+  const mudFull = `<tr><td class="tn">Toledo Mud Hens</td>${mudRow.join('')}<td class="tot">${mudR}</td><td class="tot">${mudH}</td><td class="tot">${mudE}</td></tr>`;
+  const oppFull = `<tr><td class="tn">${oppName}</td>${oppRowArr.join('')}<td class="tot">${oppR}</td><td class="tot">${oppH}</td><td class="tot">${oppE}</td></tr>`;
   document.getElementById('linescore-body').innerHTML = isHome ? oppFull + mudFull : mudFull + oppFull;
 }
 
@@ -987,6 +996,21 @@ async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
 
 // ── FETCH STANDINGS ────────────────────────────────────────
 async function fetchStandings(mudId, oppId) {
+  // If we already have standings data, just update the record displays from cache
+  if (standingsCache) {
+    let mudRec = '', oppRec = '', mudStand = '';
+    [...(standingsCache.il || []), ...(standingsCache.pcl || [])].forEach(div => {
+      div.teamRecords?.forEach(tr => {
+        if (tr.team.id === mudId) { mudRec=`${tr.wins}-${tr.losses}`; mudStand=`${ordinal(tr.divisionRank)} in ${div.division?.name||''}`; }
+        if (tr.team.id === oppId) oppRec=`${tr.wins}-${tr.losses}`;
+      });
+    });
+    if (mudRec) document.getElementById('mud-rec').textContent = mudRec;
+    if (oppRec) document.getElementById('opp-rec').textContent = oppRec;
+    const siEl = document.getElementById('standings-info');
+    if (mudStand && siEl) siEl.innerHTML = `Standings: <span>${mudStand}</span>`;
+    return;
+  }
   try {
     const [resIL, resPCL] = await Promise.all([
       fetch(`${WORKER}/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
@@ -1005,7 +1029,8 @@ async function fetchStandings(mudId, oppId) {
     });
     if (mudRec) document.getElementById('mud-rec').textContent = mudRec;
     if (oppRec) document.getElementById('opp-rec').textContent = oppRec;
-    if (mudStand) document.getElementById('standings-info').innerHTML = `Standings: <span>${mudStand}</span>`;
+    const siEl = document.getElementById('standings-info');
+    if (mudStand && siEl) siEl.innerHTML = `Standings: <span>${mudStand}</span>`;
   } catch(e) {}
 }
 
@@ -1260,7 +1285,7 @@ function applyPlaysToScorecard(halfPlays, inning, targetLineup, targetScores) {
     const batterName = play.matchup?.batter?.fullName;
     if (!batterId && !batterName) return;
 
-    // Match batter to lineup slot by ID, fallback to name
+    // Match batter to lineup slot by ID, fallback to name (handles " *" suffix mock names)
     let bi = targetLineup.findIndex(p => p.mlbId === batterId);
     if (bi === -1 && batterName) {
       bi = targetLineup.findIndex(p => p.name === batterName || p.name === batterName + ' *');
@@ -1275,6 +1300,18 @@ function applyPlaysToScorecard(halfPlays, inning, targetLineup, targetScores) {
     if (result) {
       targetScores[key] = result;
       targetScores[key + '_auto'] = true;
+    }
+
+    // Track RBI from play data
+    const rbi = play.result?.rbi ?? 0;
+    if (rbi > 0) {
+      targetScores[`${bi}_${inning}_rbi`] = (targetScores[`${bi}_${inning}_rbi`] || 0) + rbi;
+    }
+
+    // Track runs scored by the batter (if they scored this inning via runners data)
+    const scored = play.runners?.some(r => r.movement?.end === 'score' && r.details?.runner?.id === batterId);
+    if (scored) {
+      targetScores[`${bi}_rTotal`] = (targetScores[`${bi}_rTotal`] || 0) + 1;
     }
   });
 }
@@ -1297,13 +1334,14 @@ async function pollLiveFeed(gamePk) {
     const oppSide = isHome ? 'away' : 'home';
 
     // ── 1. LINEUP: pull from boxscore battingOrder if not yet loaded
-    const needsMudLineup = !lineup.length || lineup.every(p => p.name === 'Lineup pending...');
-    const needsOppLineup = !oppLineup.length || oppLineup.every(p => p.name === 'Lineup pending...');
+    const needsMudLineup = !lineupIsReal;
+    const needsOppLineup = !oppLineupIsReal;
 
     if (needsMudLineup) {
       const extracted = extractLineupFromFeed(feed, mudSide);
       if (extracted && extracted.length) {
         lineup = extracted;
+        lineupIsReal = true;
         renderScorecard();
         // Kick off async player stats fetch (non-blocking)
         fetchPlayerStats(lineup.map(p => p.mlbId).filter(Boolean));
@@ -1314,6 +1352,7 @@ async function pollLiveFeed(gamePk) {
       const extracted = extractLineupFromFeed(feed, oppSide);
       if (extracted && extracted.length) {
         oppLineup = extracted;
+        oppLineupIsReal = true;
         renderOppScorecard();
         fetchOppPlayerStats(oppLineup.map(p => p.mlbId).filter(Boolean));
       }
@@ -1344,33 +1383,36 @@ async function pollLiveFeed(gamePk) {
       document.getElementById('opp-sc').textContent = oppScore;
 
       // ── 3. PLAY-BY-PLAY AUTO-FILL
-      // Detect when the half-inning has changed since last poll
+      // Detect when the top/bottom has changed since last poll
       if (inn && lastInning !== null && (inn !== lastInning || isTop !== lastIsTop)) {
-        // The half-inning that just ended
+        // The half-inning that just ended:
+        // - If isTop just became true  → bottom of previous inning just ended
+        // - If isTop just became false → top of current inning just ended
         const prevInning = isTop ? inn - 1 : inn;
         const prevIsTop  = !isTop;
-        // who bats in the previous half: top = away, bottom = home
-        const prevMudBatting = (prevIsTop && !isHome) || (!prevIsTop && isHome);
 
-        const allPlays = ld.plays?.allPlays || [];
-        const halfPlays = allPlays.filter(p =>
-          p.about?.inning === prevInning && p.about?.isTopInning === prevIsTop
-        );
-
-        if (halfPlays.length) {
-          if (prevMudBatting) {
-            applyPlaysToScorecard(halfPlays, prevInning, lineup, scores);
-          } else {
-            applyPlaysToScorecard(halfPlays, prevInning, oppLineup, oppScores);
+        // Guard: prevInning=0 means we're at top→bottom of inning 1, nothing to fill yet
+        if (prevInning >= 1) {
+          const prevMudBatting = (prevIsTop && !isHome) || (!prevIsTop && isHome);
+          const allPlays = ld.plays?.allPlays || [];
+          const halfPlays = allPlays.filter(p =>
+            p.about?.inning === prevInning && p.about?.isTopInning === prevIsTop
+          );
+          if (halfPlays.length) {
+            if (prevMudBatting) {
+              applyPlaysToScorecard(halfPlays, prevInning, lineup, scores);
+            } else {
+              applyPlaysToScorecard(halfPlays, prevInning, oppLineup, oppScores);
+            }
+            renderScorecard();
+            renderOppScorecard();
           }
-          renderScorecard();
-          renderOppScorecard();
         }
       }
 
-      // Also catch up any innings we might have missed on initial load
-      // (fills completed innings that haven't been scored yet)
-      if (inn && lastInning === null) {
+      // Catch up completed innings on first poll — but only after lineups are real
+      // (deferred: if lineups just got extracted above, they're now set)
+      if (inn && lastInning === null && (lineupIsReal || oppLineupIsReal)) {
         catchUpInnings(ld.plays?.allPlays || [], inn, isTop, isHome);
       }
 
@@ -1418,9 +1460,21 @@ function catchUpInnings(allPlays, currentInning, isTop, isHome) {
 function updateLinescoreFromFeed(ls, isHome) {
   const mudSide = isHome ? 'home' : 'away';
   const oppSide = isHome ? 'away' : 'home';
+  const innings = ls.innings || [];
+  const numInnings = Math.max(9, innings.length); // support extra innings
+
+  // Rebuild header if extra innings have appeared
+  const headEl = document.getElementById('linescore-head');
+  if (headEl) {
+    let hCols = '<th class="tc">Team</th>';
+    for (let i = 1; i <= numInnings; i++) hCols += `<th>${i}</th>`;
+    hCols += '<th>R</th><th>H</th><th>E</th>';
+    headEl.innerHTML = `<tr>${hCols}</tr>`;
+  }
+
   const mudRow = [], oppRowArr = [];
-  for (let i = 0; i < 9; i++) {
-    const inn = ls.innings[i];
+  for (let i = 0; i < numInnings; i++) {
+    const inn = innings[i];
     mudRow.push(`<td>${inn ? inn[mudSide]?.runs ?? '' : ''}</td>`);
     oppRowArr.push(`<td>${inn ? inn[oppSide]?.runs ?? '' : ''}</td>`);
   }
@@ -1535,6 +1589,7 @@ async function fetchGame() {
       lineup = schedMudPlayers.slice(0,15).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
+      lineupIsReal = true;
       renderScorecard();
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
     }
@@ -1543,6 +1598,7 @@ async function fetchGame() {
       oppLineup = schedOppPlayers.slice(0,15).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
+      oppLineupIsReal = true;
       renderOppScorecard();
       fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
     }
@@ -1574,7 +1630,8 @@ async function fetchGame() {
 
       if (isFinal) {
         document.getElementById('countdown-card').style.display = 'none';
-        // Game over — do a final pass to fill any remaining innings, then stop
+        clearInterval(window._liveFeedInterval);
+        // Game over — do one final poll then slow-check in case of extra data
         setTimeout(fetchGame, 120000);
       } else if (isLive) {
         document.getElementById('countdown-card').style.display = 'none';
@@ -1583,17 +1640,18 @@ async function fetchGame() {
         window._liveFeedInterval = setInterval(() => {
           if (currentGamePk) pollLiveFeed(currentGamePk);
         }, 20000);
-        // Also refresh the schedule data every 5 min during live game
-        setTimeout(fetchGame, 300000);
+        // Refresh the schedule data every 10 min during live game (slow refresh, interval handles play-by-play)
+        clearTimeout(window._fetchGameTimeout);
+        window._fetchGameTimeout = setTimeout(fetchGame, 600000);
       } else {
-        // Pre-game: if lineup not loaded, poll live feed every 2 min
-        // (lineup appears in feed once announced, usually ~60 min before first pitch)
+        // Pre-game: poll live feed every 2 min for lineup announcement
         clearInterval(window._liveFeedInterval);
         window._liveFeedInterval = setInterval(() => {
           if (currentGamePk) pollLiveFeed(currentGamePk);
         }, 120000);
         // Refresh schedule data every 5 min pre-game
-        setTimeout(fetchGame, 300000);
+        clearTimeout(window._fetchGameTimeout);
+        window._fetchGameTimeout = setTimeout(fetchGame, 300000);
       }
     } else {
       setTimeout(fetchGame, 300000);
@@ -1980,7 +2038,9 @@ function getOppStats(bi) {
     if (!v) continue;
     if (!walks.includes(v)) ab++;
     if (hits.includes(v)) h++;
+    rbi += oppScores[`${bi}_${i}_rbi`] || 0;
   }
+  r = oppScores[`${bi}_rTotal`] || 0;
   return {ab, h, r, rbi};
 }
 
@@ -2179,11 +2239,13 @@ function scheduleMidnightReset() {
     scores = {}; oppScores = {}; lineup = []; oppLineup = [];
     playerStats = {}; oppPlayerStats = {};
     pitchCount = 0; lastInning = null; lastIsTop = null; currentGamePk = null;
+    lineupIsReal = false; oppLineupIsReal = false;
     window._gameStatus = null; window._gameTimeUTC = null; window._oppTeamId = null;
     standingsCache = null;
     hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
     clearInterval(window._liveFeedInterval);
+    clearTimeout(window._fetchGameTimeout);
     renderScorecard(); renderOppScorecard();
     fetchGame();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
