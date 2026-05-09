@@ -234,6 +234,35 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .nm.is-placeholder{color:rgba(26,43,94,0.3);font-style:italic;}
 .nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:rgba(26,43,94,0.25);line-height:1;flex-shrink:0;}
 .nm-stats:hover{color:#1a2b5e;}
+/* ── FOOD FINDER ── */
+.food-search-wrap{position:relative;margin-bottom:10px;}
+.food-search{width:100%;background:#fff;border:1.5px solid rgba(26,43,94,0.2);border-radius:12px;padding:11px 14px 11px 38px;font-size:13px;font-family:inherit;color:#1a2b5e;outline:none;}
+.food-search:focus{border-color:#c8102e;}
+.food-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+.food-filter-row{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.food-filter-row::-webkit-scrollbar{display:none;}
+.food-chip{flex:0 0 auto;background:#fff;border:1.5px solid rgba(26,43,94,0.15);border-radius:20px;padding:5px 12px;font-size:10px;font-weight:600;color:rgba(26,43,94,0.5);cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
+.food-chip.active{background:#c8102e;border-color:#c8102e;color:#fff;}
+.food-chip:active{transform:scale(0.95);}
+.food-results{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.food-card{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);overflow:hidden;transition:box-shadow 0.15s;}
+.food-card:active{box-shadow:0 2px 8px rgba(26,43,94,0.15);}
+.food-card-top{display:flex;align-items:center;gap:10px;padding:11px 14px;}
+.food-pin{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;color:#fff;}
+.food-pin.restaurant{background:#c8a84b;}
+.food-pin.cart{background:#c8102e;}
+.food-pin.club{background:#1a2b5e;}
+.food-card-name{font-size:13px;font-weight:700;color:#1a2b5e;flex:1;}
+.food-card-section{font-size:10px;color:rgba(26,43,94,0.45);margin-top:1px;}
+.food-items{padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px;}
+.food-item-tag{background:rgba(26,43,94,0.05);border-radius:6px;padding:3px 8px;font-size:10px;color:rgba(26,43,94,0.6);font-weight:500;}
+.food-empty{text-align:center;padding:30px 20px;color:rgba(26,43,94,0.35);font-size:12px;font-style:italic;}
+.food-type-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.food-type-dot{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(26,43,94,0.5);font-weight:600;}
+.food-map-wrap{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);margin-bottom:10px;overflow:hidden;}
+.food-map-label{font-size:9px;color:rgba(26,43,94,0.4);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 6px;font-weight:600;}
+.food-map-svg-wrap{position:relative;width:100%;}
+.food-map-count{font-size:10px;color:rgba(26,43,94,0.4);padding:6px 14px 10px;text-align:center;}
 </style>
 </head>
 <body>
@@ -255,6 +284,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="nav-tab" onclick="showSection('oppstats',this)" id="opp-stats-tab">Opp Stats</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
+  <div class="nav-tab" onclick="showSection('food',this)">🍟 Food</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
   <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
   <div class="nav-tab" onclick="window.open('https://mudhens.com/tickets','_blank')">🎟 Tickets</div>
@@ -764,13 +794,14 @@ function showSection(name, el) {
   const sec = document.getElementById('sec-' + name);
   if (sec) sec.classList.add('active');
   if (el) el.classList.add('active');
-  if (name === 'trivia') loadTrivia();
-  if (name === 'history') loadHistory();
+  if (name === 'trivia')     loadTrivia();
+  if (name === 'history')    loadHistory();
   if (name === 'promotions') loadPromos();
-  if (name === 'archive') loadArchive();
-  if (name === 'standings') loadStandingsTab();
-  if (name === 'henstats') loadHensStats();
-  if (name === 'oppstats') loadOppStats();
+  if (name === 'archive')    loadArchive();
+  if (name === 'standings')  loadStandingsTab();
+  if (name === 'henstats')   loadHensStats();
+  if (name === 'oppstats')   loadOppStats();
+  if (name === 'food')       initFood();
 }
 
 // ── COLOR ──────────────────────────────────────────────────
@@ -1680,7 +1711,7 @@ async function fetchGame() {
     const schedOppPlayers = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
 
     if (schedMudPlayers?.length) {
-      lineup = schedMudPlayers.slice(0,15).map(p=>({
+      lineup = schedMudPlayers.slice(0,9).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
       lineupIsReal = true;
@@ -1689,7 +1720,7 @@ async function fetchGame() {
     }
 
     if (schedOppPlayers?.length) {
-      oppLineup = schedOppPlayers.slice(0,15).map(p=>({
+      oppLineup = schedOppPlayers.slice(0,9).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
       oppLineupIsReal = true;
@@ -2329,6 +2360,137 @@ fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
 loadTrivia();
 startCountdown();
 
+// ── FOOD FINDER DATA ──────────────────────────────────────
+const FOOD_LOCATIONS = [
+  { id:1,  type:'restaurant', name:'Toft\'s Sundaes',              section:'Sections 101–102',        mapX:348, mapY:178, items:['Funnel Cakes','Root Beer Float','Sundaes','Toft\'s Soft Serve Ice Cream'], tags:['dessert','sweet','ice cream','funnel cake','root beer'] },
+  { id:2,  type:'cart',       name:'Marco\'s Pizza',                section:'Sections 103–104',        mapX:326, mapY:135, items:['Marco\'s Pizza'], tags:['pizza'] },
+  { id:3,  type:'cart',       name:'Hot Dogs & Nachos',             section:'Sections 104–105',        mapX:302, mapY:107, items:['All-Beef Hot Dogs','Nachos','Popcorn','Johnsonville Brat','BacHen Burger'], tags:['hot dog','brat','nachos','popcorn','burger'] },
+  { id:4,  type:'restaurant', name:'Gilhooleys',                    section:'Sections 107–108',        mapX:205, mapY:56,  items:['Bloomin Bacon Burger','French Fries','Grilled Chicken Sandwich','Lot-A-Cheddar Burger','Pulled Pork'], tags:['burger','fries','chicken','sandwich','pulled pork'] },
+  { id:5,  type:'restaurant', name:'Hen & Hound Grab & Go',         section:'Section 115',             mapX:56,  mapY:220, items:['All-Beef Hot Dogs','Chicken Tenders','French Fries','Mac & Cheese','Cheeseburgers','Pretzel Bites','Chicken Sandwich'], tags:['hot dog','chicken','fries','mac cheese','burger','pretzel','sandwich'] },
+  { id:6,  type:'restaurant', name:'Frözhen Cocktail Bar',          section:'Section 118',             mapX:46,  mapY:302, items:['Specialty Drinks','Frozen Cocktails','Mixed Drinks','Draft Beer'], tags:['drinks','cocktails','frozen','beer','alcohol'] },
+  { id:7,  type:'restaurant', name:'Frözhen Ice Cream & Bar',       section:'Section 119',             mapX:54,  mapY:330, items:['All-Beef Hot Dog','Popcorn','Root Beer Float','Sundaes','Toft\'s Hand Dipped Ice Cream','Bottle Beer','Craft Beer','Mixed Drinks'], tags:['ice cream','hot dog','popcorn','root beer','sundae','beer','drinks'] },
+  { id:8,  type:'restaurant', name:'Fleetwood\'s Corner Bar',       section:'Left field (120–121)',    mapX:160, mapY:348, items:['Bottle Beer','Craft Beer','Mixed Drinks'], tags:['beer','drinks','craft beer'] },
+  { id:9,  type:'restaurant', name:'Hen House Eats',                section:'Right field (122)',       mapX:354, mapY:308, items:['All-Beef Hot Dogs','Bavarian Pretzel','Nachos','Popcorn','Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['hot dog','pretzel','nachos','popcorn','beer','drinks'] },
+  { id:10, type:'club',       name:'Lexus Birdcage Club',           section:'Club Level — 109–110',   mapX:136, mapY:46,  items:['Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['beer','drinks','craft beer','specialty','club level'] },
+  { id:11, type:'club',       name:'Frogtown Cantina',              section:'Club Level — 105–106',   mapX:256, mapY:48,  items:['Frogtown Nachos','Chips and Salsa','Tacos','Quesadilla','Mixed Drinks','Draft Beer'], tags:['nachos','chips','salsa','tacos','quesadilla','mexican','beer','drinks'] },
+  { id:12, type:'cart',       name:'Frogtown Nachos',               section:'Section 103',             mapX:316, mapY:116, items:['Frogtown Nachos','Chips and Salsa','Bottle Beer'], tags:['nachos','chips','salsa','beer'] },
+  { id:13, type:'cart',       name:'Grab & Go',                     section:'Sections 105–106',        mapX:272, mapY:74,  items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
+  { id:14, type:'cart',       name:'Yuengling Draft & Craft',       section:'Sections 107–108',        mapX:222, mapY:62,  items:['Yuengling & Craft Beers'], tags:['beer','yuengling','craft beer','draft'] },
+  { id:15, type:'cart',       name:'Bottle Beer',                   section:'Sections 108–109',        mapX:184, mapY:58,  items:['Bottle Beer','Seltzers'], tags:['beer','seltzer'] },
+  { id:16, type:'cart',       name:'Tito\'s Vodka Bar',             section:'Section 113',             mapX:62,  mapY:164, items:['Mixed Drinks','Specialty Cocktails','Bottled Beer & Wine','Seltzers'], tags:['vodka','cocktails','drinks','beer','wine','seltzer'] },
+  { id:17, type:'cart',       name:'Draft Beer',                    section:'Sections 103–104',        mapX:310, mapY:128, items:['Draft Beer'], tags:['beer','draft'] },
+  { id:18, type:'cart',       name:'Popcorn & Pretzel',             section:'Section 108',             mapX:174, mapY:60,  items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
+  { id:19, type:'cart',       name:'Glass City Cheesesteaks',       section:'Section 114',             mapX:56,  mapY:192, items:['Bases Loaded Brat','Philly Steak','Peanuts','Bottled Beer & Pepsi'], tags:['cheesesteak','philly','brat','peanuts','beer','pepsi'] },
+  { id:20, type:'cart',       name:'Grab & Go (116)',               section:'Section 116',             mapX:44,  mapY:248, items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
+  { id:21, type:'cart',       name:'Popcorn & Pretzel (117)',       section:'Section 117',             mapX:44,  mapY:276, items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
+];
+
+let foodFilter = 'all';
+let foodHighlight = null;
+
+function setFoodFilter(f, el) {
+  foodFilter = f;
+  document.querySelectorAll('.food-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  foodHighlight = null;
+  renderFood();
+}
+
+function highlightFoodPin(id) {
+  foodHighlight = foodHighlight === id ? null : id;
+  renderFood();
+  if (foodHighlight) {
+    // Scroll the matching card into view
+    const card = document.getElementById(`food-card-${id}`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderFood() {
+  const query  = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
+  const filter = foodFilter;
+
+  const filtered = FOOD_LOCATIONS.filter(loc => {
+    // Category filter — exact tag match to avoid 'beer' matching 'root beer'
+    if (filter !== 'all') {
+      const tagMatch  = loc.tags.some(t => t === filter);
+      const itemMatch = loc.items.some(i => i.toLowerCase().includes(filter));
+      if (!tagMatch && !itemMatch) return false;
+    }
+    // Text search — substring match is fine here (user is typing freely)
+    if (query) {
+      const inName  = loc.name.toLowerCase().includes(query);
+      const inItems = loc.items.some(i => i.toLowerCase().includes(query));
+      const inTags  = loc.tags.some(t => t.includes(query));
+      if (!inName && !inItems && !inTags) return false;
+    }
+    return true;
+  });
+
+  // Render map pins
+  const visibleIds = new Set(filtered.map(l => l.id));
+  renderFoodMap(visibleIds);
+
+  // Update count
+  const countEl = document.getElementById('food-map-count');
+  if (countEl) countEl.textContent = `Showing ${filtered.length} of 21 locations`;
+
+  // Render cards
+  const resultsEl = document.getElementById('food-results');
+  if (!resultsEl) return;
+
+  if (!filtered.length) {
+    resultsEl.innerHTML = '<div class="food-empty">No locations match — try a different search or filter.</div>';
+    return;
+  }
+
+  const pinColors = { restaurant: '#c8a84b', cart: '#c8102e', club: '#1a2b5e' };
+  const typeLabels = { restaurant: 'Ballpark Restaurant', cart: 'Portable Cart', club: 'Club Level' };
+
+  resultsEl.innerHTML = filtered.map(loc => {
+    const isHL = foodHighlight === loc.id;
+    return `<div class="food-card${isHL ? ' highlight' : ''}" id="food-card-${loc.id}">
+      <div class="food-card-top" onclick="highlightFoodPin(${loc.id})">
+        <div class="food-pin ${loc.type}">${loc.id}</div>
+        <div style="flex:1;">
+          <div class="food-card-name">${esc(loc.name)}</div>
+          <div class="food-card-section">📍 ${loc.section} &nbsp;·&nbsp; ${typeLabels[loc.type]}</div>
+        </div>
+        <div class="food-card-arrow">${isHL ? '▾' : '▸'}</div>
+      </div>
+      <div class="food-items">
+        ${loc.items.map(item => `<span class="food-item-tag">${esc(item)}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFoodMap(visibleIds) {
+  const pinsEl = document.getElementById('food-pins');
+  if (!pinsEl) return;
+
+  const pinColors = { restaurant: '#c8a84b', cart: '#c8102e', club: '#1a2b5e' };
+
+  pinsEl.innerHTML = FOOD_LOCATIONS.map(loc => {
+    const visible = visibleIds.has(loc.id);
+    const isHL = foodHighlight === loc.id;
+    const color = pinColors[loc.type];
+    const opacity = visible ? 1 : 0.15;
+    const r = isHL ? 13 : 10;
+    const fontSize = isHL ? 8 : 7;
+    return `<g onclick="highlightFoodPin(${loc.id})" style="cursor:pointer" opacity="${opacity}">
+      <circle cx="${loc.mapX}" cy="${loc.mapY}" r="${r}" fill="${color}" stroke="#fff" stroke-width="${isHL ? 2.5 : 1.5}"/>
+      ${isHL ? `<circle cx="${loc.mapX}" cy="${loc.mapY}" r="17" fill="none" stroke="${color}" stroke-width="2" opacity="0.4"/>` : ''}
+      <text x="${loc.mapX}" y="${loc.mapY + fontSize/2 - 0.5}" text-anchor="middle" font-size="${fontSize}" fill="#fff" font-weight="800" font-family="sans-serif">${loc.id}</text>
+    </g>`;
+  }).join('');
+}
+
+// ── FOOD SECTION INIT ─────────────────────────────────────
+function initFood() {
+  renderFood();
+}
+
 // ── MIDNIGHT RESET ─────────────────────────────────────────
 function scheduleMidnightReset() {
   const now = new Date();
@@ -2357,6 +2519,106 @@ function scheduleMidnightReset() {
 }
 scheduleMidnightReset();
 </script>
+
+<!-- ══════════════ FOOD FINDER ══════════════ -->
+<div class="section" id="sec-food">
+
+  <!-- Search -->
+  <div class="food-search-wrap">
+    <span class="food-search-icon">🔍</span>
+    <input class="food-search" id="food-search-input" type="text"
+      placeholder="Search food, drinks, stands…"
+      oninput="renderFood()">
+  </div>
+
+  <!-- Category filters -->
+  <div class="food-filter-row" id="food-filter-row">
+    <button class="food-chip active" data-filter="all" onclick="setFoodFilter('all',this)">All</button>
+    <button class="food-chip" data-filter="burger" onclick="setFoodFilter('burger',this)">🍔 Burgers</button>
+    <button class="food-chip" data-filter="hot dog" onclick="setFoodFilter('hot dog',this)">🌭 Hot Dogs</button>
+    <button class="food-chip" data-filter="chicken" onclick="setFoodFilter('chicken',this)">🍗 Chicken</button>
+    <button class="food-chip" data-filter="pizza" onclick="setFoodFilter('pizza',this)">🍕 Pizza</button>
+    <button class="food-chip" data-filter="nachos" onclick="setFoodFilter('nachos',this)">🧀 Nachos</button>
+    <button class="food-chip" data-filter="tacos" onclick="setFoodFilter('tacos',this)">🌮 Tacos</button>
+    <button class="food-chip" data-filter="pretzel" onclick="setFoodFilter('pretzel',this)">🥨 Pretzels</button>
+    <button class="food-chip" data-filter="fries" onclick="setFoodFilter('fries',this)">🍟 Fries</button>
+    <button class="food-chip" data-filter="ice cream" onclick="setFoodFilter('ice cream',this)">🍦 Ice Cream</button>
+    <button class="food-chip" data-filter="dessert" onclick="setFoodFilter('dessert',this)">🍩 Desserts</button>
+    <button class="food-chip" data-filter="beer" onclick="setFoodFilter('beer',this)">🍺 Beer</button>
+    <button class="food-chip" data-filter="cocktails" onclick="setFoodFilter('cocktails',this)">🍹 Cocktails</button>
+    <button class="food-chip" data-filter="snacks" onclick="setFoodFilter('snacks',this)">🍿 Snacks</button>
+  </div>
+
+  <!-- Legend -->
+  <div class="food-type-legend">
+    <div class="food-type-dot"><span style="background:#c8a84b"></span>Ballpark Restaurant</div>
+    <div class="food-type-dot"><span style="background:#c8102e"></span>Portable Cart</div>
+    <div class="food-type-dot"><span style="background:#1a2b5e"></span>Club Level</div>
+  </div>
+
+  <!-- Map -->
+  <div class="food-map-wrap">
+    <div class="food-map-label">📍 Stadium Map — Tap a pin to highlight</div>
+    <div class="food-map-svg-wrap">
+      <svg id="food-map-svg" viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+        <!-- Field background -->
+        <rect width="400" height="360" fill="#dbe8f0"/>
+        <!-- Outfield grass -->
+        <ellipse cx="200" cy="220" rx="165" ry="145" fill="#4a8c3f"/>
+        <!-- Infield dirt -->
+        <ellipse cx="200" cy="255" rx="90" ry="75" fill="#c4955a"/>
+        <!-- Infield grass -->
+        <ellipse cx="200" cy="255" rx="68" ry="58" fill="#4a8c3f"/>
+        <!-- Home plate area -->
+        <ellipse cx="200" cy="308" rx="22" ry="16" fill="#c4955a"/>
+        <!-- Foul lines -->
+        <line x1="200" y1="308" x2="52" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <line x1="200" y1="308" x2="348" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <!-- Warning track -->
+        <ellipse cx="200" cy="215" rx="155" ry="133" fill="none" stroke="#c4955a" stroke-width="8" opacity="0.5"/>
+        <!-- Stands outline -->
+        <path d="M 35 338 L 10 200 Q 20 60 200 30 Q 380 60 390 200 L 365 338 Z" fill="#1a2b5e" opacity="0.12" stroke="#1a2b5e" stroke-width="1" opacity="0.2"/>
+        <!-- Section markers -->
+        <text x="340" y="185" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">101</text>
+        <text x="328" y="148" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">102</text>
+        <text x="308" y="118" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">103</text>
+        <text x="284" y="96" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">104</text>
+        <text x="258" y="82" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">105</text>
+        <text x="232" y="74" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">106</text>
+        <text x="205" y="70" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">107</text>
+        <text x="178" y="72" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">108</text>
+        <text x="152" y="80" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">109</text>
+        <text x="126" y="93" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">110</text>
+        <text x="100" y="112" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">111</text>
+        <text x="78" y="136" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">112</text>
+        <text x="62" y="164" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">113</text>
+        <text x="52" y="196" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">114</text>
+        <text x="48" y="226" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">115</text>
+        <text x="44" y="256" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">116</text>
+        <text x="42" y="284" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">117</text>
+        <text x="42" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">118</text>
+        <text x="48" y="334" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">119</text>
+        <text x="160" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">120</text>
+        <text x="240" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">121</text>
+        <text x="362" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">122</text>
+        <!-- Home plate diamond -->
+        <polygon points="200,300 208,308 200,316 192,308" fill="#fff" opacity="0.7"/>
+        <!-- Bases -->
+        <rect x="236" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 240 272)"/>
+        <rect x="196" y="238" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 200 242)"/>
+        <rect x="155" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 159 272)"/>
+        <!-- Pitcher's mound -->
+        <circle cx="200" cy="265" r="6" fill="#c4955a" opacity="0.8"/>
+        <!-- Food location pins - rendered by JS -->
+        <g id="food-pins"></g>
+      </svg>
+    </div>
+    <div class="food-map-count" id="food-map-count">Showing all 21 locations</div>
+  </div>
+
+  <!-- Results list -->
+  <div class="food-results" id="food-results"></div>
+</div>
 
 <!-- PERMANENT FOOTER DISCLAIMER -->
 <div style="background:#0d1f3c;border-top:1px solid rgba(200,168,75,0.2);padding:14px 16px;margin-top:20px;text-align:center;">
