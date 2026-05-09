@@ -229,8 +229,9 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .standings-table td.team-cell.mud-hens{color:#c8102e;font-weight:700;}
 .standings-table tr.div-header td{background:#e8e0cc;color:rgba(26,43,94,0.5);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
 .nm-wrap{display:flex;align-items:center;gap:4px;}
-.nm[contenteditable]{outline:none;cursor:text;border-bottom:1px dashed rgba(26,43,94,0.25);min-width:60px;}
-.nm[contenteditable]:focus{border-bottom:1px solid #c8102e;background:rgba(200,16,46,0.04);border-radius:2px;}
+.nm{cursor:pointer;border-bottom:1px dashed rgba(26,43,94,0.25);min-width:60px;display:inline-block;}
+.nm:active{opacity:0.6;}
+.nm.is-placeholder{color:rgba(26,43,94,0.3);font-style:italic;}
 .nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:rgba(26,43,94,0.25);line-height:1;flex-shrink:0;}
 .nm-stats:hover{color:#1a2b5e;}
 </style>
@@ -713,6 +714,22 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   </div>
 </div>
 
+<!-- ══════════════ NAME EDIT MODAL ══════════════ -->
+<div class="modal-overlay" id="name-modal">
+  <div class="modal" style="padding-bottom:24px;">
+    <h3 id="name-modal-title" style="margin-bottom:6px;">Edit Player Name</h3>
+    <div class="modal-sub" id="name-modal-sub">Batting order slot</div>
+    <input id="name-modal-input" class="f-input" type="text"
+      placeholder="Enter player name"
+      style="margin-bottom:12px;"
+      onkeydown="if(event.key==='Enter'){saveNameModal();}">
+    <div style="display:flex;gap:8px;">
+      <button class="mc" onclick="closeNameModal()" style="flex:1;margin-top:0;">Cancel</button>
+      <button class="save-btn" onclick="saveNameModal()" style="flex:2;">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONSTANTS ──────────────────────────────────────────────
 const TEAM_ID = 512;
@@ -806,33 +823,67 @@ function getStats(bi) {
   r = scores[`${bi}_rTotal`] || 0;
   return {ab, h, r, rbi};
 }
-// ── EDITABLE PLAYER NAMES ─────────────────────────────────
-// Called on blur of the contenteditable name span
-function editName(bi, el) {
-  const newName = el.textContent.trim();
-  // Ignore if blank or still showing placeholder text
-  if (!newName || newName === 'Tap to enter name') {
-    el.textContent = lineup[bi]?.name || '';
-    return;
-  }
-  if (!lineup[bi]) lineup[bi] = { name: newName, pos: '—', num: '', mlbId: null };
-  else lineup[bi].name = newName;
+// ── HTML ESCAPE ────────────────────────────────────────────
+// Prevents XSS when inserting user-typed names into innerHTML
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
 }
-function editOppName(bi, el) {
-  const newName = el.textContent.trim();
-  if (!newName || newName === 'Tap to enter name') {
-    el.textContent = oppLineup[bi]?.name || '';
-    return;
+
+// ── EDITABLE PLAYER NAMES ─────────────────────────────────
+// Uses a custom modal instead of prompt() — prompt() is blocked in iOS PWA standalone mode
+let _nameModalTarget = null; // { side: 'mud'|'opp', bi: number }
+
+function editName(bi) {
+  const current = lineup[bi]?.name || '';
+  _nameModalTarget = { side: 'mud', bi };
+  document.getElementById('name-modal-title').textContent = `Slot ${bi + 1} — Mud Hens`;
+  document.getElementById('name-modal-sub').textContent = 'Enter the batter\'s name';
+  const input = document.getElementById('name-modal-input');
+  input.value = current;
+  document.getElementById('name-modal').classList.add('open');
+  // Delay focus slightly so the modal animation completes first
+  setTimeout(() => input.focus(), 120);
+}
+
+function editOppName(bi) {
+  const current = oppLineup[bi]?.name || '';
+  _nameModalTarget = { side: 'opp', bi };
+  document.getElementById('name-modal-title').textContent = `Slot ${bi + 1} — ${oppTeamName}`;
+  document.getElementById('name-modal-sub').textContent = 'Enter the batter\'s name';
+  const input = document.getElementById('name-modal-input');
+  input.value = current;
+  document.getElementById('name-modal').classList.add('open');
+  setTimeout(() => input.focus(), 120);
+}
+
+function saveNameModal() {
+  if (!_nameModalTarget) return;
+  const trimmed = document.getElementById('name-modal-input').value.trim();
+  const { side, bi } = _nameModalTarget;
+  if (side === 'mud') {
+    if (!lineup[bi]) lineup[bi] = { name: trimmed, pos: '—', num: '', mlbId: null };
+    else lineup[bi].name = trimmed;
+    closeNameModal();
+    renderScorecard();
+  } else {
+    if (!oppLineup[bi]) oppLineup[bi] = { name: trimmed, pos: '—', num: '', mlbId: null };
+    else oppLineup[bi].name = trimmed;
+    closeNameModal();
+    renderOppScorecard();
   }
-  if (!oppLineup[bi]) oppLineup[bi] = { name: newName, pos: '—', num: '', mlbId: null };
-  else oppLineup[bi].name = newName;
+}
+
+function closeNameModal() {
+  document.getElementById('name-modal').classList.remove('open');
+  _nameModalTarget = null;
 }
 
 function renderScorecard() {
   const tbody = document.getElementById('sc-body');
-
-  // Don't re-render if a name cell is actively being edited
-  if (tbody.querySelector('.nm:focus')) return;
 
   // Always show 9 editable rows — even if lineup is empty
   if (!lineup.length) {
@@ -842,16 +893,14 @@ function renderScorecard() {
   let html = '';
   lineup.forEach((p, i) => {
     const s = getStats(i);
-    const badge = streakBadge(p.mlbId);
     const displayName = p.name || '';
-    const placeholder = displayName ? '' : 'style="color:rgba(26,43,94,0.3);"';
+    const isPlaceholder = !displayName;
+    const nameClass = isPlaceholder ? 'nm is-placeholder' : 'nm';
+    const shownName = isPlaceholder ? 'Tap to enter name' : esc(displayName);
     html += `<tr>
       <td class="pn">
         <div class="nm-wrap">
-          <span class="nm" contenteditable="true" spellcheck="false"
-            onblur="editName(${i},this)"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
-            ${placeholder}>${displayName || 'Tap to enter name'}</span>
+          <span class="${nameClass}" onclick="editName(${i})">${shownName}</span>
           ${p.mlbId ? `<button class="nm-stats" onclick="openPlayerModal(${i})" title="Stats">📊</button>` : ''}
         </div>
         <div class="av">${p.pos}</div>
@@ -861,7 +910,7 @@ function renderScorecard() {
     html += `<td class="pst">${s.ab??'—'}</td><td class="pst">${s.h??'—'}</td><td class="pst">${s.r??'—'}</td><td class="pst">${s.rbi??'—'}</td></tr>`;
   });
   tbody.innerHTML = html;
-  // Add badge text after innerHTML set (avoids XSS via player name)
+  // Append streak badges after innerHTML (avoids XSS via player names)
   lineup.forEach((p, i) => {
     if (!p.mlbId) return;
     const b = streakBadge(p.mlbId);
@@ -2092,9 +2141,6 @@ function getOppStats(bi) {
 function renderOppScorecard() {
   const tbody = document.getElementById('opp-sc-body');
 
-  // Don't re-render if a name cell is actively being edited
-  if (tbody.querySelector('.nm:focus')) return;
-
   // Always show 9 editable rows
   if (!oppLineup.length) {
     oppLineup = Array.from({length:9}, () => ({ name: '', pos: '—', num: '', mlbId: null }));
@@ -2104,14 +2150,13 @@ function renderOppScorecard() {
   oppLineup.forEach((p, i) => {
     const s = getOppStats(i);
     const displayName = p.name || '';
+    const isPlaceholder = !displayName;
+    const nameClass = isPlaceholder ? 'nm is-placeholder' : 'nm';
+    const shownName = isPlaceholder ? 'Tap to enter name' : esc(displayName);
     html += `<tr>
       <td class="pn">
         <div class="nm-wrap">
-          <span class="nm" contenteditable="true" spellcheck="false"
-            onblur="editOppName(${i},this)"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
-            ${displayName || '<span style="color:rgba(26,43,94,0.3)">Tap to enter name</span>'}
-          </span>
+          <span class="${nameClass}" onclick="editOppName(${i})">${shownName}</span>
           ${p.mlbId ? `<button class="nm-stats" onclick="openOppPlayerModal(${i})" title="Stats">📊</button>` : ''}
         </div>
         <div class="av">${p.pos}</div>
@@ -2176,8 +2221,8 @@ function showSummary() {
   document.getElementById('sum-opp-score').textContent = document.getElementById('opp-sc').textContent || '—';
   document.getElementById('sum-opp-name').textContent   = oppTeamName || 'Opponent';
   document.getElementById('sum-date').textContent       = document.getElementById('meta-date').textContent || '—';
-  document.getElementById('sum-ab').textContent         = totalAB || '—';
-  document.getElementById('sum-hits').textContent       = totalHits || '—';
+  document.getElementById('sum-ab').textContent         = totalAB ?? '—';
+  document.getElementById('sum-hits').textContent       = totalHits ?? '—';
   document.getElementById('sum-people').textContent     = people;
   document.getElementById('summary-overlay').classList.add('open');
 }
@@ -2272,7 +2317,7 @@ function startCountdown() {
 }
 
 // ── MODAL BACKDROP ─────────────────────────────────────────
-['sc-modal','player-modal','summary-overlay'].forEach(id=>{
+['sc-modal','player-modal','summary-overlay','name-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 
