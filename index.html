@@ -717,6 +717,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 const TEAM_ID = 512;
 const INNINGS = 9;
 const LAT = 41.6639, LON = -83.5552;
+const WORKER = 'https://super-glade-7699.jrdsherman.workers.dev';
 const hits  = ['1B','2B','3B','HR'];
 const walks = ['BB','IBB','HBP'];
 const outs  = ['K','Kc','DP','FC','E','SAC','SF'];
@@ -849,7 +850,6 @@ function chooseCategory(cat) {
   if (cat === 'misc') showStep('step-misc');
 }
 
-// fielder picker (F#, P#, L#, U#)
 function needFielder(prefix) {
   pendingPrefix = prefix;
   document.getElementById('fielder-label').textContent =
@@ -861,13 +861,11 @@ function needFielder(prefix) {
 }
 function pickFielder(n) { finalRec(pendingPrefix + n); }
 
-// groundout builder (#-#)
 function needGroundout() { goFirst = null; document.getElementById('go-label').textContent = 'Groundout: who fielded it?'; showStep('step-groundout'); }
 function goStep(n) {
   if (goFirst === null) {
     goFirst = n;
     document.getElementById('go-label').textContent = `${n}-? : Who threw to?`;
-    // update numpad to confirm on second tap
   } else {
     finalRec(`${goFirst}-${n}`);
     goFirst = null;
@@ -927,8 +925,6 @@ function updateLinescore(game, isHome) {
   const ls = game.linescore; if (!ls || !ls.innings) return;
   const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
   const oppName = oppTeamName || (isHome ? game.teams.away.team.name : game.teams.home.team.name);
-  let mRow = `<tr><td class="tn">Toledo Mud Hens</td>`, oRow = `<tr><td class="tn">${oppName}</td>`;
-  // Baseball convention: away team on top, home on bottom
   const mudRow = [], oppRowArr = [];
   for (let i = 0; i < 9; i++) {
     const inn = ls.innings[i];
@@ -938,7 +934,6 @@ function updateLinescore(game, isHome) {
   const mt = game.teams[mi], ot = game.teams[oi];
   const mudFull = `<tr><td class="tn">Toledo Mud Hens</td>${mudRow.join('')}<td class="tot">${mt.score??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
   const oppFull = `<tr><td class="tn">${oppName}</td>${oppRowArr.join('')}<td class="tot">${ot.score??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
-  // Away on top, home on bottom
   document.getElementById('linescore-body').innerHTML = isHome ? oppFull + mudFull : mudFull + oppFull;
 }
 
@@ -954,7 +949,7 @@ async function fetchPlayerStats(ids) {
   for (const id of ids) {
     if (!id || playerStats[id]) continue;
     try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
+      const res = await fetch(`${WORKER}/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
       const data = await res.json();
       const splits = data.stats?.[0]?.splits;
       if (splits?.length) playerStats[id] = splits[splits.length-1].stat;
@@ -966,65 +961,36 @@ async function fetchPlayerStats(ids) {
 // ── FETCH STARTERS ─────────────────────────────────────────
 async function fetchStarters(gamePk, isHome, mudFallback, oppFallback) {
   try {
-    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/boxscore`);
+    const res = await fetch(`${WORKER}/api/v1/game/${gamePk}/boxscore`);
     const data = await res.json();
     const mk = isHome ? 'home' : 'away', ok = isHome ? 'away' : 'home';
     const mPid = data.teams?.[mk]?.pitchers?.[0];
     const oPid = data.teams?.[ok]?.pitchers?.[0];
     const mP = mPid ? data.teams[mk].players['ID'+mPid] : null;
     const oP = oPid ? data.teams[ok].players['ID'+oPid] : null;
-    // Update names if we have actual game pitchers (overrides probable)
     const mN = mP?.person?.fullName || mudFallback || 'TBD';
     const oN = oP?.person?.fullName || oppFallback || 'TBD';
-    if (mN !== 'TBD') {
-      ['mud-starter'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = mN; });
-    }
-    if (oN !== 'TBD') {
-      ['opp-starter'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent = oN; });
-    }
-    // Get pitcher stats by searching team pitching stats
-    const findPitcherStats = async (name, teamId, eraId) => {
-      if (!name || name === 'TBD' || !teamId) return;
-      try {
-        const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const splits = data.stats?.[0]?.splits || [];
-        const match = splits.find(s => s.player?.fullName === name);
-        if (match) {
-          const sp = match.stat;
-          const el = document.getElementById(eraId);
-          if (el) el.textContent = `ERA ${sp.era||'—'} · ${sp.wins||0}-${sp.losses||0} · ${sp.strikeOuts||0} K`;
-        }
-      } catch(e) {}
-    };
-    // Get stats from boxscore seasonStats if available
+    if (mN !== 'TBD') document.getElementById('mud-starter').textContent = mN;
+    if (oN !== 'TBD') document.getElementById('opp-starter').textContent = oN;
     if (mP?.seasonStats?.pitching) {
       const mp = mP.seasonStats.pitching;
       const el = document.getElementById('mud-starter-era');
       if (el) el.textContent = `ERA ${mp.era||'—'} · ${mp.wins||0}-${mp.losses||0} · ${mp.strikeOuts||0} K`;
-    } else {
-      findPitcherStats(mN, 512, 'mud-starter-era');
     }
     if (oP?.seasonStats?.pitching) {
       const op = oP.seasonStats.pitching;
       const el = document.getElementById('opp-starter-era');
       if (el) el.textContent = `ERA ${op.era||'—'} · ${op.wins||0}-${op.losses||0} · ${op.strikeOuts||0} K`;
-    } else {
-      findPitcherStats(oN, window._oppTeamId, 'opp-starter-era');
     }
   } catch(e) {}
 }
 
 // ── FETCH STANDINGS ────────────────────────────────────────
-// standingsCache declared in STATE block above
-
 async function fetchStandings(mudId, oppId) {
   try {
-    // Fetch both IL (117) and PCL (112)
     const [resIL, resPCL] = await Promise.all([
-      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
-      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
+      fetch(`${WORKER}/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
+      fetch(`${WORKER}/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
     ]);
     const ilData = await resIL.json();
     const pclData = await resPCL.json();
@@ -1043,7 +1009,6 @@ async function fetchStandings(mudId, oppId) {
   } catch(e) {}
 }
 
-// Full team name lookup by team ID
 const TEAM_NAMES = {
   512:'Toledo Mud Hens', 235:'Memphis Redbirds', 445:'Columbus Clippers',
   484:'Indianapolis Indians', 416:'Louisville Bats', 1960:'St. Paul Saints',
@@ -1102,8 +1067,8 @@ async function loadStandingsTab() {
   document.getElementById('standings-pcl').innerHTML = '<div class="empty-state"><div class="empty-text">Loading standings...</div></div>';
   try {
     const [resIL, resPCL] = await Promise.all([
-      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
-      fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
+      fetch(`${WORKER}/api/v1/standings?leagueId=117&season=2026&standingsTypes=regularSeason`),
+      fetch(`${WORKER}/api/v1/standings?leagueId=112&season=2026&standingsTypes=regularSeason`)
     ]);
     const ilData = await resIL.json();
     const pclData = await resPCL.json();
@@ -1115,55 +1080,47 @@ async function loadStandingsTab() {
   }
 }
 
-// ── FETCH VENUE WEATHER ────────────────────────────────────
-// Known venue coords for common MiLB opponents — fallback if API doesn't return coords
+// ── VENUE WEATHER ──────────────────────────────────────────
 const VENUE_COORDS = {
-  2767: {lat:41.6639,lon:-83.5552,name:'Fifth Third Field'},       // Toledo
-  2542: {lat:35.1496,lon:-90.0490,name:'AutoZone Park'},           // Memphis
-  3970: {lat:39.9612,lon:-82.9988,name:'Huntington Park'},         // Columbus
-  2858: {lat:39.7601,lon:-86.1638,name:'Victory Field'},           // Indianapolis
-  2724: {lat:38.2567,lon:-85.7534,name:'Louisville Slugger Field'},// Louisville
-  5472: {lat:44.9488,lon:-93.0910,name:'CHS Field'},               // St. Paul
-  4271: {lat:41.2558,lon:-95.9369,name:'Werner Park'},             // Omaha
-  2844: {lat:41.5997,lon:-93.6164,name:'Principal Park'},          // Iowa
-  2797: {lat:41.4559,lon:-75.6644,name:'PNC Field'},               // SWB
-  2756: {lat:42.8865,lon:-78.8784,name:'Sahlen Field'},            // Buffalo
-  2773: {lat:43.0481,lon:-77.6126,name:'ESL Ballpark'},            // Rochester
-  2823: {lat:43.0481,lon:-76.1474,name:'NBT Bank Stadium'},        // Syracuse
-  2541: {lat:35.9979,lon:-78.8986,name:'Durham Bulls Athletic Park'},// Durham
-  4670: {lat:35.2271,lon:-80.8526,name:'Truist Field'},            // Charlotte
-  2852: {lat:30.3290,lon:-81.6549,name:'Vystar Ballpark'},         // Jacksonville
-  2781: {lat:36.8485,lon:-76.2990,name:'Harbor Park'},             // Norfolk
-  4715: {lat:36.1601,lon:-86.7784,name:'First Horizon Park'},      // Nashville
-  3810: {lat:33.8485,lon:-84.0682,name:'Gwinnett Field'},          // Gwinnett
-  2528: {lat:30.5085,lon:-97.6795,name:'Dell Diamond'},            // Round Rock
+  2767:{lat:41.6639,lon:-83.5552,name:'Fifth Third Field'},
+  2542:{lat:35.1496,lon:-90.0490,name:'AutoZone Park'},
+  3970:{lat:39.9612,lon:-82.9988,name:'Huntington Park'},
+  2858:{lat:39.7601,lon:-86.1638,name:'Victory Field'},
+  2724:{lat:38.2567,lon:-85.7534,name:'Louisville Slugger Field'},
+  5472:{lat:44.9488,lon:-93.0910,name:'CHS Field'},
+  4271:{lat:41.2558,lon:-95.9369,name:'Werner Park'},
+  2844:{lat:41.5997,lon:-93.6164,name:'Principal Park'},
+  2797:{lat:41.4559,lon:-75.6644,name:'PNC Field'},
+  2756:{lat:42.8865,lon:-78.8784,name:'Sahlen Field'},
+  2773:{lat:43.0481,lon:-77.6126,name:'ESL Ballpark'},
+  2823:{lat:43.0481,lon:-76.1474,name:'NBT Bank Stadium'},
+  2541:{lat:35.9979,lon:-78.8986,name:'Durham Bulls Athletic Park'},
+  4670:{lat:35.2271,lon:-80.8526,name:'Truist Field'},
+  2852:{lat:30.3290,lon:-81.6549,name:'Vystar Ballpark'},
+  2781:{lat:36.8485,lon:-76.2990,name:'Harbor Park'},
+  4715:{lat:36.1601,lon:-86.7784,name:'First Horizon Park'},
+  3810:{lat:33.8485,lon:-84.0682,name:'Gwinnett Field'},
+  2528:{lat:30.5085,lon:-97.6795,name:'Dell Diamond'},
 };
 
 async function fetchVenueWeather(venueId, venueName, isHome) {
   let lat = LAT, lon = LON;
   let resolvedName = venueName || 'Fifth Third Field';
-
   if (venueId && VENUE_COORDS[venueId]) {
     lat = VENUE_COORDS[venueId].lat;
     lon = VENUE_COORDS[venueId].lon;
     resolvedName = VENUE_COORDS[venueId].name;
   } else if (venueId) {
-    // Try to fetch venue coords from MLB API
     try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/venues/${venueId}?hydrate=location`);
+      const res = await fetch(`${WORKER}/api/v1/venues/${venueId}?hydrate=location`);
       const data = await res.json();
       const loc = data.venues?.[0]?.location;
-      if (loc?.latitude && loc?.longitude) {
-        lat = loc.latitude;
-        lon = loc.longitude;
-      }
+      if (loc?.latitude && loc?.longitude) { lat = loc.latitude; lon = loc.longitude; }
     } catch(e) {}
   }
-
   fetchWeather(lat, lon, resolvedName, window._gameTimeUTC, window._gameStatus);
 }
 
-// ── FETCH WEATHER ──────────────────────────────────────────
 function renderWeather(temp, feelsLike, code, wind, humidity, venueName, isForcast, forecastTime) {
   const wxStr = WX[code] || '🌡️ —';
   const parts = wxStr.split(' ');
@@ -1175,31 +1132,19 @@ function renderWeather(temp, feelsLike, code, wind, humidity, venueName, isForca
   document.getElementById('wx-desc').textContent = `${desc}${feelsStr} · ${Math.round(wind)} mph wind`;
   const wxLabel = document.getElementById('wx-label');
   if (wxLabel) {
-    if (isForcast && forecastTime) {
-      wxLabel.textContent = `Forecast at ${forecastTime} · ${venueName}`;
-    } else {
-      wxLabel.textContent = `Live weather · ${venueName}`;
-    }
+    wxLabel.textContent = isForcast && forecastTime ? `Forecast at ${forecastTime} · ${venueName}` : `Live weather · ${venueName}`;
   }
 }
 
 async function fetchWeather(lat, lon, venueName, gameTimeUTC, gameStatus) {
   try {
-    // Decide whether to show forecast or live weather
-    const now = new Date();
     const isPreGame = gameStatus && !gameStatus.includes('Progress') && gameStatus !== 'Final';
-    const isFinal = gameStatus === 'Final';
-    
-    // Fetch both current and hourly forecast
     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m&hourly=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=2`);
     const data = await res.json();
     const cur = data.current;
-
     if (gameTimeUTC && isPreGame) {
-      // Show forecast for game time
       const gameTime = new Date(gameTimeUTC);
-      const gameHour = gameTime.getHours();
-      const gameDateStr = gameTime.toISOString().slice(0,13); // "2026-05-07T18"
+      const gameDateStr = gameTime.toISOString().slice(0,13);
       const hourlyTimes = data.hourly?.time || [];
       const idx = hourlyTimes.findIndex(t => t === gameDateStr + ':00');
       if (idx !== -1) {
@@ -1209,33 +1154,280 @@ async function fetchWeather(lat, lon, venueName, gameTimeUTC, gameStatus) {
         return;
       }
     }
-
-    // Live current weather (in progress or fallback)
     renderWeather(cur.temperature_2m, cur.apparent_temperature, cur.weather_code, cur.wind_speed_10m, null, venueName, false, null);
   } catch(e) { document.getElementById('wx-temp').textContent='—'; }
 }
 
 // ── MOCK LINEUP ────────────────────────────────────────────
 function mockLineup() {
-  // Always return 9 rows so scorecard grid shows
   if (hensStatsCache && hensStatsCache.length) {
-    return [...hensStatsCache]
-      .sort((a,b) => b.g - a.g)
-      .slice(0,9)
+    return [...hensStatsCache].sort((a,b) => b.g - a.g).slice(0,9)
+      .map(p => ({ name: p.name + ' *', pos: p.pos, num: '', mlbId: null }));
+  }
+  return Array.from({length:9}, () => ({ name: 'Lineup pending...', pos: '—', num: '', mlbId: null }));
+}
+function mockOppLineup() {
+  if (oppStatsCache && oppStatsCache.length) {
+    return [...oppStatsCache].sort((a,b) => b.g - a.g).slice(0,9)
       .map(p => ({ name: p.name + ' *', pos: p.pos, num: '', mlbId: null }));
   }
   return Array.from({length:9}, () => ({ name: 'Lineup pending...', pos: '—', num: '', mlbId: null }));
 }
 
-function mockOppLineup() {
-  // Always return 9 rows so scorecard grid shows
-  if (oppStatsCache && oppStatsCache.length) {
-    return [...oppStatsCache]
-      .sort((a,b) => b.g - a.g)
-      .slice(0,9)
-      .map(p => ({ name: p.name + ' *', pos: p.pos, num: '', mlbId: null }));
+// ══════════════════════════════════════════════════════════════
+// ── LIVE FEED — single source of truth for lineups + play-by-play
+// ══════════════════════════════════════════════════════════════
+
+// Extract batting lineup from feed/live boxscore
+// Returns array of {name, pos, num, mlbId} in batting order
+function extractLineupFromFeed(feedData, side) {
+  // side = 'home' or 'away'
+  const teamBox = feedData.liveData?.boxscore?.teams?.[side];
+  if (!teamBox) return null;
+
+  const battingOrder = teamBox.battingOrder || [];
+  if (!battingOrder.length) return null;
+
+  const players = teamBox.players || {};
+  const gameData = feedData.gameData?.players || {};
+
+  return battingOrder.slice(0, 9).map(id => {
+    const key = 'ID' + id;
+    // Try boxscore players first, then gameData players
+    const boxPlayer = players[key];
+    const gdPlayer = gameData[key];
+    const name = boxPlayer?.person?.fullName || gdPlayer?.fullName || 'Player';
+    const pos  = boxPlayer?.position?.abbreviation || gdPlayer?.primaryPosition?.abbreviation || '—';
+    const num  = boxPlayer?.jerseyNumber || gdPlayer?.jerseyNumber || '';
+    return { name, pos, num, mlbId: id };
+  });
+}
+
+// Map a play result to our scorecard notation
+function mapPlayResult(play) {
+  const event = play.result?.event || '';
+  if (event === 'Home Run') return 'HR';
+  if (event === 'Triple') return '3B';
+  if (event === 'Double') return '2B';
+  if (event === 'Single') return '1B';
+  if (event === 'Walk') return 'BB';
+  if (event === 'Intent Walk') return 'IBB';
+  if (event === 'Hit By Pitch') return 'HBP';
+  if (event === 'Strikeout') {
+    const pitches = play.playEvents || [];
+    const last = pitches[pitches.length - 1];
+    return last?.details?.code === 'C' ? 'Kc' : 'K';
   }
-  return Array.from({length:9}, () => ({ name: 'Lineup pending...', pos: '—', num: '', mlbId: null }));
+  if (event === 'Grounded Into DP' || event === 'Double Play') return 'DP';
+  if (event === 'Sac Fly') return 'SF';
+  if (event === 'Sac Bunt') return 'SAC';
+  if (event === 'Field Error') return 'E';
+  if (event === 'Fielders Choice' || event === 'Fielders Choice Out') return 'FC';
+
+  const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+  const getCredPos = () => {
+    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
+    return pos ? posMap[pos] : null;
+  };
+
+  if (event === 'Flyout') {
+    const n = getCredPos(); return n ? `F${n}` : 'FO';
+  }
+  if (event === 'Pop Out') {
+    const n = getCredPos(); return n ? `P${n}` : 'FO';
+  }
+  if (event === 'Lineout') {
+    const n = getCredPos(); return n ? `L${n}` : 'LO';
+  }
+  if (event === 'Groundout' || event === 'Forceout') {
+    const credits = play.runners?.[0]?.credits || [];
+    if (credits.length >= 2) {
+      const f1 = posMap[credits[0]?.position?.abbreviation];
+      const f2 = posMap[credits[1]?.position?.abbreviation];
+      if (f1 && f2) return `${f1}-${f2}`;
+    }
+    return 'GO';
+  }
+  if (event === 'Field Out') return 'FO';
+  return event ? event.substring(0,4).toUpperCase() : '';
+}
+
+// Fill scorecard cells from a completed half-inning's plays
+function applyPlaysToScorecard(halfPlays, inning, targetLineup, targetScores) {
+  halfPlays.forEach(play => {
+    if (!play.about?.isComplete) return;
+    const batterId = play.matchup?.batter?.id;
+    const batterName = play.matchup?.batter?.fullName;
+    if (!batterId && !batterName) return;
+
+    // Match batter to lineup slot by ID, fallback to name
+    let bi = targetLineup.findIndex(p => p.mlbId === batterId);
+    if (bi === -1 && batterName) {
+      bi = targetLineup.findIndex(p => p.name === batterName || p.name === batterName + ' *');
+    }
+    if (bi === -1) return;
+
+    const key = `${bi}_${inning}`;
+    // Never overwrite a manually scored cell
+    if (targetScores[key] && !targetScores[key + '_auto']) return;
+
+    const result = mapPlayResult(play);
+    if (result) {
+      targetScores[key] = result;
+      targetScores[key + '_auto'] = true;
+    }
+  });
+}
+
+// ── MAIN LIVE FEED POLLER ──────────────────────────────────
+// Replaces checkForHalfInningEnd + autoFillHalfInning
+// Called every 20s during live games; does lineup + play-by-play in one fetch
+
+async function pollLiveFeed(gamePk) {
+  try {
+    const res = await fetch(`${WORKER}/api/v1.1/game/${gamePk}/feed/live`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const feed = await res.json();
+
+    const gd   = feed.gameData;
+    const ld   = feed.liveData;
+    const ls   = ld?.linescore;
+    const isHome = window._isHome !== undefined ? window._isHome : true;
+    const mudSide = isHome ? 'home' : 'away';
+    const oppSide = isHome ? 'away' : 'home';
+
+    // ── 1. LINEUP: pull from boxscore battingOrder if not yet loaded
+    const needsMudLineup = !lineup.length || lineup.every(p => p.name === 'Lineup pending...');
+    const needsOppLineup = !oppLineup.length || oppLineup.every(p => p.name === 'Lineup pending...');
+
+    if (needsMudLineup) {
+      const extracted = extractLineupFromFeed(feed, mudSide);
+      if (extracted && extracted.length) {
+        lineup = extracted;
+        renderScorecard();
+        // Kick off async player stats fetch (non-blocking)
+        fetchPlayerStats(lineup.map(p => p.mlbId).filter(Boolean));
+      }
+    }
+
+    if (needsOppLineup) {
+      const extracted = extractLineupFromFeed(feed, oppSide);
+      if (extracted && extracted.length) {
+        oppLineup = extracted;
+        renderOppScorecard();
+        fetchOppPlayerStats(oppLineup.map(p => p.mlbId).filter(Boolean));
+      }
+    }
+
+    // ── 2. LINESCORE: update status bar and score board
+    if (ls) {
+      const inn    = ls.currentInning;
+      const isTop  = ls.isTopInning;
+      const status = gd?.status?.detailedState || '';
+
+      if (inn) {
+        document.getElementById('s-inn').textContent = `${isTop ? 'Top' : 'Bot'} ${inn}`;
+        document.getElementById('s-cnt').textContent  = `${ls.balls??0}-${ls.strikes??0} | ${ls.outs??0} out`;
+        const off = ls.offense || {};
+        document.getElementById('b1').classList.toggle('on', !!off.first);
+        document.getElementById('b2').classList.toggle('on', !!off.second);
+        document.getElementById('b3').classList.toggle('on', !!off.third);
+        document.getElementById('auto-badge').style.display = 'inline';
+      }
+
+      // Scores
+      const mudScore = ld.boxscore?.teams?.[mudSide]?.teamStats?.batting?.runs
+                    ?? ls.teams?.[mudSide]?.runs ?? 0;
+      const oppScore = ld.boxscore?.teams?.[oppSide]?.teamStats?.batting?.runs
+                    ?? ls.teams?.[oppSide]?.runs ?? 0;
+      document.getElementById('mud-sc').textContent = mudScore;
+      document.getElementById('opp-sc').textContent = oppScore;
+
+      // ── 3. PLAY-BY-PLAY AUTO-FILL
+      // Detect when the half-inning has changed since last poll
+      if (inn && lastInning !== null && (inn !== lastInning || isTop !== lastIsTop)) {
+        // The half-inning that just ended
+        const prevInning = isTop ? inn - 1 : inn;
+        const prevIsTop  = !isTop;
+        // who bats in the previous half: top = away, bottom = home
+        const prevMudBatting = (prevIsTop && !isHome) || (!prevIsTop && isHome);
+
+        const allPlays = ld.plays?.allPlays || [];
+        const halfPlays = allPlays.filter(p =>
+          p.about?.inning === prevInning && p.about?.isTopInning === prevIsTop
+        );
+
+        if (halfPlays.length) {
+          if (prevMudBatting) {
+            applyPlaysToScorecard(halfPlays, prevInning, lineup, scores);
+          } else {
+            applyPlaysToScorecard(halfPlays, prevInning, oppLineup, oppScores);
+          }
+          renderScorecard();
+          renderOppScorecard();
+        }
+      }
+
+      // Also catch up any innings we might have missed on initial load
+      // (fills completed innings that haven't been scored yet)
+      if (inn && lastInning === null) {
+        catchUpInnings(ld.plays?.allPlays || [], inn, isTop, isHome);
+      }
+
+      lastInning = inn;
+      lastIsTop  = isTop;
+    }
+
+    // ── 4. LINESCORE TABLE update from feed
+    const lsTable = ld?.linescore;
+    if (lsTable?.innings) {
+      updateLinescoreFromFeed(lsTable, isHome);
+    }
+
+  } catch(e) {
+    console.log('pollLiveFeed error:', e);
+  }
+}
+
+// Fill any already-completed innings when the app first loads mid-game
+function catchUpInnings(allPlays, currentInning, isTop, isHome) {
+  // Work through every completed half-inning up to where we are now
+  for (let inn = 1; inn <= currentInning; inn++) {
+    for (const topFlag of [true, false]) {
+      // Skip the current half-inning (still in progress)
+      if (inn === currentInning && topFlag === isTop) continue;
+
+      const mudBatting = (topFlag && !isHome) || (!topFlag && isHome);
+      const halfPlays = allPlays.filter(p =>
+        p.about?.inning === inn && p.about?.isTopInning === topFlag && p.about?.isComplete
+      );
+      if (!halfPlays.length) continue;
+
+      if (mudBatting) {
+        applyPlaysToScorecard(halfPlays, inn, lineup, scores);
+      } else {
+        applyPlaysToScorecard(halfPlays, inn, oppLineup, oppScores);
+      }
+    }
+  }
+  renderScorecard();
+  renderOppScorecard();
+}
+
+// Update the linescore table from feed data (avoids a separate API call)
+function updateLinescoreFromFeed(ls, isHome) {
+  const mudSide = isHome ? 'home' : 'away';
+  const oppSide = isHome ? 'away' : 'home';
+  const mudRow = [], oppRowArr = [];
+  for (let i = 0; i < 9; i++) {
+    const inn = ls.innings[i];
+    mudRow.push(`<td>${inn ? inn[mudSide]?.runs ?? '' : ''}</td>`);
+    oppRowArr.push(`<td>${inn ? inn[oppSide]?.runs ?? '' : ''}</td>`);
+  }
+  const mt = ls.teams?.[mudSide] || {}, ot = ls.teams?.[oppSide] || {};
+  const mudFull = `<tr><td class="tn">Toledo Mud Hens</td>${mudRow.join('')}<td class="tot">${mt.runs??0}</td><td class="tot">${mt.hits??0}</td><td class="tot">${mt.errors??0}</td></tr>`;
+  const oppFull = `<tr><td class="tn">${oppTeamName}</td>${oppRowArr.join('')}<td class="tot">${ot.runs??0}</td><td class="tot">${ot.hits??0}</td><td class="tot">${ot.errors??0}</td></tr>`;
+  document.getElementById('linescore-body').innerHTML = isHome ? oppFull + mudFull : mudFull + oppFull;
 }
 
 // ── FETCH GAME ─────────────────────────────────────────────
@@ -1243,15 +1435,13 @@ async function fetchGame() {
   try {
     const today = new Date();
     const pad = n => String(n).padStart(2,'0');
-    // Use local date explicitly to avoid UTC timezone shift
     const ds = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
     document.getElementById('meta-date').textContent = today.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     console.log('Fetching games for date:', ds, '— Team ID:', TEAM_ID);
 
-    // Worker handles sportId fallback automatically
     let data = null;
     try {
-      const r = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team,probablePitcher,person,stats`);
+      const r = await fetch(`${WORKER}/api/v1/schedule?teamId=${TEAM_ID}&date=${ds}&hydrate=lineups,linescore,team,probablePitcher,person,stats`);
       data = await r.json();
     } catch(e) { console.log('fetch failed:', e); }
 
@@ -1264,78 +1454,66 @@ async function fetchGame() {
       lineup = mockLineup(); renderScorecard(); return;
     }
 
-    const game = data.dates[0].games[0];
+    const game   = data.dates[0].games[0];
     const isHome = game.teams.home.team.id === TEAM_ID;
-    const mi = isHome ? 'home' : 'away', oi = isHome ? 'away' : 'home';
+    const mi     = isHome ? 'home' : 'away';
+    const oi     = isHome ? 'away' : 'home';
     const oppTeam = game.teams[oi].team;
 
     oppTeamName = oppTeam.name || 'Opponent';
+    window._isHome    = isHome;
+    window._oppTeamId = oppTeam.id;
+
+    // Update UI labels
     document.getElementById('opp-nm').textContent = oppTeamName.toUpperCase();
-    // Update all opp starter labels
     const oscl = document.getElementById('opp-starter-card-label');
     if (oscl) oscl.textContent = oppTeamName + ' Starter';
-    // Update opp stats tab to show team nickname (short)
     const oppStatsTab = document.getElementById('opp-stats-tab');
-    if (oppStatsTab) {
-      const nickname = oppTeamName.split(' ').pop(); // get last word = nickname
-      oppStatsTab.textContent = nickname + ' Stats';
-    }
-    // Update vs/@  indicator
+    if (oppStatsTab) oppStatsTab.textContent = oppTeamName.split(' ').pop() + ' Stats';
     const vsEl = document.getElementById('matchup-vs');
     if (vsEl) vsEl.textContent = isHome ? 'vs' : '@';
-    // Update opponent scorecard header
     const oppScHeader = document.getElementById('opp-sc-header');
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
-    // Update opp stats title
     const oppStatsTitle = document.getElementById('opp-stats-title');
     if (oppStatsTitle) oppStatsTitle.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
-    // Update opponent tab label
     const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]');
     if (oppTab) oppTab.textContent = oppTeamName;
+    document.querySelectorAll('#sec-game .card-label').forEach(el => {
+      if (['OPP STARTER','Opp Starter'].includes(el.textContent)) el.textContent = oppTeamName + ' Starter';
+    });
 
-    // Update venue name and weather dynamically
+    // Venue / weather
     const venueName = game.venue?.name || (isHome ? 'Fifth Third Field' : 'Away Ballpark');
     const venueCity = isHome ? 'Toledo, OH' : (oppTeam.locationName || '');
     document.getElementById('app-venue-sub').textContent = `${venueName} · ${venueCity}`;
-    // Fetch venue coordinates from MLB API then get weather
     fetchVenueWeather(game.venue?.id, venueName, isHome);
+
+    // Scores
     document.getElementById('mud-sc').textContent = game.teams[mi].score ?? '—';
     document.getElementById('opp-sc').textContent = game.teams[oi].score ?? '—';
 
     const status = game.status?.detailedState || '';
-    window._gameStatus = status;
+    window._gameStatus  = status;
     window._gameTimeUTC = game.gameDate || null;
-    window._isHome = isHome;
     document.getElementById('fp-time').textContent =
-      status === 'Final' ? 'Final' :
-      status.includes('Progress') ? '▶ In Progress' :
+      status === 'Final'            ? 'Final' :
+      status.includes('Progress')   ? '▶ In Progress' :
       `First Pitch: ${fmtTime(game.gameDate)} ET`;
 
-    window._oppTeamId = oppTeam.id;
     fetchStandings(TEAM_ID, oppTeam.id);
-    // Update all opponent labels with real team name
-    const pcOppLabel = document.getElementById('pc-opp-label');
-    if (pcOppLabel) pcOppLabel.textContent = oppTeamName + ' Starter';
-    const gameOppLabel = document.querySelector('#sec-game .card-label[id="opp-starter"]');
-    // Try to get probable pitchers from schedule data first
+
+    // Probable pitchers from schedule hydrate
     const mudProbable = game.teams[mi]?.probablePitcher;
     const oppProbable = game.teams[oi]?.probablePitcher;
     const mudName = mudProbable?.fullName || null;
     const oppName2 = oppProbable?.fullName || null;
     document.getElementById('mud-starter').textContent = mudName || 'TBD';
     document.getElementById('opp-starter').textContent = oppName2 || 'TBD';
-    // Update opp starter label to team name
-    const oppStarterLabel = document.querySelector('#sec-game .card-label:last-of-type');
-    const allLabels = document.querySelectorAll('#sec-game .card-label');
-    allLabels.forEach(el => {
-      if (el.textContent === 'OPP STARTER' || el.textContent === 'Opp Starter' || el.id === 'pc-opp-label') {
-        el.textContent = (oppTeamName || 'Opp') + ' Starter';
-      }
-    });
-    // Fetch boxscore for actual pitcher stats during/after game
-    fetchStarters(game.gamePk, isHome, mudName, oppName2);
+
+    // Linescore from schedule hydrate (pre-game / initial render)
     updateLinescore(game, isHome);
 
+    // Status bar from schedule hydrate
     const ls = game.linescore;
     if (ls && ls.currentInning) {
       document.getElementById('s-inn').textContent = `${ls.isTopInning?'Top':'Bot'} ${ls.currentInning}`;
@@ -1346,78 +1524,85 @@ async function fetchGame() {
       document.getElementById('b3').classList.toggle('on',!!off.third);
       document.getElementById('auto-badge').style.display='inline';
     } else {
-      document.getElementById('s-inn').textContent = status||'Pre-game';
+      document.getElementById('s-inn').textContent = status || 'Pre-game';
     }
 
-    const lp = isHome ? game.lineups?.homePlayers : game.lineups?.awayPlayers;
-    const op = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
+    // ── LINEUPS: try schedule hydrate first, fall back to live feed ──
+    const schedMudPlayers = isHome ? game.lineups?.homePlayers : game.lineups?.awayPlayers;
+    const schedOppPlayers = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
 
-    if (lp?.length) {
-      lineup = lp.slice(0,15).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
-      renderScorecard(); // Render immediately with names, stats load async
+    if (schedMudPlayers?.length) {
+      lineup = schedMudPlayers.slice(0,15).map(p=>({
+        name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
+      }));
+      renderScorecard();
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
-    } else {
-      lineup = mockLineup(); renderScorecard();
     }
 
-    if (op?.length) {
-      oppLineup = op.slice(0,15).map(p=>({name:p.person?.fullName||'Player',pos:p.position?.abbreviation||'',num:p.jerseyNumber||'',mlbId:p.person?.id||null}));
-      renderOppScorecard(); // Show names immediately
-      // Update opponent scorecard header
-      const oppHeader = document.getElementById('opp-sc-header');
-      if (oppHeader) oppHeader.textContent = oppTeam.name + ' Batter';
-      fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
-    } else {
-      oppLineup = mockOppLineup();
+    if (schedOppPlayers?.length) {
+      oppLineup = schedOppPlayers.slice(0,15).map(p=>({
+        name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
+      }));
       renderOppScorecard();
+      fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
     }
 
+    // For any game with a gamePk, kick off the live feed poller
+    // This handles: lineup fallback, play-by-play, live score updates
     if (game.gamePk) {
       currentGamePk = game.gamePk;
-      checkForHalfInningEnd(game.gamePk);
-      // During live games, poll linescore every 15s for half-inning changes
-      if (status.includes('Progress')) {
-        clearInterval(window._linescoreInterval);
-        window._linescoreInterval = setInterval(() => {
-          if (currentGamePk) checkForHalfInningEnd(currentGamePk);
-        }, 15000);
-      }
-      // Pre-load stats in background when game loads (don't block rendering)
+
+      // Immediately poll the live feed — this fills lineups if schedule hydrate was empty
+      // and catches up any plays already completed
+      await pollLiveFeed(game.gamePk);
+
+      // Also fetch boxscore for pitcher stats
+      fetchStarters(game.gamePk, isHome, mudName, oppName2);
+
+      // Pre-load stats caches in background
       if (!hensStatsCache) {
-        fetchRosterStats(512).then(stats => {
-          if (stats.length) hensStatsCache = stats;
-        });
+        fetchRosterStats(512).then(stats => { if (stats.length) hensStatsCache = stats; });
       }
       if (!oppStatsCache && window._oppTeamId) {
         fetchRosterStats(window._oppTeamId).then(stats => {
           if (stats.length) { oppStatsCache = stats; oppStatsTeamId = window._oppTeamId; }
         });
       }
-      // Hide countdown only if game is actually in progress or final
-      const gStatus = game.status?.detailedState || '';
-      if (gStatus.includes('Progress') || gStatus === 'Final') {
-        document.getElementById('countdown-card').style.display = 'none';
-      }
-      // Schedule next refresh based on game state
-      const isLive = gStatus.includes('Progress');
-      const isFinal = gStatus === 'Final';
+
+      const isLive  = status.includes('Progress');
+      const isFinal = status === 'Final';
+
       if (isFinal) {
-        // Game over - check less frequently
-        setTimeout(fetchGame, 60000);
-      } else if (isLive) {
-        // Live game - refresh every 20s
-        setTimeout(fetchGame, 20000);
-      } else if (!lp?.length) {
-        // Pre-game, no lineup yet - check every 2 min
+        document.getElementById('countdown-card').style.display = 'none';
+        // Game over — do a final pass to fill any remaining innings, then stop
         setTimeout(fetchGame, 120000);
+      } else if (isLive) {
+        document.getElementById('countdown-card').style.display = 'none';
+        // Set up interval-based live feed polling (every 20s)
+        clearInterval(window._liveFeedInterval);
+        window._liveFeedInterval = setInterval(() => {
+          if (currentGamePk) pollLiveFeed(currentGamePk);
+        }, 20000);
+        // Also refresh the schedule data every 5 min during live game
+        setTimeout(fetchGame, 300000);
       } else {
-        // Pre-game with lineup - refresh every 30s
-        setTimeout(fetchGame, 30000);
+        // Pre-game: if lineup not loaded, poll live feed every 2 min
+        // (lineup appears in feed once announced, usually ~60 min before first pitch)
+        clearInterval(window._liveFeedInterval);
+        window._liveFeedInterval = setInterval(() => {
+          if (currentGamePk) pollLiveFeed(currentGamePk);
+        }, 120000);
+        // Refresh schedule data every 5 min pre-game
+        setTimeout(fetchGame, 300000);
       }
     } else {
-      // No game today
-      setTimeout(fetchGame, 300000); // check every 5 min on off days
+      setTimeout(fetchGame, 300000);
     }
+
+    // Show mock lineups only if still empty after everything above
+    if (!lineup.length) { lineup = mockLineup(); renderScorecard(); }
+    if (!oppLineup.length) { oppLineup = mockOppLineup(); renderOppScorecard(); }
+
   } catch(e) {
     console.error('fetchGame error:', e);
     document.getElementById('s-inn').textContent = 'Retrying...';
@@ -1427,208 +1612,43 @@ async function fetchGame() {
   }
 }
 
-// ── AUTO-FILL PLAY BY PLAY ────────────────────────────────
-// lastInning, lastIsTop, currentGamePk declared in STATE block above
-
-function mapPlayResult(play) {
-  const event = play.result?.event || '';
-  const desc = play.result?.description || '';
-  
-  // Map MLB API event names to our notation
-  if (event === 'Home Run') return 'HR';
-  if (event === 'Triple') return '3B';
-  if (event === 'Double') return '2B';
-  if (event === 'Single') return '1B';
-  if (event === 'Walk') return 'BB';
-  if (event === 'Intent Walk') return 'IBB';
-  if (event === 'Hit By Pitch') return 'HBP';
-  if (event === 'Strikeout') {
-    // Check if called or swinging
-    const lastPitch = play.pitchIndex?.[play.pitchIndex.length - 1];
-    const pitches = play.playEvents || [];
-    const last = pitches[pitches.length - 1];
-    if (last?.details?.code === 'C') return 'Kc';
-    return 'K';
-  }
-  if (event === 'Grounded Into DP' || event === 'Double Play') return 'DP';
-  if (event === 'Sac Fly') return 'SF';
-  if (event === 'Sac Bunt') return 'SAC';
-  if (event === 'Field Error') return 'E';
-  if (event === 'Fielders Choice' || event === 'Fielders Choice Out') return 'FC';
-  if (event === 'Flyout') {
-    // Try to get fielder number
-    const fielder = play.matchup?.postOnFirst || null;
-    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
-    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
-    if (pos && posMap[pos]) return `F${posMap[pos]}`;
-    return 'FO';
-  }
-  if (event === 'Pop Out') {
-    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
-    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
-    if (pos && posMap[pos]) return `P${posMap[pos]}`;
-    return 'FO';
-  }
-  if (event === 'Lineout') {
-    const pos = play.runners?.[0]?.credits?.[0]?.position?.abbreviation;
-    const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
-    if (pos && posMap[pos]) return `L${posMap[pos]}`;
-    return 'LO';
-  }
-  if (event === 'Groundout' || event === 'Forceout') {
-    // Try to build #-# notation
-    const credits = play.runners?.[0]?.credits || [];
-    if (credits.length >= 2) {
-      const posMap = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
-      const f1 = posMap[credits[0]?.position?.abbreviation];
-      const f2 = posMap[credits[1]?.position?.abbreviation];
-      if (f1 && f2) return `${f1}-${f2}`;
-    }
-    return 'GO';
-  }
-  if (event === 'Field Out') return 'FO';
-  // Fallback
-  return event ? event.substring(0,4).toUpperCase() : '';
-}
-
-async function autoFillHalfInning(gamePk, inning, isTop) {
-  try {
-    // Try v1.1 live feed first, fall back to v1 playByPlay
-    let allPlays = [];
-    try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1.1/game/${gamePk}/feed/live`);
-      const data = await res.json();
-      allPlays = data.liveData?.plays?.allPlays || [];
-    } catch(e) {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/playByPlay`);
-      const data = await res.json();
-      allPlays = data.allPlays || [];
-    }
-
-    // Filter plays for this half inning
-    const halfPlays = allPlays.filter(p => {
-      const ab = p.about;
-      return ab && ab.inning === inning && ab.isTopInning === isTop && ab.isComplete;
-    });
-
-    if (!halfPlays.length) return;
-
-    // Determine which lineup to use
-    // Convention: top of inning = away team bats, bottom = home team bats
-    // If Mud Hens are HOME: top=opp bats, bottom=hens bats
-    // If Mud Hens are AWAY: top=hens bats, bottom=opp bats
-    const isHome = window._isHome !== undefined ? window._isHome : true;
-    const hensAreTopTeam = !isHome; // away team bats in top
-    const hensAreBatting = isTop === hensAreTopTeam;
-    const targetLineup = hensAreBatting ? lineup : oppLineup;
-    const targetScores = hensAreBatting ? scores : oppScores;
-
-    halfPlays.forEach(play => {
-      const batterId = play.matchup?.batter?.id;
-      const batterName = play.matchup?.batter?.fullName;
-      if (!batterId && !batterName) return;
-
-      // Find batter index by ID first, then name as fallback
-      let bi = targetLineup.findIndex(p => p.mlbId === batterId);
-      if (bi === -1 && batterName) {
-        bi = targetLineup.findIndex(p => p.name === batterName);
-      }
-      if (bi === -1) return;
-
-      const key = `${bi}_${inning}`;
-      // Only auto-fill if not manually scored
-      if (targetScores[key] && !targetScores[key + '_auto']) return;
-
-      const result = mapPlayResult(play);
-      if (result) {
-        targetScores[key] = result;
-        targetScores[key + '_auto'] = true;
-      }
-    });
-
-    renderScorecard();
-    renderOppScorecard();
-  } catch(e) {
-    console.log('Auto-fill error:', e);
-  }
-}
-
-async function checkForHalfInningEnd(gamePk) {
-  try {
-    const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/game/${gamePk}/linescore`);
-    const data = await res.json();
-    // MiLB linescore can return data directly or wrapped
-    const lsData = data.currentInning !== undefined ? data : (data.linescore || data);
-    const inning = lsData?.currentInning || data?.currentInning;
-    const isTop = lsData?.isTopInning !== undefined ? lsData.isTopInning : data?.isTopInning;
-    console.log('Linescore check - inning:', inning, 'isTop:', isTop, 'lastInning:', lastInning);
-    if (!inning) return;
-
-    // Detect half inning change
-    if (lastInning !== null && (inning !== lastInning || isTop !== lastIsTop)) {
-      // Half inning just ended — auto-fill the previous one
-      const prevInning = isTop ? inning - 1 : inning;
-      const prevIsTop = !isTop;
-      console.log(`Half inning ended: ${prevIsTop ? 'Top' : 'Bot'} ${prevInning} — auto-filling...`);
-      await autoFillHalfInning(gamePk, prevInning, prevIsTop);
-    }
-
-    lastInning = inning;
-    lastIsTop = isTop;
-  } catch(e) {}
-}
-
 // ── PLAYER STATS TABS ─────────────────────────────────────
 async function fetchRosterStats(teamId) {
   try {
-    // Use the stats endpoint with teamId and sportId for individual player stats
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
+    const url = `${WORKER}/api/v1/stats?stats=season&season=2026&group=hitting&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
-    
     if (splits.length > 1) {
-      // Individual player stats returned
       return splits
         .filter(s => s.player?.fullName && (s.stat?.atBats || 0) >= 1)
         .map(s => ({
-          name: s.player?.fullName || '—',
-          num: '',
-          pos: s.position?.abbreviation || '—',
-          g: s.stat.gamesPlayed ?? 0,
-          ab: s.stat.atBats ?? 0,
-          avg: s.stat.avg || '.000',
-          obp: s.stat.obp || '.000',
-          slg: s.stat.slg || '.000',
-          ops: s.stat.ops || '.000',
-          hr: s.stat.homeRuns ?? 0,
-          rbi: s.stat.rbi ?? 0,
-          sb: s.stat.stolenBases ?? 0,
+          name:s.player?.fullName||'—', num:'', pos:s.position?.abbreviation||'—',
+          g:s.stat.gamesPlayed??0, ab:s.stat.atBats??0,
+          avg:s.stat.avg||'.000', obp:s.stat.obp||'.000',
+          slg:s.stat.slg||'.000', ops:s.stat.ops||'.000',
+          hr:s.stat.homeRuns??0, rbi:s.stat.rbi??0, sb:s.stat.stolenBases??0,
         }))
         .sort((a,b) => b.ab - a.ab);
     }
-
-    // Fallback: roster then individual stats calls
-    const rRes = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/teams/${teamId}/roster?season=2026&rosterType=fullRoster`);
+    const rRes = await fetch(`${WORKER}/api/v1/teams/${teamId}/roster?season=2026&rosterType=fullRoster`);
     const rData = await rRes.json();
     const roster = (rData.roster || []).filter(p => p.position?.type !== 'Pitcher');
     const stats = [];
     await Promise.all(roster.slice(0,25).map(async p => {
       try {
-        const sr = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
+        const sr = await fetch(`${WORKER}/api/v1/people/${p.person.id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
         const sd = await sr.json();
         const sp = sd.stats?.[0]?.splits;
         if (sp?.length) {
           const st = sp[sp.length-1].stat;
           if ((st.atBats||0) >= 1) {
             stats.push({
-              name: p.person.fullName,
-              num: p.jerseyNumber || '',
-              pos: p.position?.abbreviation || '—',
-              g: st.gamesPlayed??0, ab: st.atBats??0,
-              avg: st.avg||'.000', obp: st.obp||'.000',
-              slg: st.slg||'.000', ops: st.ops||'.000',
-              hr: st.homeRuns??0, rbi: st.rbi??0, sb: st.stolenBases??0,
+              name:p.person.fullName, num:p.jerseyNumber||'', pos:p.position?.abbreviation||'—',
+              g:st.gamesPlayed??0, ab:st.atBats??0,
+              avg:st.avg||'.000', obp:st.obp||'.000',
+              slg:st.slg||'.000', ops:st.ops||'.000',
+              hr:st.homeRuns??0, rbi:st.rbi??0, sb:st.stolenBases??0,
             });
           }
         }
@@ -1641,26 +1661,19 @@ async function fetchRosterStats(teamId) {
 
 async function fetchPitcherStats(teamId) {
   try {
-    const url = `https://super-glade-7699.jrdsherman.workers.dev/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
+    const url = `${WORKER}/api/v1/stats?stats=season&season=2026&group=pitching&gameType=R&teamId=${teamId}&sportId=11&limit=200&playerPool=ALL&offset=0`;
     const res = await fetch(url);
     const data = await res.json();
     const splits = data.stats?.[0]?.splits || [];
-    
     if (splits.length > 0) {
       return splits
         .filter(s => s.player?.fullName && parseFloat(s.stat?.inningsPitched || 0) >= 0.1)
         .map(s => ({
-          name: s.player?.fullName || '—',
-          pos: s.position?.abbreviation || 'P',
-          g: s.stat.gamesPlayed ?? 0,
-          gs: s.stat.gamesStarted ?? 0,
-          ip: s.stat.inningsPitched || '0.0',
-          era: s.stat.era || '—',
-          w: s.stat.wins ?? 0,
-          l: s.stat.losses ?? 0,
-          so: s.stat.strikeOuts ?? 0,
-          whip: s.stat.whip || '—',
-          sv: s.stat.saves ?? 0,
+          name:s.player?.fullName||'—', pos:s.position?.abbreviation||'P',
+          g:s.stat.gamesPlayed??0, gs:s.stat.gamesStarted??0,
+          ip:s.stat.inningsPitched||'0.0', era:s.stat.era||'—',
+          w:s.stat.wins??0, l:s.stat.losses??0, so:s.stat.strikeOuts??0,
+          whip:s.stat.whip||'—', sv:s.stat.saves??0,
         }))
         .sort((a,b) => parseFloat(b.ip) - parseFloat(a.ip));
     }
@@ -1705,18 +1718,10 @@ function renderPitchTable(stats, bodyId) {
     return;
   }
   tbody.innerHTML = stats.map(p => `<tr>
-    <td>${p.name}</td>
-    <td>${p.g}</td>
-    <td>${p.gs}</td>
-    <td>${p.ip}</td>
+    <td>${p.name}</td><td>${p.g}</td><td>${p.gs}</td><td>${p.ip}</td>
     <td class="${parseFloat(p.era)<3.50?'highlight':''}">${p.era}</td>
-    <td>${p.w}</td>
-    <td>${p.l}</td>
-    <td>${p.so}</td>
-    <td>${p.whip}</td>
-    <td>${p.sv}</td>
+    <td>${p.w}</td><td>${p.l}</td><td>${p.so}</td><td>${p.whip}</td><td>${p.sv}</td>
   </tr>`).join('');
-  // Wire up sorting - numeric cols: 1,2,3,4,5,6,7,8,9
   const table = tbody.closest('table');
   if (table) makeSortable(table, [1,2,3,4,5,6,7,8,9]);
 }
@@ -1729,17 +1734,11 @@ function renderStatsTable(stats, bodyId) {
     return;
   }
   tbody.innerHTML = stats.map(p => `<tr>
-    <td>${p.name}</td>
-    <td>${p.pos}</td>
-    <td>${p.g}</td>
-    <td>${p.ab}</td>
+    <td>${p.name}</td><td>${p.pos}</td><td>${p.g}</td><td>${p.ab}</td>
     <td class="${parseFloat(p.avg)>=0.300?'highlight':''}">${p.avg}</td>
-    <td>${p.obp}</td>
-    <td>${p.slg}</td>
+    <td>${p.obp}</td><td>${p.slg}</td>
     <td class="${parseFloat(p.ops)>=0.850?'highlight':''}">${p.ops}</td>
-    <td>${p.hr}</td>
-    <td>${p.rbi}</td>
-    <td>${p.sb}</td>
+    <td>${p.hr}</td><td>${p.rbi}</td><td>${p.sb}</td>
   </tr>`).join('');
   const table = tbody.closest('table');
   if (table) makeSortable(table, [2,3,4,5,6,7,8,9,10]);
@@ -1752,35 +1751,21 @@ function switchStatTab(team, type, el) {
   tabs.forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   if (type === 'bat') {
-    batView.style.display = 'block';
-    pitView.style.display = 'none';
+    batView.style.display = 'block'; pitView.style.display = 'none';
   } else {
-    batView.style.display = 'none';
-    pitView.style.display = 'block';
+    batView.style.display = 'none'; pitView.style.display = 'block';
     if (team === 'hens') loadHensPitching();
     else loadOppPitching();
   }
 }
 
 async function loadHensStats() {
-  if (hensStatsCache && hensStatsCache.length) { 
-    renderStatsTable(hensStatsCache, 'hens-stats-body'); 
-    return; 
-  }
+  if (hensStatsCache && hensStatsCache.length) { renderStatsTable(hensStatsCache, 'hens-stats-body'); return; }
   const tbody = document.getElementById('hens-stats-body');
   if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
-  try {
-    const stats = await fetchRosterStats(512);
-    if (stats && stats.length) {
-      hensStatsCache = stats;
-      renderStatsTable(hensStatsCache, 'hens-stats-body');
-    } else {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">No stats available yet — try again later.</td></tr>';
-    }
-  } catch(e) {
-    console.error('loadHensStats error:', e);
-    if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Error loading stats.</td></tr>';
-  }
+  const stats = await fetchRosterStats(512);
+  if (stats && stats.length) { hensStatsCache = stats; renderStatsTable(hensStatsCache, 'hens-stats-body'); }
+  else if (tbody) tbody.innerHTML = '<tr><td colspan="11" class="stats-loading">No stats available yet.</td></tr>';
 }
 
 async function loadHensPitching() {
@@ -1790,23 +1775,19 @@ async function loadHensPitching() {
   renderPitchTable(hensPitchCache, 'hens-pitch-body');
 }
 
-// oppPitchCache, oppPitchTeamId declared in STATE block
-
 async function loadOppStats() {
-  const titleEl = document.getElementById('opp-stats-title');
   const oppName = oppTeamName && oppTeamName !== 'Opponent' ? oppTeamName : 'Opponent';
+  const titleEl = document.getElementById('opp-stats-title');
   if (titleEl) titleEl.textContent = `${oppName} — 2026 Batting`;
   const pitTitleEl = document.getElementById('opp-pitch-title');
   if (pitTitleEl) pitTitleEl.textContent = `${oppName} — 2026 Pitching`;
 
   if (oppStatsCache && oppStatsCache.length && oppStatsTeamId === window._oppTeamId) {
-    renderStatsTable(oppStatsCache, 'opp-stats-body');
-    return;
+    renderStatsTable(oppStatsCache, 'opp-stats-body'); return;
   }
   const oppTbody = document.getElementById('opp-stats-body');
   if (!window._oppTeamId) {
-    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Waiting for game data... tap this tab again in a moment.</td></tr>';
-    // Only retry once - don't create an infinite loop
+    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Waiting for game data...</td></tr>';
     if (!window._oppStatsRetryPending) {
       window._oppStatsRetryPending = true;
       setTimeout(() => { window._oppStatsRetryPending = false; loadOppStats(); }, 4000);
@@ -1817,22 +1798,14 @@ async function loadOppStats() {
   if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Loading batting stats...</td></tr>';
   oppStatsTeamId = window._oppTeamId;
   const oppStats = await fetchRosterStats(window._oppTeamId);
-  if (oppStats.length) {
-    oppStatsCache = oppStats;
-    renderStatsTable(oppStatsCache, 'opp-stats-body');
-  } else {
-    if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Could not load stats — try again shortly.</td></tr>';
-  }
+  if (oppStats.length) { oppStatsCache = oppStats; renderStatsTable(oppStatsCache, 'opp-stats-body'); }
+  else if (oppTbody) oppTbody.innerHTML = '<tr><td colspan="11" class="stats-loading">Could not load stats.</td></tr>';
 }
 
 async function loadOppPitching() {
-  if (oppPitchCache && oppPitchTeamId === window._oppTeamId) {
-    renderPitchTable(oppPitchCache, 'opp-pitch-body');
-    return;
-  }
+  if (oppPitchCache && oppPitchTeamId === window._oppTeamId) { renderPitchTable(oppPitchCache, 'opp-pitch-body'); return; }
   if (!window._oppTeamId) {
-    document.getElementById('opp-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Load the game first.</td></tr>';
-    return;
+    document.getElementById('opp-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Load the game first.</td></tr>'; return;
   }
   document.getElementById('opp-pitch-body').innerHTML = '<tr><td colspan="9" class="stats-loading">Loading pitching stats...</td></tr>';
   oppPitchTeamId = window._oppTeamId;
@@ -1847,16 +1820,15 @@ const TRIVIA = [
   {q:"Where does the nickname 'Mud Hens' come from?",a:"The original team played near the Maumee River marshes, home to American Coots — locally called 'mud hens.' The name stuck and became iconic."},
   {q:"Which MLB team are the Mud Hens currently affiliated with?",a:"The Detroit Tigers. Toledo has been a Tigers Triple-A affiliate since 1987 — one of the longest continuous affiliations in MiLB history."},
   {q:"What are the names of the Mud Hens' mascots?",a:"Muddy and Spike — two mud hen bird mascots who entertain fans at Fifth Third Field throughout every home game."},
-  {q:"Jamie Farr, who played Klinger on M*A*S*H, was actually born in Toledo. True or False?",a:"True! Jamie Farr was born and raised in Toledo, Ohio. His character\'s devotion to the Mud Hens was a genuine nod to his hometown."},
-  {q:"What year did Fifth Third Field open?",a:"2002. It\'s consistently ranked among the best minor league ballparks in America and has won multiple awards for fan experience and design."},
+  {q:"Jamie Farr, who played Klinger on M*A*S*H, was actually born in Toledo. True or False?",a:"True! Jamie Farr was born and raised in Toledo, Ohio. His character's devotion to the Mud Hens was a genuine nod to his hometown."},
+  {q:"What year did Fifth Third Field open?",a:"2002. It's consistently ranked among the best minor league ballparks in America and has won multiple awards for fan experience and design."},
   {q:"How many Governors Cup championships have the Mud Hens won?",a:"Five — in 1927, 1953, 1963, 1967, and 2010. The 2010 title is their most recent Triple-A championship."},
   {q:"What entertainment district surrounds Fifth Third Field?",a:"Hensville — a dedicated entertainment district with restaurants, bars, and a fan plaza, all built around the ballpark in downtown Toledo."},
   {q:"Several future Detroit Tigers stars developed in Toledo. Name one from the famous 1984 World Series team.",a:"Kirk Gibson, Alan Trammell, Lou Whitaker, and Jack Morris all came through the Toledo organization before starring on the 1984 World Series champion Tigers."},
   {q:"What is the approximate seating capacity of Fifth Third Field?",a:"About 10,300 for a sellout, with standing room bringing it closer to 11,000 fans."},
-  {q:"The Mud Hens play in which league?",a:"The International League — which is now the top Triple-A circuit after Minor League Baseball\'s 2021 restructuring placed all Triple-A teams into one league."},
-  {q:"What river runs near Fifth Third Field and gave the original team their name?",a:"The Maumee River. The original Toledo team played at Bay View Park near the river\'s marshlands, where mud hens (American Coots) were common."},
-  {q:"Which Mud Hens pitcher threw a perfect game in Toledo\'s history?",a:"Several no-hitters and near-perfect games have occurred in Toledo\'s history — checking game notes and Mud Hens historical records reveals the full list of pitching gems at Fifth Third Field."},
-  {q:"What is the duck connection to Toledo and the Mud Hens?",a:"Toledo is home to the Jeep assembly plant, and Jeep owners famously 'duck' each other by leaving rubber ducks on vehicles — a local tradition that\'s become part of Toledo\'s identity, including at Mud Hens games."},
+  {q:"The Mud Hens play in which league?",a:"The International League — the top Triple-A circuit after Minor League Baseball's 2021 restructuring."},
+  {q:"What river runs near Fifth Third Field and gave the original team their name?",a:"The Maumee River. The original Toledo team played at Bay View Park near the river's marshlands, where mud hens (American Coots) were common."},
+  {q:"What is the duck connection to Toledo and the Mud Hens?",a:"Toledo is home to the Jeep assembly plant, and Jeep owners famously 'duck' each other by leaving rubber ducks on vehicles — a local tradition that's become part of Toledo's identity, including at Mud Hens games."},
 ];
 let triviaIdx = 0;
 function loadTrivia() {
@@ -1879,7 +1851,7 @@ const MH_HISTORY = [
   {year:"1970s",title:"M*A*S*H Puts Toledo on the Map",desc:"Corporal Maxwell Q. Klinger, played by Toledo native Jamie Farr on the hit TV show M*A*S*H, becomes the most famous fictional Mud Hens fan ever. Klinger wearing their jersey throughout the show brings national attention to Toledo baseball."},
   {year:"1984",title:"World Series Pipeline",desc:"Many of the 1984 World Series champion Detroit Tigers developed in Toledo, including Hall of Famers Alan Trammell and Lou Whitaker, plus Kirk Gibson and Jack Morris."},
   {year:"1987",title:"Detroit Tigers Affiliation Begins",desc:"The Toledo Mud Hens become the Triple-A affiliate of the Detroit Tigers, beginning one of the longest continuous affiliate relationships in Minor League Baseball history."},
-  {year:"2002",title:"Fifth Third Field Opens",desc:"The Mud Hens move into brand new Fifth Third Field in downtown Toledo, immediately recognized as one of the finest minor league ballparks in America. The stadium anchors the Hensville district and downtown revitalization."},
+  {year:"2002",title:"Fifth Third Field Opens",desc:"The Mud Hens move into brand new Fifth Third Field in downtown Toledo, immediately recognized as one of the finest minor league ballparks in America."},
   {year:"2010",title:"Triple-A Championship",desc:"The Toledo Mud Hens win the Triple-A championship, their fifth and most recent title, in one of the most celebrated seasons in franchise history."},
   {year:"2021",title:"MiLB Restructuring",desc:"Minor League Baseball undergoes its largest restructuring in history. Toledo retains Triple-A status in the newly organized International League as one of MiLB's marquee franchises."},
   {year:"2026",title:"New Season, New Prospects",desc:"The 2026 Toledo Mud Hens feature top Detroit Tigers prospects including Kevin McGonigle, Max Clark, Thayron Liranzo, and Josue Briceno, managed by returning skipper Gabe Alvarez."},
@@ -1896,38 +1868,33 @@ function loadHistory() {
 
 // ── PROMOTIONS ─────────────────────────────────────────────
 const PROMOS = [
-  // May 2026
-  {date:'2026-05-10',name:"Mother\'s Day — Kids Run the Bases",desc:"Special Mother\'s Day celebration at Fifth Third Field. Kids Run the Bases postgame. Family Sunday fun.",badge:'Holiday'},
-  {date:'2026-05-22',name:'Military Appreciation Night',desc:'Honoring past and present military with a specialty jersey giveaway and special on-field recognition ceremony.',badge:'Theme Night'},
-  {date:'2026-05-23',name:'"The Paper" Night + Fireworks',desc:'Theme night inspired by Peacock\'s hit comedy set in Toledo, with a special appearance by series star Oscar Nuñez! Clips from the show throughout the night. First postgame fireworks show of the season.',badge:'Special Event'},
-  {date:'2026-05-24',name:'Kids Day — Bluey & Bingo Visit',desc:'Bluey and Bingo visit Fifth Third Field! Kids Run the Bases postgame. Sunday Family Day.',badge:'Kids Event'},
+  {date:'2026-05-10',name:"Mother's Day — Kids Run the Bases",desc:"Special Mother's Day celebration. Kids Run the Bases postgame. Family Sunday fun.",badge:'Holiday'},
+  {date:'2026-05-22',name:'Military Appreciation Night',desc:'Honoring past and present military with a specialty jersey giveaway and on-field recognition ceremony.',badge:'Theme Night'},
+  {date:'2026-05-23',name:'"The Paper" Night + Fireworks',desc:"Theme night inspired by Peacock's hit comedy set in Toledo, with a special appearance by Oscar Nuñez! First postgame fireworks show of the season.",badge:'Special Event'},
+  {date:'2026-05-24',name:'Kids Day — Bluey & Bingo Visit',desc:'Bluey and Bingo visit Fifth Third Field! Kids Run the Bases postgame.',badge:'Kids Event'},
   {date:'2026-05-25',name:'Memorial Day',desc:'Special Memorial Day game. Patriotic ceremonies and family fun at the ballpark.',badge:'Holiday'},
   {date:'2026-05-29',name:"Boots & Baseball Festival",desc:'Hensville comes alive with country music, food, and drinks for the Boots & Baseball festival weekend.',badge:'Festival'},
-  {date:'2026-05-30',name:"Boots & Baseball + Hens & Hounds",desc:'Dog-friendly Tuesday! Bring your dog to the ballpark for Hens & Hounds Night. Supported by Perrysburg & West Toledo Animal Hospital.',badge:'Special Event'},
+  {date:'2026-05-30',name:"Boots & Baseball + Hens & Hounds",desc:"Dog-friendly Tuesday! Bring your dog to the ballpark. Supported by Perrysburg & West Toledo Animal Hospital.",badge:'Special Event'},
   {date:'2026-05-31',name:"Boots & Baseball Festival",desc:'Final night of the Boots & Baseball festival weekend in Hensville.',badge:'Festival'},
-  // June 2026
-  {date:'2026-06-12',name:"80s Night",desc:'Turn back the clock! 80s music all night, costumes welcome. Brand new theme night in 2026.',badge:'Theme Night'},
-  {date:'2026-06-13',name:'WWE Night',desc:'Wrestling comes to Fifth Third Field! WWE Night is a brand new theme night for 2026.',badge:'Theme Night'},
-  {date:'2026-06-14',name:'Backyard Baseball Night — Pablo Sanchez Visit',desc:'The legend himself, Pablo Sanchez of Backyard Baseball, visits Fifth Third Field! Kids Sunday Family Day.',badge:'Special Event'},
-  // July 2026
-  {date:'2026-07-03',name:"Rock N Blast Festival — Night 1",desc:'Rock N Blast is back for two nights! Extended postgame fireworks show celebrating America 250. Specialty jersey and sound-reactive light-up bracelets.',badge:'Fireworks'},
-  {date:'2026-07-04',name:"Independence Day — Rock N Blast Night 2",desc:'Fourth of July at Fifth Third Field! Rock N Blast Night 2 with extended extravagant postgame fireworks celebrating America 250. Specialty jersey and sound-reactive bracelets.',badge:'Fireworks'},
+  {date:'2026-06-12',name:"80s Night",desc:'Turn back the clock! 80s music all night, costumes welcome.',badge:'Theme Night'},
+  {date:'2026-06-13',name:'WWE Night',desc:'Wrestling comes to Fifth Third Field! WWE Night is brand new for 2026.',badge:'Theme Night'},
+  {date:'2026-06-14',name:'Backyard Baseball Night — Pablo Sanchez Visit',desc:'The legend himself visits Fifth Third Field! Kids Sunday Family Day.',badge:'Special Event'},
+  {date:'2026-07-03',name:"Rock N Blast Festival — Night 1",desc:"Rock N Blast is back! Extended postgame fireworks celebrating America 250. Specialty jersey and light-up bracelets.",badge:'Fireworks'},
+  {date:'2026-07-04',name:"Independence Day — Rock N Blast Night 2",desc:'Fourth of July! Extended fireworks celebrating America 250. Specialty jersey and bracelets.',badge:'Fireworks'},
   {date:'2026-07-05',name:'Kids Run the Bases Sunday',desc:'Sunday Family Day. Kids Run the Bases postgame.',badge:'Kids Event'},
-  {date:'2026-07-17',name:"Margaritaville Festival Night 1",desc:'Hensville transforms into Margaritaville for a weekend festival. Live entertainment, tropical vibes, food and drinks.',badge:'Festival'},
-  {date:'2026-07-18',name:"Margaritaville Festival Night 2",desc:'Night 2 of the Margaritaville festival weekend in Hensville.',badge:'Festival'},
-  {date:'2026-07-19',name:'Peanuts Night — Snoopy Visit',desc:'Snoopy visits Fifth Third Field for Peanuts Night! Kids Run the Bases Sunday.',badge:'Special Event'},
-  {date:'2026-07-24',name:'Harry Potter Night',desc:'Magic comes to Fifth Third Field for Harry Potter Night. Costumes encouraged!',badge:'Theme Night'},
+  {date:'2026-07-17',name:"Margaritaville Festival Night 1",desc:'Hensville transforms into Margaritaville. Live entertainment, tropical vibes, food and drinks.',badge:'Festival'},
+  {date:'2026-07-18',name:"Margaritaville Festival Night 2",desc:'Night 2 of the Margaritaville festival weekend.',badge:'Festival'},
+  {date:'2026-07-19',name:'Peanuts Night — Snoopy Visit',desc:"Snoopy visits Fifth Third Field! Kids Run the Bases Sunday.",badge:'Special Event'},
+  {date:'2026-07-24',name:'Harry Potter Night',desc:'Magic comes to Fifth Third Field. Costumes encouraged!',badge:'Theme Night'},
   {date:'2026-07-25',name:'Christmas in July',desc:'Holiday-themed night in the middle of summer. Classic fan favorite returning for 2026.',badge:'Theme Night'},
-  // August 2026
-  {date:'2026-08-07',name:'Toledo Jeep Fest Weekend — Night 1',desc:'Jeeps take over St. Clair St. outside the ballpark! Toledo Jeep Fest Weekend at Fifth Third Field.',badge:'Festival'},
+  {date:'2026-08-07',name:'Toledo Jeep Fest Weekend — Night 1',desc:'Jeeps take over St. Clair St. outside the ballpark! Toledo Jeep Fest Weekend.',badge:'Festival'},
   {date:'2026-08-08',name:'Toledo Jeep Fest Weekend — Night 2',desc:'Night 2 of Toledo Jeep Fest Weekend. One of the biggest events of the Mud Hens season.',badge:'Festival'},
   {date:'2026-08-09',name:'Toledo Jeep Fest Weekend — Sunday',desc:'Final day of Toledo Jeep Fest Weekend. Kids Run the Bases postgame.',badge:'Festival'},
   {date:'2026-08-23',name:'Crayola Night',desc:'Brand new in 2026 — Crayola Night at Fifth Third Field! Colorful fun for the whole family.',badge:'Theme Night'},
-  // September 2026
-  {date:'2026-09-04',name:"Star Wars Night — Labor Day Weekend",desc:'Star Wars Night returns! Labor Day weekend game. May the force be with the Mud Hens.',badge:'Theme Night'},
-  {date:'2026-09-05',name:"Labor Day Kids Day",desc:'Labor Day weekend Sunday. Kids Run the Bases postgame. Final weeks of the 2026 season.',badge:'Kids Event'},
-  {date:'2026-09-06',name:"Labor Day",desc:'Labor Day game at Fifth Third Field to close out the Labor Day holiday weekend.',badge:'Holiday'},
-  {date:'2026-09-18',name:'Tigers Affiliate Night',desc:'Celebrating the Detroit Tigers affiliation. Special ceremonies honoring the Tigers-Mud Hens partnership. Final homestand of the 2026 season.',badge:'Special Event'},
+  {date:'2026-09-04',name:"Star Wars Night — Labor Day Weekend",desc:'Star Wars Night returns! Labor Day weekend game.',badge:'Theme Night'},
+  {date:'2026-09-05',name:"Labor Day Kids Day",desc:'Labor Day weekend Sunday. Kids Run the Bases postgame.',badge:'Kids Event'},
+  {date:'2026-09-06',name:"Labor Day",desc:'Labor Day game to close out the holiday weekend.',badge:'Holiday'},
+  {date:'2026-09-18',name:'Tigers Affiliate Night',desc:'Celebrating the Detroit Tigers affiliation. Final homestand of the 2026 season.',badge:'Special Event'},
 ];
 function loadPromos() {
   const today = new Date().toISOString().slice(0,10);
@@ -1990,8 +1957,6 @@ function deleteGame(i) {
 }
 
 // ── OPPONENT SCORECARD ────────────────────────────────────
-// oppLineup, oppScores, oppPlayerStats, activeOppCell declared in STATE block
-
 function switchOppTab(t) {
   document.querySelectorAll('#sec-oppscore .sc-tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
   document.getElementById('opp-live-view').style.display = t === 'live' ? 'block' : 'none';
@@ -2022,7 +1987,6 @@ function getOppStats(bi) {
 function renderOppScorecard() {
   const tbody = document.getElementById('opp-sc-body');
   if (!oppLineup.length) {
-    // Show 9 pending slots like the Mud Hens card
     let html = '';
     for (let i = 0; i < 9; i++) {
       html += `<tr><td class="pn"><div class="nm" style="cursor:default;text-decoration:none;color:rgba(26,43,94,0.35);">Lineup pending...</div><div class="av">—</div></td><td class="pp">—</td>`;
@@ -2051,7 +2015,6 @@ function openOppScModal(bi, inn) {
   document.getElementById('sc-modal-title').textContent = p ? p.name : 'Batter';
   document.getElementById('sc-modal-sub').textContent = `Inning ${inn}`;
   pendingPrefix = ''; goFirst = null;
-  // Store which scorecard is active
   document.getElementById('sc-modal').dataset.mode = 'opp';
   showStep('step-cat');
   document.getElementById('sc-modal').classList.add('open');
@@ -2079,7 +2042,7 @@ async function fetchOppPlayerStats(ids) {
   for (const id of ids) {
     if (!id || oppPlayerStats[id] || playerStats[id]) continue;
     try {
-      const res = await fetch(`https://super-glade-7699.jrdsherman.workers.dev/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
+      const res = await fetch(`${WORKER}/api/v1/people/${id}/stats?stats=season&season=2026&group=hitting&gameType=R&sportId=11`);
       const data = await res.json();
       const splits = data.stats?.[0]?.splits;
       if (splits?.length) oppPlayerStats[id] = splits[splits.length-1].stat;
@@ -2090,39 +2053,28 @@ async function fetchOppPlayerStats(ids) {
 
 // ── GAME SUMMARY CARD ─────────────────────────────────────
 function showSummary() {
-  // Calculate totals from scorecard
   let totalAB = 0, totalHits = 0;
-  lineup.forEach((p, i) => {
-    const s = getStats(i);
-    totalAB += s.ab;
-    totalHits += s.h;
-  });
-
-  // Pull last saved archive entry for attendees
+  lineup.forEach((p, i) => { const s = getStats(i); totalAB += s.ab; totalHits += s.h; });
   const games = JSON.parse(localStorage.getItem('mh_archive') || '[]');
   const lastGame = games[games.length - 1];
   const people = lastGame?.people || 'Just me';
-
   document.getElementById('sum-mud-score').textContent = document.getElementById('mud-sc').textContent || '—';
   document.getElementById('sum-opp-score').textContent = document.getElementById('opp-sc').textContent || '—';
-  document.getElementById('sum-opp-name').textContent = oppTeamName || 'Opponent';
-  document.getElementById('sum-date').textContent = document.getElementById('meta-date').textContent || '—';
-  document.getElementById('sum-ab').textContent = totalAB || '—';
-  document.getElementById('sum-hits').textContent = totalHits || '—';
-  document.getElementById('sum-people').textContent = people;
+  document.getElementById('sum-opp-name').textContent   = oppTeamName || 'Opponent';
+  document.getElementById('sum-date').textContent       = document.getElementById('meta-date').textContent || '—';
+  document.getElementById('sum-ab').textContent         = totalAB || '—';
+  document.getElementById('sum-hits').textContent       = totalHits || '—';
+  document.getElementById('sum-people').textContent     = people;
   document.getElementById('summary-overlay').classList.add('open');
 }
-function closeSummary() {
-  document.getElementById('summary-overlay').classList.remove('open');
-}
+function closeSummary() { document.getElementById('summary-overlay').classList.remove('open'); }
 function screenshotSummary() {
-  alert('To save: press the side button + volume up (iPhone) or take a screenshot, then crop to the card. The card is centered on screen for easy cropping!');
+  alert('To save: press the side button + volume up (iPhone) or take a screenshot, then crop to the card.');
 }
 
 // ── NEXT GAME COUNTDOWN ────────────────────────────────────
 let countdownInterval = null;
 const SCHEDULE = [
-  // May 2026
   {date:'2026-05-07',opp:'Memphis Redbirds',time:'18:35'},
   {date:'2026-05-08',opp:'Memphis Redbirds',time:'19:05'},
   {date:'2026-05-09',opp:'Memphis Redbirds',time:'17:05'},
@@ -2136,7 +2088,6 @@ const SCHEDULE = [
   {date:'2026-05-28',opp:'Indianapolis Indians',time:'19:05'},
   {date:'2026-05-29',opp:'Indianapolis Indians',time:'19:05'},
   {date:'2026-05-30',opp:'Indianapolis Indians',time:'14:05'},
-  // June 2026
   {date:'2026-06-03',opp:'Nashville Sounds',time:'19:05'},
   {date:'2026-06-04',opp:'Nashville Sounds',time:'19:05'},
   {date:'2026-06-05',opp:'Nashville Sounds',time:'19:05'},
@@ -2150,7 +2101,6 @@ const SCHEDULE = [
   {date:'2026-06-25',opp:'Louisville Bats',time:'19:05'},
   {date:'2026-06-26',opp:'Louisville Bats',time:'19:05'},
   {date:'2026-06-27',opp:'Louisville Bats',time:'17:05'},
-  // July 2026
   {date:'2026-07-01',opp:'St. Paul Saints',time:'19:05'},
   {date:'2026-07-02',opp:'St. Paul Saints',time:'19:05'},
   {date:'2026-07-03',opp:'St. Paul Saints',time:'19:05'},
@@ -2163,7 +2113,6 @@ const SCHEDULE = [
   {date:'2026-07-29',opp:'Iowa Cubs',time:'19:05'},
   {date:'2026-07-30',opp:'Iowa Cubs',time:'19:05'},
   {date:'2026-07-31',opp:'Iowa Cubs',time:'19:05'},
-  // August 2026
   {date:'2026-08-01',opp:'Iowa Cubs',time:'17:05'},
   {date:'2026-08-11',opp:'Columbus Clippers',time:'19:05'},
   {date:'2026-08-12',opp:'Columbus Clippers',time:'19:05'},
@@ -2175,7 +2124,6 @@ const SCHEDULE = [
   {date:'2026-08-27',opp:'Indianapolis Indians',time:'19:05'},
   {date:'2026-08-28',opp:'Indianapolis Indians',time:'19:05'},
   {date:'2026-08-29',opp:'Indianapolis Indians',time:'17:05'},
-  // September 2026
   {date:'2026-09-01',opp:'Louisville Bats',time:'19:05'},
   {date:'2026-09-02',opp:'Louisville Bats',time:'19:05'},
   {date:'2026-09-03',opp:'Louisville Bats',time:'19:05'},
@@ -2186,40 +2134,26 @@ const SCHEDULE = [
 function startCountdown() {
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  
-  // Find next game after today
-  // Find next upcoming game (today or future)
   const next = SCHEDULE.find(g => {
     if (g.date > todayStr) return true;
-    if (g.date === todayStr) {
-      // Check if game time has passed
-      const gameTime = new Date(`${g.date}T${g.time}:00`);
-      return new Date() < gameTime;
-    }
+    if (g.date === todayStr) return new Date() < new Date(`${g.date}T${g.time}:00`);
     return false;
   });
-  if (!next) { 
-    document.getElementById('countdown-card').style.display = 'none'; 
-    return; 
-  }
-
+  if (!next) { document.getElementById('countdown-card').style.display = 'none'; return; }
   document.getElementById('countdown-card').style.display = 'block';
   document.getElementById('countdown-opp').textContent = `vs ${next.opp}`;
   const d = new Date(`${next.date}T${next.time}:00`);
-  document.getElementById('countdown-date').textContent = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-
+  document.getElementById('countdown-date').textContent =
+    d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + ' at ' +
+    d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   if (countdownInterval) clearInterval(countdownInterval);
   countdownInterval = setInterval(() => {
     const diff = d - new Date();
     if (diff <= 0) { clearInterval(countdownInterval); return; }
-    const days = Math.floor(diff / 86400000);
-    const hrs  = Math.floor((diff % 86400000) / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    const secs = Math.floor((diff % 60000) / 1000);
-    document.getElementById('cd-d').textContent = days;
-    document.getElementById('cd-h').textContent = String(hrs).padStart(2,'0');
-    document.getElementById('cd-m').textContent = String(mins).padStart(2,'0');
-    document.getElementById('cd-s').textContent = String(secs).padStart(2,'0');
+    document.getElementById('cd-d').textContent = Math.floor(diff / 86400000);
+    document.getElementById('cd-h').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
   }, 1000);
 }
 
@@ -2242,7 +2176,6 @@ function scheduleMidnightReset() {
   midnight.setHours(24, 0, 0, 0);
   const msUntilMidnight = midnight - est;
   setTimeout(() => {
-    // Reset all game state
     scores = {}; oppScores = {}; lineup = []; oppLineup = [];
     playerStats = {}; oppPlayerStats = {};
     pitchCount = 0; lastInning = null; lastIsTop = null; currentGamePk = null;
@@ -2250,17 +2183,18 @@ function scheduleMidnightReset() {
     standingsCache = null;
     hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
-    clearInterval(window._linescoreInterval);
+    clearInterval(window._liveFeedInterval);
     renderScorecard(); renderOppScorecard();
     fetchGame();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
     startCountdown();
-    scheduleMidnightReset(); // schedule next reset
+    scheduleMidnightReset();
   }, msUntilMidnight);
   console.log(`Midnight reset scheduled in ${Math.round(msUntilMidnight/60000)} minutes`);
 }
 scheduleMidnightReset();
 </script>
+
 <!-- PERMANENT FOOTER DISCLAIMER -->
 <div style="background:#0d1f3c;border-top:1px solid rgba(200,168,75,0.2);padding:14px 16px;margin-top:20px;text-align:center;">
   <p style="font-size:9px;color:rgba(255,255,255,0.35);line-height:1.8;max-width:600px;margin:0 auto;">
@@ -2284,7 +2218,6 @@ scheduleMidnightReset();
 </div>
 
 <script>
-// Show disclaimer on first visit
 if (!localStorage.getItem('disclaimerSeen')) {
   document.getElementById('disclaimer-modal').classList.add('open');
 }
