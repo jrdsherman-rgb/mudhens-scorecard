@@ -263,6 +263,40 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .food-map-label{font-size:9px;color:rgba(26,43,94,0.4);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 6px;font-weight:600;}
 .food-map-svg-wrap{position:relative;width:100%;}
 .food-map-count{font-size:10px;color:rgba(26,43,94,0.4);padding:6px 14px 10px;text-align:center;}
+/* ── GAME NOTES ── */
+.gn-status{text-align:center;padding:28px 16px;color:rgba(26,43,94,0.4);font-size:12px;font-style:italic;}
+.gn-fetch-btn{width:100%;background:linear-gradient(135deg,#1a2b5e,#0f1d40);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.5px;margin-bottom:10px;}
+.gn-fetch-btn:active{opacity:0.85;}
+.gn-fetch-btn:disabled{opacity:0.5;cursor:default;}
+.gn-meta{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.25);}
+.gn-meta-date{font-size:10px;color:#c8a84b;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px;}
+.gn-meta-matchup{font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;}
+.gn-meta-time{font-size:11px;color:rgba(255,255,255,0.6);}
+.gn-section{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);margin-bottom:10px;overflow:hidden;}
+.gn-section-hdr{background:rgba(26,43,94,0.04);padding:10px 14px;font-size:9px;font-weight:700;color:rgba(26,43,94,0.5);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid rgba(26,43,94,0.07);}
+.gn-section-body{padding:12px 14px;}
+.gn-pitcher-row{display:flex;gap:10px;margin-bottom:8px;}
+.gn-pitcher{flex:1;background:rgba(26,43,94,0.04);border-radius:10px;padding:10px 12px;border:1px solid rgba(26,43,94,0.08);}
+.gn-pitcher-team{font-size:9px;color:#c8102e;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.gn-pitcher-name{font-size:13px;font-weight:700;color:#1a2b5e;margin-bottom:2px;}
+.gn-pitcher-stat{font-size:10px;color:rgba(26,43,94,0.5);font-weight:500;}
+.gn-narrative{font-size:12px;color:rgba(26,43,94,0.75);line-height:1.75;}
+.gn-narrative p{margin-bottom:10px;}
+.gn-narrative p:last-child{margin-bottom:0;}
+.gn-spotlight-item{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(26,43,94,0.07);}
+.gn-spotlight-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.gn-spotlight-name{font-size:13px;font-weight:700;color:#1a2b5e;margin-bottom:4px;}
+.gn-spotlight-stat{display:inline-block;background:rgba(200,16,46,0.08);color:#c8102e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:6px;}
+.gn-spotlight-text{font-size:11px;color:rgba(26,43,94,0.6);line-height:1.65;}
+.gn-stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(26,43,94,0.06);}
+.gn-stat-row:last-child{border-bottom:none;}
+.gn-stat-label{font-size:11px;color:rgba(26,43,94,0.5);}
+.gn-stat-val{font-size:12px;font-weight:700;color:#1a2b5e;}
+.gn-pdf-link{display:block;text-align:center;padding:10px;font-size:10px;color:rgba(26,43,94,0.35);text-decoration:none;margin-top:4px;}
+.gn-pdf-link:hover{color:#c8102e;}
+.gn-error{background:rgba(200,16,46,0.06);border:1px solid rgba(200,16,46,0.2);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;}
+.gn-error-title{font-size:13px;font-weight:700;color:#c8102e;margin-bottom:4px;}
+.gn-error-msg{font-size:11px;color:rgba(26,43,94,0.5);}
 </style>
 </head>
 <body>
@@ -284,6 +318,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="nav-tab" onclick="showSection('oppstats',this)" id="opp-stats-tab">Opp Stats</div>
   <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
   <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
+  <div class="nav-tab" onclick="showSection('gamenotes',this)">📋 Game Notes</div>
   <div class="nav-tab" onclick="showSection('food',this)">🍟 Food</div>
   <div class="nav-tab" onclick="showSection('history',this)">History</div>
   <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
@@ -802,6 +837,7 @@ function showSection(name, el) {
   if (name === 'henstats')   loadHensStats();
   if (name === 'oppstats')   loadOppStats();
   if (name === 'food')       initFood();
+  // gamenotes loads on demand via button tap — no auto-load needed
 }
 
 // ── COLOR ──────────────────────────────────────────────────
@@ -1043,6 +1079,7 @@ function closePlayerModal() { document.getElementById('player-modal').classList.
 function adjustPC(n) {
   pitchCount = Math.max(0, pitchCount + n);
   const el = document.getElementById('pc-display');
+  if (!el) return; // pitch count panel not present in this build
   el.textContent = pitchCount;
   el.className = 'pc-num' + (pitchCount >= 100 ? ' danger' : pitchCount >= 75 ? ' warn' : '');
 }
@@ -2360,6 +2397,300 @@ fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
 loadTrivia();
 startCountdown();
 
+// ── GAME NOTES ────────────────────────────────────────────
+let gameNotesCache = null; // { pdfUrl, date, parsed, fetchedAt }
+
+async function fetchGameNotes() {
+  const btn = document.getElementById('gn-fetch-btn');
+  const content = document.getElementById('gn-content');
+  const pdfLink = document.getElementById('gn-pdf-link');
+
+  // If cached within the last 30 minutes, show cached version
+  if (gameNotesCache && (Date.now() - gameNotesCache.fetchedAt < 30 * 60 * 1000)) {
+    renderGameNotes(gameNotesCache.parsed, gameNotesCache.date, gameNotesCache.pdfUrl);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Finding today\'s notes...';
+  content.innerHTML = '<div class="gn-status">Checking MiLB.com for today\'s game notes...</div>';
+  pdfLink.style.display = 'none';
+
+  try {
+    // Step 1: Get today's PDF URL from the Worker
+    const notesRes = await fetch(`${WORKER}/game-notes-url`);
+    if (!notesRes.ok) throw new Error(`Worker error: ${notesRes.status}`);
+    const notesData = await notesRes.json();
+
+    if (!notesData.pdfUrl) {
+      throw new Error('No game notes found for today. They\'re posted ~3 hours before first pitch.');
+    }
+
+    const isToday = notesData.found;
+    const dateLabel = notesData.date || 'Recent Game';
+    const pdfUrl = notesData.pdfUrl;
+
+    btn.textContent = `⏳ Reading ${isToday ? 'today\'s' : 'most recent'} notes...`;
+
+    // Step 2: Fetch the PDF and extract text using pdf.js
+    const pdfText = await extractPdfText(pdfUrl);
+    if (!pdfText || pdfText.length < 100) {
+      throw new Error('Could not read the PDF content. Try again in a moment.');
+    }
+
+    btn.textContent = '⏳ Parsing with AI...';
+
+    // Step 3: Send to Claude API for structured parsing
+    const parsed = await parseGameNotesWithAI(pdfText, dateLabel);
+
+    // Cache the result
+    gameNotesCache = { pdfUrl, date: dateLabel, parsed, fetchedAt: Date.now() };
+
+    // Step 4: Render
+    renderGameNotes(parsed, dateLabel, pdfUrl);
+
+    btn.disabled = false;
+    btn.textContent = isToday
+      ? '🔄 Refresh Game Notes'
+      : `📋 Notes from ${dateLabel} (tap to refresh)`;
+
+  } catch (err) {
+    console.error('Game notes error:', err);
+    content.innerHTML = `
+      <div class="gn-error">
+        <div class="gn-error-title">Couldn't load game notes</div>
+        <div class="gn-error-msg">${esc(err.message)}</div>
+      </div>
+      <div class="gn-status">
+        Game notes are posted ~3 hours before first pitch.<br>
+        You can also view them at:<br>
+        <a href="https://www.milb.com/toledo/team/game-notes" target="_blank"
+           style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes</a>
+      </div>`;
+    btn.disabled = false;
+    btn.textContent = '📋 Try Again';
+  }
+}
+
+// Extract text from a PDF URL using pdf.js
+async function extractPdfText(pdfUrl) {
+  // Load pdf.js from cdnjs if not already loaded
+  if (!window.pdfjsLib) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // Try direct URL first; if CORS blocks it, fall back to Worker proxy
+  let fetchUrl = pdfUrl;
+  try {
+    const testRes = await fetch(pdfUrl, { method: 'HEAD' });
+    if (!testRes.ok) throw new Error('HEAD failed');
+  } catch (corsErr) {
+    // mlbstatic.com may block direct browser fetch — route through Worker
+    fetchUrl = `${WORKER}/proxy-pdf?url=${encodeURIComponent(pdfUrl)}`;
+  }
+
+  let pdf;
+  try {
+    pdf = await window.pdfjsLib.getDocument(fetchUrl).promise;
+  } catch (e) {
+    // Last resort: try direct URL anyway (pdf.js handles CORS differently)
+    pdf = await window.pdfjsLib.getDocument(pdfUrl).promise;
+  }
+
+  let fullText = '';
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+  }
+
+  return fullText.trim();
+}
+
+// Send raw PDF text to Claude API and get structured game notes back
+async function parseGameNotesWithAI(rawText, dateLabel) {
+  const prompt = `You are parsing Toledo Mud Hens game notes PDF text. Extract and structure the following information from this raw text. Return ONLY valid JSON with no markdown, no backticks, no preamble.
+
+Required JSON structure:
+{
+  "gameDate": "string — game date and time",
+  "matchup": "string — e.g. Memphis Redbirds vs. Toledo Mud Hens",
+  "venue": "string",
+  "mudHensPitcher": { "name": "string", "hand": "string (LHP/RHP)", "record": "string", "era": "string", "notes": "string — 1-2 sentence bio/context" },
+  "oppPitcher": { "name": "string", "hand": "string", "record": "string", "era": "string", "notes": "string" },
+  "lastGameRecap": "string — paragraph about last game result",
+  "teamRecord": { "overall": "string", "home": "string", "road": "string", "streak": "string" },
+  "teamStats": { "batting": "string — team AVG", "era": "string — team ERA" },
+  "playerSpotlights": [ { "name": "string", "statLine": "string — key hot streak stat", "notes": "string — 2-3 sentence narrative" } ],
+  "playersToWatch": [ { "name": "string", "team": "string", "statLine": "string" } ],
+  "nextGame": "string — next game info if mentioned"
+}
+
+If a field is not found in the text, use null for that field. For playerSpotlights, include all players with narrative sections (usually 2-5 players). Keep notes concise but informative.
+
+Raw PDF text:
+${rawText.substring(0, 6000)}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(`AI API error ${response.status}: ${errData?.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  // Check for API-level errors in the response body
+  if (data.type === 'error') {
+    throw new Error(`AI error: ${data.error?.message || 'Unknown error'}`);
+  }
+
+  const raw = data.content?.[0]?.text || '';
+  if (!raw) throw new Error('AI returned empty response — please try again.');
+
+  // Strip any markdown fences if present
+  const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    console.error('JSON parse failed:', clean.substring(0, 200));
+    throw new Error('AI parsing failed — the notes may be in an unusual format.');
+  }
+}
+
+function renderGameNotes(parsed, dateLabel, pdfUrl) {
+  const content = document.getElementById('gn-content');
+  const pdfLink = document.getElementById('gn-pdf-link');
+
+  if (!parsed) {
+    content.innerHTML = '<div class="gn-status">No structured data could be extracted.</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Header card
+  html += `<div class="gn-meta">
+    <div class="gn-meta-date">📋 Game Notes — ${esc(dateLabel)}</div>
+    <div class="gn-meta-matchup">${esc(parsed.matchup || 'Toledo Mud Hens')}</div>
+    <div class="gn-meta-time">${esc(parsed.gameDate || '')}${parsed.venue ? ' · ' + esc(parsed.venue) : ''}</div>
+  </div>`;
+
+  // Starting pitchers
+  const mp = parsed.mudHensPitcher, op = parsed.oppPitcher;
+  if (mp || op) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">⚾ Today's Starting Pitchers</div>
+      <div class="gn-section-body">
+        <div class="gn-pitcher-row">`;
+    if (mp) html += `
+          <div class="gn-pitcher">
+            <div class="gn-pitcher-team">Toledo Mud Hens</div>
+            <div class="gn-pitcher-name">${esc(mp.hand || '')} ${esc(mp.name || 'TBD')}</div>
+            <div class="gn-pitcher-stat">${esc(mp.record || '')}${mp.era ? ' · ' + esc(mp.era) + ' ERA' : ''}</div>
+            ${mp.notes ? `<div class="gn-narrative" style="margin-top:8px;font-size:11px;">${esc(mp.notes)}</div>` : ''}
+          </div>`;
+    if (op) html += `
+          <div class="gn-pitcher">
+            <div class="gn-pitcher-team" style="color:#555;">${esc(parsed.matchup?.split(' vs')[0] || 'Opponent')}</div>
+            <div class="gn-pitcher-name">${esc(op.hand || '')} ${esc(op.name || 'TBD')}</div>
+            <div class="gn-pitcher-stat">${esc(op.record || '')}${op.era ? ' · ' + esc(op.era) + ' ERA' : ''}</div>
+            ${op.notes ? `<div class="gn-narrative" style="margin-top:8px;font-size:11px;">${esc(op.notes)}</div>` : ''}
+          </div>`;
+    html += `</div></div></div>`;
+  }
+
+  // Last game recap
+  if (parsed.lastGameRecap) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">📰 Last Game Recap</div>
+      <div class="gn-section-body">
+        <div class="gn-narrative">${esc(parsed.lastGameRecap).replace(/\n/g,'<br>')}</div>
+      </div>
+    </div>`;
+  }
+
+  // Player spotlights
+  if (parsed.playerSpotlights?.length) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">🔥 Player Spotlights</div>
+      <div class="gn-section-body">`;
+    parsed.playerSpotlights.forEach(p => {
+      html += `<div class="gn-spotlight-item">
+        <div class="gn-spotlight-name">${esc(p.name || '')}</div>
+        ${p.statLine ? `<span class="gn-spotlight-stat">${esc(p.statLine)}</span>` : ''}
+        <div class="gn-spotlight-text">${esc(p.notes || '')}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Players to watch
+  if (parsed.playersToWatch?.length) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">👀 Players to Watch</div>
+      <div class="gn-section-body">`;
+    parsed.playersToWatch.forEach(p => {
+      html += `<div class="gn-stat-row">
+        <div>
+          <div class="gn-stat-val">${esc(p.name || '')}</div>
+          <div class="gn-stat-label">${esc(p.team || '')}</div>
+        </div>
+        <div class="gn-stat-val" style="color:#c8102e;">${esc(p.statLine || '')}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Team record & stats
+  const rec = parsed.teamRecord, stats = parsed.teamStats;
+  if (rec || stats) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">📊 Mud Hens at a Glance</div>
+      <div class="gn-section-body">`;
+    if (rec?.overall)  html += `<div class="gn-stat-row"><span class="gn-stat-label">Overall Record</span><span class="gn-stat-val">${esc(rec.overall)}</span></div>`;
+    if (rec?.home)     html += `<div class="gn-stat-row"><span class="gn-stat-label">Home Record</span><span class="gn-stat-val">${esc(rec.home)}</span></div>`;
+    if (rec?.road)     html += `<div class="gn-stat-row"><span class="gn-stat-label">Road Record</span><span class="gn-stat-val">${esc(rec.road)}</span></div>`;
+    if (rec?.streak)   html += `<div class="gn-stat-row"><span class="gn-stat-label">Current Streak</span><span class="gn-stat-val">${esc(rec.streak)}</span></div>`;
+    if (stats?.batting) html += `<div class="gn-stat-row"><span class="gn-stat-label">Team Batting AVG</span><span class="gn-stat-val">${esc(stats.batting)}</span></div>`;
+    if (stats?.era)    html += `<div class="gn-stat-row"><span class="gn-stat-label">Team ERA</span><span class="gn-stat-val">${esc(stats.era)}</span></div>`;
+    html += `</div></div>`;
+  }
+
+  // Next game
+  if (parsed.nextGame) {
+    html += `<div class="gn-section">
+      <div class="gn-section-hdr">📅 Next Game</div>
+      <div class="gn-section-body gn-narrative">${esc(parsed.nextGame)}</div>
+    </div>`;
+  }
+
+  content.innerHTML = html;
+
+  // Show PDF link
+  if (pdfUrl) {
+    pdfLink.href = pdfUrl;
+    pdfLink.style.display = 'block';
+  }
+}
+
 // ── FOOD FINDER DATA ──────────────────────────────────────
 const FOOD_LOCATIONS = [
   { id:1,  type:'restaurant', name:'Toft\'s Sundaes',              section:'Sections 101–102',        mapX:348, mapY:178, items:['Funnel Cakes','Root Beer Float','Sundaes','Toft\'s Soft Serve Ice Cream'], tags:['dessert','sweet','ice cream','funnel cake','root beer'] },
@@ -2507,6 +2838,8 @@ function scheduleMidnightReset() {
     standingsCache = null;
     hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
+    gameNotesCache = null; // clear so tomorrow's notes fetch fresh
+    foodFilter = 'all'; foodHighlight = null; // reset food finder state
     clearInterval(window._liveFeedInterval);
     clearTimeout(window._fetchGameTimeout);
     renderScorecard(); renderOppScorecard();
@@ -2519,6 +2852,22 @@ function scheduleMidnightReset() {
 }
 scheduleMidnightReset();
 </script>
+
+<!-- ══════════════ GAME NOTES ══════════════ -->
+<div class="section" id="sec-gamenotes">
+  <button class="gn-fetch-btn" id="gn-fetch-btn" onclick="fetchGameNotes()">
+    📋 Load Today's Game Notes
+  </button>
+  <div id="gn-content">
+    <div class="gn-status">
+      Tap above to load today's game notes.<br>
+      Posted ~3 hours before first pitch.
+    </div>
+  </div>
+  <a class="gn-pdf-link" id="gn-pdf-link" href="#" target="_blank" style="display:none">
+    📄 View full PDF on MiLB.com ↗
+  </a>
+</div>
 
 <!-- ══════════════ FOOD FINDER ══════════════ -->
 <div class="section" id="sec-food">
@@ -2577,7 +2926,7 @@ scheduleMidnightReset();
         <!-- Warning track -->
         <ellipse cx="200" cy="215" rx="155" ry="133" fill="none" stroke="#c4955a" stroke-width="8" opacity="0.5"/>
         <!-- Stands outline -->
-        <path d="M 35 338 L 10 200 Q 20 60 200 30 Q 380 60 390 200 L 365 338 Z" fill="#1a2b5e" opacity="0.12" stroke="#1a2b5e" stroke-width="1" opacity="0.2"/>
+        <path d="M 35 338 L 10 200 Q 20 60 200 30 Q 380 60 390 200 L 365 338 Z" fill="#1a2b5e" fill-opacity="0.12" stroke="#1a2b5e" stroke-width="1" stroke-opacity="0.2"/>
         <!-- Section markers -->
         <text x="340" y="185" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">101</text>
         <text x="328" y="148" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">102</text>
