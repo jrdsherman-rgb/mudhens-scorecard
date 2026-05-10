@@ -2483,17 +2483,15 @@ async function fetchGameNotes() {
   pdfLink.style.display = 'none';
 
   try {
-    // Step 1: Fetch the MiLB game notes page via CORS proxy
-    // allorigins.win is a free public CORS proxy — wraps any URL with CORS headers
+    // Step 1: Fetch the MiLB game notes page via Cloudflare Worker (avoids CORS)
     const gameNotesUrl = 'https://www.milb.com/toledo/team/game-notes';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(gameNotesUrl)}`;
+    const workerProxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(gameNotesUrl)}`;
 
     let pageHtml;
     try {
-      const proxyRes = await fetch(proxyUrl);
-      if (!proxyRes.ok) throw new Error(`Proxy HTTP ${proxyRes.status}`);
-      const proxyData = await proxyRes.json();
-      pageHtml = proxyData.contents;
+      const proxyRes = await fetch(workerProxyUrl);
+      if (!proxyRes.ok) throw new Error(`Worker proxy HTTP ${proxyRes.status}`);
+      pageHtml = await proxyRes.text();
     } catch (proxyErr) {
       throw new Error(`Could not reach MiLB.com (${proxyErr.message}). Check your connection and try again.`);
     }
@@ -2622,12 +2620,12 @@ async function extractPdfText(pdfUrl) {
   }
 
   // img.mlbstatic.com (Cloudinary CDN) supports CORS — try direct first
-  // If that fails (network error or CORS block), use allorigins proxy as fallback
+  // If that fails, fall back to Cloudflare Worker proxy
   try {
     return await _loadPdfText(pdfUrl);
   } catch (e) {
-    console.log('Direct PDF fetch failed, trying proxy:', e.message);
-    const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(pdfUrl)}`;
+    console.log('Direct PDF fetch failed, trying worker proxy:', e.message);
+    const proxied = `${WORKER}/proxy?url=${encodeURIComponent(pdfUrl)}`;
     return await _loadPdfText(proxied);
   }
 }
