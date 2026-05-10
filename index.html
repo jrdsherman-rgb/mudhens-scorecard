@@ -1507,7 +1507,8 @@ async function pollLiveFeed(gamePk) {
         fetchPlayerStats(lineup.map(p => p.mlbId).filter(Boolean));
         // Run catch-up now that we have a real lineup — may have missed completed innings
         if (ld?.plays?.allPlays && ls?.currentInning) {
-          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome);
+          const isFinal = gd?.status?.abstractGameState === 'Final';
+          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome, isFinal);
         }
       }
     }
@@ -1521,7 +1522,8 @@ async function pollLiveFeed(gamePk) {
         fetchOppPlayerStats(oppLineup.map(p => p.mlbId).filter(Boolean));
         // Same for opp — catch up any completed innings
         if (ld?.plays?.allPlays && ls?.currentInning) {
-          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome);
+          const isFinal = gd?.status?.abstractGameState === 'Final';
+          catchUpInnings(ld.plays.allPlays, ls.currentInning, ls.isTopInning, isHome, isFinal);
         }
       }
     }
@@ -1552,6 +1554,13 @@ async function pollLiveFeed(gamePk) {
 
       // ── 3. PLAY-BY-PLAY AUTO-FILL
       // Detect when the top/bottom has changed since last poll
+      const isFinal = (gd?.status?.abstractGameState === 'Final');
+
+      // For Final games: on first poll (lastInning===null), catch up all innings
+      if (isFinal && lastInning === null && inn && ld?.plays?.allPlays && lineupIsReal && oppLineupIsReal) {
+        catchUpInnings(ld.plays.allPlays, inn, isTop, isHome, true);
+      }
+
       if (inn && lastInning !== null && (inn !== lastInning || isTop !== lastIsTop)) {
         // The half-inning that just ended:
         // - If isTop just became true  → bottom of previous inning just ended
@@ -1594,12 +1603,12 @@ async function pollLiveFeed(gamePk) {
 }
 
 // Fill any already-completed innings when the app first loads mid-game
-function catchUpInnings(allPlays, currentInning, isTop, isHome) {
+function catchUpInnings(allPlays, currentInning, isTop, isHome, isFinal) {
   // Work through every completed half-inning up to where we are now
   for (let inn = 1; inn <= currentInning; inn++) {
     for (const topFlag of [true, false]) {
-      // Skip the current half-inning (still in progress)
-      if (inn === currentInning && topFlag === isTop) continue;
+      // Skip the current half-inning if still in progress (but not for Final games)
+      if (!isFinal && inn === currentInning && topFlag === isTop) continue;
 
       const mudBatting = (topFlag && !isHome) || (!topFlag && isHome);
       const halfPlays = allPlays.filter(p =>
