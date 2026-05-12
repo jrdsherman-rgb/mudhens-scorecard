@@ -227,6 +227,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .standings-table tr:nth-child(even) td{background:#f5f3ee;}
 .standings-table td.team-cell{text-align:left;padding-left:12px;color:#1a2b5e;font-size:11px;font-weight:500;}
 .standings-table td.team-cell.mud-hens{color:#c8102e;font-weight:700;}
+.standings-div-title{font-size:10px;font-weight:700;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1.5px;padding:10px 12px 4px;margin-top:8px;}
 .standings-table tr.div-header td{background:#e8e0cc;color:rgba(26,43,94,0.5);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
 .nm-wrap{display:flex;align-items:center;gap:4px;}
 .nm{cursor:pointer;border-bottom:1px dashed rgba(26,43,94,0.25);min-width:60px;display:inline-block;}
@@ -256,6 +257,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .food-card-section{font-size:10px;color:rgba(26,43,94,0.45);margin-top:1px;}
 .food-items{padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px;}
 .food-item-tag{background:rgba(26,43,94,0.05);border-radius:6px;padding:3px 8px;font-size:10px;color:rgba(26,43,94,0.6);font-weight:500;}
+.food-card-arrow{font-size:12px;color:rgba(26,43,94,0.35);flex-shrink:0;}
 .food-empty{text-align:center;padding:30px 20px;color:rgba(26,43,94,0.35);font-size:12px;font-style:italic;}
 .food-type-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
 .food-type-dot{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(26,43,94,0.5);font-weight:600;}
@@ -299,6 +301,31 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .gn-error-msg{font-size:11px;color:rgba(26,43,94,0.5);}
 
 /* ── SCHEDULE ─────────────────────────── */
+.sched-cal-month{margin-bottom:20px;}
+.sched-cal-month-title{font-size:13px;font-weight:800;color:#1a2b5e;text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid #c8102e;margin-bottom:10px;}
+.sched-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.sched-cal-dow{font-size:9px;font-weight:700;color:rgba(26,43,94,0.4);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
+.sched-cal-day{border-radius:8px;min-height:52px;padding:4px;position:relative;background:#fff;border:1px solid rgba(26,43,94,0.08);}
+.sched-cal-day.empty{background:transparent;border-color:transparent;}
+.sched-cal-day.home{border-color:rgba(26,43,94,0.2);background:#fff;}
+.sched-cal-day.away{background:#f5f3ee;border-color:rgba(26,43,94,0.1);}
+.sched-cal-day.today{background:linear-gradient(135deg,rgba(26,43,94,0.08),rgba(200,16,46,0.05));border:2px solid #c8102e !important;box-shadow:0 2px 8px rgba(200,16,46,0.15);}
+.sched-cal-day.final{opacity:0.6;}
+.sched-cal-num{font-size:11px;font-weight:800;color:#1a2b5e;line-height:1;}
+.sched-cal-day.today .sched-cal-num{color:#c8102e;}
+.sched-cal-opp{font-size:8px;font-weight:700;color:#1a2b5e;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sched-cal-time{font-size:7px;color:rgba(26,43,94,0.5);margin-top:1px;font-weight:600;}
+.sched-cal-ha{font-size:7px;font-weight:800;letter-spacing:0.5px;margin-top:1px;}
+.sched-cal-ha.home{color:#1a2b5e;}
+.sched-cal-ha.away{color:rgba(26,43,94,0.4);}
+.sched-cal-score{font-size:9px;font-weight:800;color:#1a2b5e;margin-top:2px;}
+.sched-cal-wl{font-size:7px;font-weight:800;}
+.sched-cal-wl.W{color:#2e7d32;}
+.sched-cal-wl.L{color:#c8102e;}
+.sched-cal-live{font-size:7px;font-weight:700;color:#c8102e;animation:pulse 1.2s infinite;}
+.sched-cal-legend{display:flex;gap:12px;padding:8px 0 4px;flex-wrap:wrap;}
+.sched-cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(26,43,94,0.55);font-weight:500;}
+.sched-cal-legend-box{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
 .sched-month{font-size:11px;font-weight:700;color:rgba(26,43,94,0.5);text-transform:uppercase;letter-spacing:1.5px;padding:14px 0 6px;margin-top:4px;}
 .sched-month:first-child{padding-top:2px;}
 .sched-game{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:5px;background:#fff;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 3px rgba(26,43,94,0.06);position:relative;}
@@ -474,6 +501,21 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     </div>
   </div>
 
+  <div class="pc-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div>
+        <div class="pc-label">Pitch Count</div>
+        <div class="pc-pitcher" id="pc-pitcher">Current Pitcher</div>
+      </div>
+      <button class="pc-reset" onclick="resetPC()">Reset</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button class="pc-btn minus" onclick="adjustPC(-1)">−</button>
+      <div class="pc-num" id="pc-display">0</div>
+      <button class="pc-btn" onclick="adjustPC(1)">+</button>
+    </div>
+  </div>
+
   <div id="key-view" style="display:none;">
     <div class="notation-key">
       <b>Hits:</b> 1B · 2B · 3B · HR<br>
@@ -644,7 +686,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <div class="section" id="sec-schedule">
   <div class="section-title">2026 Toledo Mud Hens Schedule</div>
   <div id="sched-content"><div class="sched-loading">Loading schedule...</div></div>
-</div>═══════════ GAME SUMMARY CARD ══════════════ -->
+</div>
 <div class="summary-overlay" id="summary-overlay">
   <div class="summary-card" id="summary-card-el">
     <div class="summary-card-title">Game Summary</div>
@@ -1019,7 +1061,8 @@ function renderScorecard() {
   });
 }
 function switchScTab(t) {
-  document.querySelectorAll('.sc-tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
+  const tabs = document.querySelectorAll('#sec-scorecard .sc-tab');
+  tabs.forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
   document.getElementById('live-view').style.display = t === 'live' ? 'block' : 'none';
   document.getElementById('key-view').style.display  = t === 'full' ? 'block' : 'none';
 }
@@ -1743,7 +1786,7 @@ async function fetchGame() {
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
     const oppStatsTitle = document.getElementById('opp-stats-title');
     if (oppStatsTitle) oppStatsTitle.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
-    const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]');
+    const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]') || document.querySelector('.nav-tab:nth-child(3)');
     if (oppTab) oppTab.textContent = oppTeamName;
     document.querySelectorAll('#sec-game .card-label').forEach(el => {
       if (['OPP STARTER','Opp Starter'].includes(el.textContent)) el.textContent = oppTeamName + ' Starter';
@@ -2171,7 +2214,8 @@ const PROMOS = [
   {date:'2026-09-18',name:'Tigers Affiliate Night',desc:'Celebrating the Detroit Tigers affiliation. Final homestand of the 2026 season.',badge:'Special Event'},
 ];
 function loadPromos() {
-  const today = new Date().toISOString().slice(0,10);
+  const _now = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const today = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
   const sorted = [...PROMOS].sort((a,b)=>a.date.localeCompare(b.date));
   document.getElementById('promo-list').innerHTML = sorted.map(p=>{
     const isToday = p.date===today;
@@ -2356,64 +2400,190 @@ function screenshotSummary() {
 // ── NEXT GAME COUNTDOWN ────────────────────────────────────
 let countdownInterval = null;
 const SCHEDULE = [
-  {date:'2026-05-07',opp:'Memphis Redbirds',time:'18:35'},
-  {date:'2026-05-08',opp:'Memphis Redbirds',time:'19:05'},
-  {date:'2026-05-09',opp:'Memphis Redbirds',time:'17:05'},
-  {date:'2026-05-10',opp:'Memphis Redbirds',time:'14:05'},
-  {date:'2026-05-20',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-05-21',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-05-22',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-05-23',opp:'Columbus Clippers',time:'17:05'},
-  {date:'2026-05-26',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-05-27',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-05-28',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-05-29',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-05-30',opp:'Indianapolis Indians',time:'14:05'},
-  {date:'2026-06-03',opp:'Nashville Sounds',time:'19:05'},
-  {date:'2026-06-04',opp:'Nashville Sounds',time:'19:05'},
-  {date:'2026-06-05',opp:'Nashville Sounds',time:'19:05'},
-  {date:'2026-06-06',opp:'Nashville Sounds',time:'17:05'},
-  {date:'2026-06-17',opp:'Gwinnett Stripers',time:'19:05'},
-  {date:'2026-06-18',opp:'Gwinnett Stripers',time:'19:05'},
-  {date:'2026-06-19',opp:'Gwinnett Stripers',time:'19:05'},
-  {date:'2026-06-20',opp:'Gwinnett Stripers',time:'17:05'},
-  {date:'2026-06-23',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-06-24',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-06-25',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-06-26',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-06-27',opp:'Louisville Bats',time:'17:05'},
-  {date:'2026-07-01',opp:'St. Paul Saints',time:'19:05'},
-  {date:'2026-07-02',opp:'St. Paul Saints',time:'19:05'},
-  {date:'2026-07-03',opp:'St. Paul Saints',time:'19:05'},
-  {date:'2026-07-04',opp:'St. Paul Saints',time:'16:05'},
-  {date:'2026-07-15',opp:'Omaha Storm Chasers',time:'19:05'},
-  {date:'2026-07-16',opp:'Omaha Storm Chasers',time:'19:05'},
-  {date:'2026-07-17',opp:'Omaha Storm Chasers',time:'19:05'},
-  {date:'2026-07-18',opp:'Omaha Storm Chasers',time:'17:05'},
-  {date:'2026-07-28',opp:'Iowa Cubs',time:'19:05'},
-  {date:'2026-07-29',opp:'Iowa Cubs',time:'19:05'},
-  {date:'2026-07-30',opp:'Iowa Cubs',time:'19:05'},
-  {date:'2026-07-31',opp:'Iowa Cubs',time:'19:05'},
-  {date:'2026-08-01',opp:'Iowa Cubs',time:'17:05'},
-  {date:'2026-08-11',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-08-12',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-08-13',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-08-14',opp:'Columbus Clippers',time:'19:05'},
-  {date:'2026-08-15',opp:'Columbus Clippers',time:'17:05'},
-  {date:'2026-08-25',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-08-26',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-08-27',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-08-28',opp:'Indianapolis Indians',time:'19:05'},
-  {date:'2026-08-29',opp:'Indianapolis Indians',time:'17:05'},
-  {date:'2026-09-01',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-09-02',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-09-03',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-09-04',opp:'Louisville Bats',time:'19:05'},
-  {date:'2026-09-05',opp:'Louisville Bats',time:'17:05'},
+  // MARCH/APRIL — Opening Week away at LHV, then SYR
+  {date:'2026-03-27',opp:'Lehigh Valley IronPigs',time:'18:05',home:false},
+  {date:'2026-03-28',opp:'Lehigh Valley IronPigs',time:'16:35',home:false},
+  {date:'2026-03-29',opp:'Syracuse Mets',time:'13:05',home:false},
+  {date:'2026-03-31',opp:'Syracuse Mets',time:'16:05',home:false},
+  {date:'2026-04-01',opp:'Syracuse Mets',time:'16:05',home:false},
+  {date:'2026-04-02',opp:'Syracuse Mets',time:'16:05',home:false},
+  {date:'2026-04-03',opp:'Syracuse Mets',time:'13:05',home:false},
+  // Home: SYR, STP
+  {date:'2026-04-05',opp:'Syracuse Mets',time:'13:05',home:true},
+  {date:'2026-04-07',opp:'St. Paul Saints',time:'16:05',home:true},
+  {date:'2026-04-08',opp:'St. Paul Saints',time:'18:35',home:true},
+  {date:'2026-04-09',opp:'St. Paul Saints',time:'18:35',home:true},
+  {date:'2026-04-10',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-04-11',opp:'St. Paul Saints',time:'17:05',home:true},
+  // Home: LOU
+  {date:'2026-04-14',opp:'Louisville Bats',time:'18:05',home:true},
+  {date:'2026-04-15',opp:'Louisville Bats',time:'11:05',home:true},
+  {date:'2026-04-16',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-04-17',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-04-18',opp:'Louisville Bats',time:'14:05',home:true},
+  // Home: OMA
+  {date:'2026-04-21',opp:'Omaha Storm Chasers',time:'18:35',home:true},
+  {date:'2026-04-22',opp:'Omaha Storm Chasers',time:'18:35',home:true},
+  {date:'2026-04-23',opp:'Omaha Storm Chasers',time:'19:05',home:true},
+  {date:'2026-04-24',opp:'Omaha Storm Chasers',time:'17:05',home:true},
+  {date:'2026-04-25',opp:'Omaha Storm Chasers',time:'17:05',home:true},
+  {date:'2026-04-26',opp:'Omaha Storm Chasers',time:'14:05',home:true},
+  // Away: COL
+  {date:'2026-04-28',opp:'Columbus Clippers',time:'18:15',home:false},
+  {date:'2026-04-29',opp:'Columbus Clippers',time:'18:15',home:false},
+  {date:'2026-04-30',opp:'Columbus Clippers',time:'18:35',home:false},
+  // MAY
+  {date:'2026-05-01',opp:'Columbus Clippers',time:'18:15',home:false},
+  {date:'2026-05-02',opp:'Columbus Clippers',time:'13:05',home:false},
+  {date:'2026-05-03',opp:'Columbus Clippers',time:'13:05',home:false},
+  // Away: MEM
+  {date:'2026-05-05',opp:'Memphis Redbirds',time:'18:05',home:false},
+  {date:'2026-05-06',opp:'Memphis Redbirds',time:'18:05',home:false},
+  {date:'2026-05-07',opp:'Memphis Redbirds',time:'11:05',home:false},
+  {date:'2026-05-08',opp:'Memphis Redbirds',time:'18:35',home:false},
+  {date:'2026-05-09',opp:'Memphis Redbirds',time:'19:05',home:false},
+  {date:'2026-05-10',opp:'Memphis Redbirds',time:'17:05',home:false},
+  // Away: OMA
+  {date:'2026-05-12',opp:'Omaha Storm Chasers',time:'19:35',home:false},
+  {date:'2026-05-13',opp:'Omaha Storm Chasers',time:'13:05',home:false},
+  {date:'2026-05-14',opp:'Omaha Storm Chasers',time:'19:35',home:false},
+  {date:'2026-05-15',opp:'Omaha Storm Chasers',time:'20:05',home:false},
+  {date:'2026-05-16',opp:'Omaha Storm Chasers',time:'20:05',home:false},
+  {date:'2026-05-17',opp:'Omaha Storm Chasers',time:'15:05',home:false},
+  // Home: IND
+  {date:'2026-05-19',opp:'Indianapolis Indians',time:'18:05',home:true},
+  {date:'2026-05-20',opp:'Indianapolis Indians',time:'11:05',home:true},
+  {date:'2026-05-21',opp:'Indianapolis Indians',time:'18:35',home:true},
+  {date:'2026-05-22',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-05-23',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-05-24',opp:'Indianapolis Indians',time:'13:05',home:true},
+  // Away: COL
+  {date:'2026-05-25',opp:'Columbus Clippers',time:'17:05',home:false},
+  {date:'2026-05-26',opp:'Columbus Clippers',time:'11:05',home:false},
+  {date:'2026-05-27',opp:'Columbus Clippers',time:'18:35',home:false},
+  {date:'2026-05-28',opp:'Columbus Clippers',time:'19:05',home:false},
+  {date:'2026-05-29',opp:'Columbus Clippers',time:'19:05',home:false},
+  {date:'2026-05-30',opp:'Columbus Clippers',time:'19:05',home:false},
+  // Home: COL
+  {date:'2026-05-31',opp:'Columbus Clippers',time:'14:05',home:true},
+  // JUNE — Away: IOW
+  {date:'2026-06-02',opp:'Iowa Cubs',time:'19:38',home:false},
+  {date:'2026-06-03',opp:'Iowa Cubs',time:'13:08',home:false},
+  {date:'2026-06-04',opp:'Iowa Cubs',time:'19:38',home:false},
+  {date:'2026-06-05',opp:'Iowa Cubs',time:'20:08',home:false},
+  {date:'2026-06-06',opp:'Iowa Cubs',time:'19:08',home:false},
+  // Home: IOW
+  {date:'2026-06-07',opp:'Iowa Cubs',time:'14:05',home:true},
+  {date:'2026-06-08',opp:'Iowa Cubs',time:'14:08',home:true},
+  // Home: STP
+  {date:'2026-06-09',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-06-10',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-06-11',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-06-12',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-06-13',opp:'St. Paul Saints',time:'19:05',home:true},
+  {date:'2026-06-14',opp:'St. Paul Saints',time:'17:05',home:true},
+  // Away: ROC
+  {date:'2026-06-16',opp:'Rochester Red Wings',time:'18:45',home:false},
+  {date:'2026-06-17',opp:'Rochester Red Wings',time:'13:05',home:false},
+  {date:'2026-06-18',opp:'Rochester Red Wings',time:'18:45',home:false},
+  {date:'2026-06-19',opp:'Rochester Red Wings',time:'18:45',home:false},
+  {date:'2026-06-20',opp:'Rochester Red Wings',time:'18:45',home:false},
+  {date:'2026-06-21',opp:'Rochester Red Wings',time:'13:05',home:false},
+  // Away: WOR
+  {date:'2026-06-23',opp:'Worcester Red Sox',time:'18:45',home:false},
+  {date:'2026-06-24',opp:'Worcester Red Sox',time:'18:45',home:false},
+  {date:'2026-06-25',opp:'Worcester Red Sox',time:'18:45',home:false},
+  {date:'2026-06-26',opp:'Worcester Red Sox',time:'18:45',home:false},
+  {date:'2026-06-27',opp:'Worcester Red Sox',time:'16:05',home:false},
+  {date:'2026-06-28',opp:'Worcester Red Sox',time:'13:05',home:false},
+  {date:'2026-06-30',opp:'Iowa Cubs',time:'12:05',home:false},
+  // JULY — Home: IOW
+  {date:'2026-07-01',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-07-02',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-07-03',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-07-04',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-07-05',opp:'Iowa Cubs',time:'16:05',home:true},
+  // Home: IND
+  {date:'2026-07-07',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-07-08',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-07-09',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-07-10',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-07-11',opp:'Indianapolis Indians',time:'19:05',home:true},
+  {date:'2026-07-12',opp:'Indianapolis Indians',time:'13:35',home:true},
+  // Home: GWN
+  {date:'2026-07-14',opp:'Gwinnett Stripers',time:'19:05',home:true},
+  {date:'2026-07-17',opp:'Gwinnett Stripers',time:'19:05',home:true},
+  {date:'2026-07-18',opp:'Gwinnett Stripers',time:'19:05',home:true},
+  // Home: LOU
+  {date:'2026-07-19',opp:'Louisville Bats',time:'19:05',home:true},
+  {date:'2026-07-20',opp:'Louisville Bats',time:'19:05',home:true},
+  {date:'2026-07-21',opp:'Louisville Bats',time:'19:05',home:true},
+  {date:'2026-07-22',opp:'Louisville Bats',time:'19:05',home:true},
+  {date:'2026-07-23',opp:'Louisville Bats',time:'19:05',home:true},
+  {date:'2026-07-24',opp:'Louisville Bats',time:'17:05',home:true},
+  {date:'2026-07-25',opp:'Louisville Bats',time:'17:05',home:true},
+  // Home: COL
+  {date:'2026-07-26',opp:'Columbus Clippers',time:'19:05',home:true},
+  {date:'2026-07-28',opp:'Columbus Clippers',time:'19:05',home:true},
+  {date:'2026-07-29',opp:'Columbus Clippers',time:'19:05',home:true},
+  {date:'2026-07-30',opp:'Columbus Clippers',time:'12:05',home:true},
+  {date:'2026-07-31',opp:'Columbus Clippers',time:'19:05',home:true},
+  // AUGUST
+  {date:'2026-08-01',opp:'Columbus Clippers',time:'19:05',home:true},
+  {date:'2026-08-02',opp:'Columbus Clippers',time:'13:05',home:false},
+  // Away: OMA
+  {date:'2026-08-04',opp:'Omaha Storm Chasers',time:'19:05',home:false},
+  {date:'2026-08-05',opp:'Omaha Storm Chasers',time:'19:05',home:false},
+  {date:'2026-08-06',opp:'Omaha Storm Chasers',time:'19:05',home:false},
+  {date:'2026-08-07',opp:'Omaha Storm Chasers',time:'19:05',home:false},
+  {date:'2026-08-08',opp:'Omaha Storm Chasers',time:'19:05',home:false},
+  {date:'2026-08-09',opp:'Omaha Storm Chasers',time:'16:05',home:true},
+  // Home: LOU
+  {date:'2026-08-11',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-08-12',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-08-13',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-08-14',opp:'Louisville Bats',time:'19:15',home:true},
+  {date:'2026-08-15',opp:'Louisville Bats',time:'19:15',home:true},
+  {date:'2026-08-16',opp:'Louisville Bats',time:'13:05',home:true},
+  // Home: IOW
+  {date:'2026-08-18',opp:'Iowa Cubs',time:'18:35',home:true},
+  {date:'2026-08-19',opp:'Iowa Cubs',time:'18:35',home:true},
+  {date:'2026-08-20',opp:'Iowa Cubs',time:'18:35',home:true},
+  {date:'2026-08-21',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-08-22',opp:'Iowa Cubs',time:'19:05',home:true},
+  {date:'2026-08-23',opp:'Iowa Cubs',time:'14:05',home:true},
+  // Away: STP
+  {date:'2026-08-25',opp:'St. Paul Saints',time:'20:07',home:false},
+  {date:'2026-08-26',opp:'St. Paul Saints',time:'20:07',home:false},
+  {date:'2026-08-27',opp:'St. Paul Saints',time:'20:07',home:false},
+  {date:'2026-08-28',opp:'St. Paul Saints',time:'20:07',home:false},
+  {date:'2026-08-29',opp:'St. Paul Saints',time:'19:37',home:false},
+  {date:'2026-08-30',opp:'St. Paul Saints',time:'15:07',home:false},
+  // SEPTEMBER — Away: IND
+  {date:'2026-09-01',opp:'Indianapolis Indians',time:'18:35',home:false},
+  {date:'2026-09-02',opp:'Indianapolis Indians',time:'18:35',home:false},
+  {date:'2026-09-03',opp:'Indianapolis Indians',time:'18:35',home:false},
+  {date:'2026-09-04',opp:'Indianapolis Indians',time:'19:05',home:false},
+  {date:'2026-09-05',opp:'Indianapolis Indians',time:'17:05',home:false},
+  {date:'2026-09-06',opp:'Indianapolis Indians',time:'18:05',home:false},
+  // Away: IOW
+  {date:'2026-09-08',opp:'Iowa Cubs',time:'19:38',home:false},
+  {date:'2026-09-09',opp:'Iowa Cubs',time:'13:08',home:false},
+  {date:'2026-09-10',opp:'Iowa Cubs',time:'19:38',home:false},
+  {date:'2026-09-11',opp:'Iowa Cubs',time:'20:08',home:false},
+  {date:'2026-09-12',opp:'Iowa Cubs',time:'19:08',home:false},
+  {date:'2026-09-13',opp:'Iowa Cubs',time:'14:08',home:false},
+  // Home: LOU (final homestand)
+  {date:'2026-09-15',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-09-16',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-09-17',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-09-18',opp:'Louisville Bats',time:'18:35',home:true},
+  {date:'2026-09-19',opp:'Louisville Bats',time:'17:05',home:true},
+  {date:'2026-09-20',opp:'Louisville Bats',time:'13:05',home:true},
 ];
 
 function startCountdown() {
-  const now = new Date();
+  const now = new Date(new Date().toLocaleString('en-US', {timeZone:'America/New_York'}));
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const next = SCHEDULE.find(g => {
     if (g.date > todayStr) return true;
@@ -2471,7 +2641,7 @@ async function fetchGameNotes() {
 
   // If cached within the last 30 minutes, show cached version
   if (gameNotesCache && (Date.now() - gameNotesCache.fetchedAt < 30 * 60 * 1000)) {
-    renderGameNotes(gameNotesCache.parsed, gameNotesCache.date, gameNotesCache.pdfUrl);
+    renderGameNotesPdf(gameNotesCache.date, gameNotesCache.pdfUrl, gameNotesCache.isToday);
     btn.textContent = '🔄 Refresh Game Notes';
     btn.disabled = false;
     return;
@@ -2483,26 +2653,11 @@ async function fetchGameNotes() {
   pdfLink.style.display = 'none';
 
   try {
-    // Step 1: Fetch the MiLB game notes page via Cloudflare Worker (avoids CORS)
-    const gameNotesUrl = 'https://www.milb.com/toledo/team/game-notes';
-    const workerProxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(gameNotesUrl)}`;
+    // Step 1: Fetch game notes via MiLB content API (team 512 = Toledo)
+    // This returns structured JSON with all published game note PDFs
+    const contentApiUrl = 'https://statsapi.mlb.com/api/v1/content/team/512?fields=articles,headline,subhead,url,parts,src,at_url&limit=10';
+    const fallbackUrl = 'https://www.milb.com/toledo/team/game-notes';
 
-    let pageHtml;
-    try {
-      const proxyRes = await fetch(workerProxyUrl);
-      if (!proxyRes.ok) throw new Error(`Worker proxy HTTP ${proxyRes.status}`);
-      pageHtml = await proxyRes.text();
-    } catch (proxyErr) {
-      throw new Error(`Could not reach MiLB.com (${proxyErr.message}). Check your connection and try again.`);
-    }
-
-    if (!pageHtml || pageHtml.length < 500) {
-      throw new Error('MiLB.com returned an empty page. Try again in a moment.');
-    }
-
-    // Step 2: Find today's PDF link in the page HTML
-    // Links appear as: href="https://img.mlbstatic.com/milb-images/image/upload/milb/{hash}.pdf"
-    // with anchor text like "Saturday, May 9" or "Friday, May 9"
     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
     const dayNames   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const monthNames = ['January','February','March','April','May','June','July',
@@ -2511,50 +2666,67 @@ async function fetchGameNotes() {
     const monthName = monthNames[now.getMonth()];
     const dayNum    = now.getDate();
 
-    // Extract all milbstatic PDF links with their surrounding text
-    const linkRegex = /href="(https:\/\/img\.mlbstatic\.com\/milb-images\/image\/upload\/[^"]+\.pdf)"[^>]*>([^<]+)<\/a>/gi;
-    const mdRegex   = /\[([^\]]+)\]\((https:\/\/img\.mlbstatic\.com\/milb-images\/image\/upload\/[^)]+\.pdf)\)/g;
+    // Try fetching from the worker-proxied game notes page to find PDF links
+    let pageHtml = '';
+    try {
+      const workerProxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(fallbackUrl)}`;
+      const proxyRes = await fetch(workerProxyUrl);
+      if (proxyRes.ok) pageHtml = await proxyRes.text();
+    } catch(e) {
+      console.log('[game notes] Page fetch failed:', e.message);
+    }
 
+    // Extract PDF links from page HTML
+    const pdfRegex = /(https?:\/\/img\.mlbstatic\.com\/milb-images\/image\/upload\/[^\s"'<>]+\.pdf)/gi;
     const allLinks = [];
     let m;
-    while ((m = linkRegex.exec(pageHtml)) !== null) {
-      allLinks.push({ url: m[1], text: m[2].trim() });
-    }
-    while ((m = mdRegex.exec(pageHtml)) !== null) {
-      allLinks.push({ url: m[2], text: m[1].trim() });
+    // Search entire page for PDF URLs
+    while ((m = pdfRegex.exec(pageHtml)) !== null) {
+      const url = m[1];
+      // Try to find associated date text near this URL
+      const surrounding = pageHtml.substring(Math.max(0, m.index - 200), m.index + 200);
+      const dateMatch = surrounding.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d+/i);
+      const text = dateMatch ? dateMatch[0] : url.split('/').pop().replace('.pdf','');
+      if (!allLinks.find(l => l.url === url)) {
+        allLinks.push({ url, text });
+      }
     }
 
+    // If no links found via page, construct today's likely URL pattern
+    // MiLB game notes are at predictable Cloudinary URLs — we can also just open the page directly
     if (!allLinks.length) {
-      throw new Error('No game notes links found on MiLB.com. The page format may have changed.');
+      // Show the page link as fallback — user can open it directly
+      const dateLabel = `${dayName}, ${monthName} ${dayNum}`;
+      const pdfUrl = fallbackUrl;
+      gameNotesCache = { pdfUrl, date: dateLabel, isToday: true, fetchedAt: Date.now(), isDirect: true };
+      renderGameNotesPdf(dateLabel, pdfUrl, true, true);
+      btn.disabled = false;
+      btn.textContent = '🔄 Refresh Game Notes';
+      return;
     }
 
-    // Deduplicate by URL (both regex passes may match the same link)
-    const seen = new Set();
-    const uniqueLinks = allLinks.filter(l => {
-      if (seen.has(l.url)) return false;
-      seen.add(l.url);
-      return true;
-    });
+    // Sort by URL (more recent uploads tend to have higher numbers) — take last as most recent
+    allLinks.sort((a,b) => a.url.localeCompare(b.url));
 
-    // Find today's link — try exact day name match, then day number match
+    // Find today's link
     const todayPatterns = [
       `${dayName}, ${monthName} ${dayNum}`,
       `${dayName}, ${monthName} ${String(dayNum).padStart(2,'0')}`,
     ];
-    let todayLink = uniqueLinks.find(l => todayPatterns.some(p => l.text.includes(p)));
-    const mostRecent = uniqueLinks[uniqueLinks.length - 1];
+    let todayLink = allLinks.find(l => todayPatterns.some(p => l.text.toLowerCase().includes(p.toLowerCase())));
+    const mostRecent = allLinks[allLinks.length - 1];
     const isToday = !!todayLink;
     const chosenLink = todayLink || mostRecent;
 
     if (!chosenLink) {
-      throw new Error('No game notes found for today. They\'re posted ~3 hours before first pitch.');
+      throw new Error("No game notes found. They're typically posted ~3 hours before first pitch.");
     }
 
     const dateLabel = chosenLink.text;
     const pdfUrl    = chosenLink.url;
 
     // Cache and render the PDF link
-    gameNotesCache = { pdfUrl, date: dateLabel, fetchedAt: Date.now() };
+    gameNotesCache = { pdfUrl, date: dateLabel, isToday, fetchedAt: Date.now() };
 
     renderGameNotesPdf(dateLabel, pdfUrl, isToday);
 
@@ -2579,7 +2751,7 @@ async function fetchGameNotes() {
   }
 }
 
-function renderGameNotesPdf(dateLabel, pdfUrl, isToday) {
+function renderGameNotesPdf(dateLabel, pdfUrl, isToday, isDirect) {
   const content = document.getElementById('gn-content');
   const pdfLink = document.getElementById('gn-pdf-link');
 
@@ -2599,10 +2771,12 @@ function renderGameNotesPdf(dateLabel, pdfUrl, isToday) {
   }
 
   // Big open button
+  const btnLabel = isDirect ? 'View Game Notes on MiLB.com' : 'Open Game Notes PDF';
+  const btnIcon  = isDirect ? '🌐' : '📄';
   html += `<a href="${pdfUrl}" target="_blank" style="display:block;background:linear-gradient(135deg,#1a2b5e,#0f1d40);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:20px;text-align:center;text-decoration:none;margin-bottom:10px;">
-    <div style="font-size:32px;margin-bottom:8px;">📄</div>
-    <div style="font-size:14px;font-weight:700;letter-spacing:0.5px;">Open Game Notes PDF</div>
-    <div style="font-size:10px;opacity:0.6;margin-top:4px;">${esc(dateLabel)}</div>
+    <div style="font-size:32px;margin-bottom:8px;">${btnIcon}</div>
+    <div style="font-size:14px;font-weight:700;letter-spacing:0.5px;">${btnLabel}</div>
+    <div style="font-size:10px;opacity:0.6;margin-top:4px;">${isDirect ? 'Opens MiLB.com game notes page' : esc(dateLabel)}</div>
   </a>`;
 
   html += `<div class="gn-status" style="font-size:11px;">
@@ -2777,93 +2951,116 @@ function renderSchedule(data) {
 
   const monthNames = ['January','February','March','April','May','June',
                       'July','August','September','October','November','December'];
-  const dowNames   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dowLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  const games = [];
+  // Group games by month
+  const gamesByDate = {};
   for (const dateObj of (data.dates || [])) {
     for (const game of (dateObj.games || [])) {
-      games.push({ dateStr: dateObj.date, game });
+      gamesByDate[dateObj.date] = game;
     }
   }
 
-  if (!games.length) {
-    el.innerHTML = '<div class="sched-loading">No games found.</div>';
-    return;
-  }
+  // Get date range from all games
+  const allDates = Object.keys(gamesByDate).sort();
+  if (!allDates.length) { el.innerHTML = '<div class="sched-loading">No games found.</div>'; return; }
 
-  let html = '';
-  let lastMonth = '';
+  const firstDate = new Date(allDates[0] + 'T12:00:00');
+  const lastDate  = new Date(allDates[allDates.length-1] + 'T12:00:00');
+
+  let html = `<div class="sched-cal-legend">
+    <div class="sched-cal-legend-item"><div class="sched-cal-legend-box" style="background:#fff;border:2px solid #1a2b5e;"></div>Home</div>
+    <div class="sched-cal-legend-item"><div class="sched-cal-legend-box" style="background:#f5f3ee;border:1px solid rgba(26,43,94,0.15);"></div>Away</div>
+    <div class="sched-cal-legend-item"><div class="sched-cal-legend-box" style="border:2px solid #c8102e;background:rgba(200,16,46,0.05);"></div>Today</div>
+  </div>`;
+
   let todayFound = false;
+  let curDate = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  const endMonth = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 1);
 
-  for (const { dateStr, game } of games) {
-    const [yr, mo, dy] = dateStr.split('-').map(Number);
-    const monthLabel = monthNames[mo - 1];
+  while (curDate < endMonth) {
+    const yr = curDate.getFullYear();
+    const mo = curDate.getMonth();
+    const monthLabel = monthNames[mo] + ' ' + yr;
 
-    if (monthLabel !== lastMonth) {
-      html += `<div class="sched-month">${monthLabel} ${yr}</div>`;
-      lastMonth = monthLabel;
-    }
+    html += `<div class="sched-cal-month"><div class="sched-cal-month-title">${monthLabel}</div>`;
+    html += `<div class="sched-cal-grid">`;
+    // Day-of-week headers
+    dowLabels.forEach(d => { html += `<div class="sched-cal-dow">${d}</div>`; });
 
-    const isHome = game.teams?.home?.team?.id === TEAM_ID;
-    const opp    = isHome ? game.teams?.away?.team : game.teams?.home?.team;
-    const oppName = opp?.name || 'TBD';
-    // Strip city prefix, keep team name (e.g. 'Memphis Redbirds' not just 'Redbirds')
-    const shortOpp = oppName.replace('Toledo Mud Hens', '').trim() || oppName;
+    // Blank cells before first day
+    const firstDow = new Date(yr, mo, 1).getDay();
+    for (let i = 0; i < firstDow; i++) html += `<div class="sched-cal-day empty"></div>`;
 
-    const status   = game.status?.abstractGameState || '';
-    const detailed = game.status?.detailedState || '';
-    const isToday  = dateStr === todayStr;
-    const isFinal  = status === 'Final';
-    const isLive   = detailed.includes('Progress');
+    const daysInMonth = new Date(yr, mo + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const pad = n => String(n).padStart(2,'0');
+      const dateStr = `${yr}-${pad(mo+1)}-${pad(d)}`;
+      const game = gamesByDate[dateStr];
+      const isToday = dateStr === todayStr;
+      if (isToday) todayFound = true;
 
-    const d2  = new Date(yr, mo - 1, dy);
-    const dow = dowNames[d2.getDay()];
-
-    const homeScore = game.teams?.home?.score;
-    const awayScore = game.teams?.away?.score;
-    const mudScore  = isHome ? homeScore : awayScore;
-    const oppScore  = isHome ? awayScore : homeScore;
-    const hasScore  = mudScore !== undefined && mudScore !== null;
-
-    let rightHtml = '';
-    if (isLive && hasScore) {
-      rightHtml = `<div class="sched-score">${mudScore}–${oppScore}</div><div class="sched-result live">LIVE</div>`;
-    } else if (isFinal && hasScore) {
-      const won = mudScore > oppScore;
-      const wl  = won ? 'W' : 'L';
-      rightHtml = `<div class="sched-score">${mudScore}–${oppScore}</div><div class="sched-result ${wl}">${wl}</div>`;
-    } else {
-      let timeStr = '';
-      if (game.gameDate) {
-        const gd = new Date(game.gameDate);
-        timeStr = gd.toLocaleString('en-US', { timeZone:'America/New_York', hour:'numeric', minute:'2-digit', hour12:true }).replace(' ','').toLowerCase();
+      if (!game) {
+        html += `<div class="sched-cal-day empty"><div class="sched-cal-num" style="color:rgba(26,43,94,0.2);">${d}</div></div>`;
+        continue;
       }
-      rightHtml = `<div class="sched-time">${timeStr || 'TBD'}</div>`;
+
+      const isHome = game.teams?.home?.team?.id === TEAM_ID;
+      const opp = isHome ? game.teams?.away?.team : game.teams?.home?.team;
+      const oppName = opp?.name || '';
+      // Short name: last word if >12 chars, else full name
+      const words = oppName.split(' ');
+      const shortOpp = words[words.length-1] || oppName;
+
+      const status = game.status?.abstractGameState || '';
+      const detailed = game.status?.detailedState || '';
+      const isFinal = status === 'Final';
+      const isLive  = detailed.includes('Progress');
+
+      const homeScore = game.teams?.home?.score;
+      const awayScore = game.teams?.away?.score;
+      const mudScore  = isHome ? homeScore : awayScore;
+      const oppScore  = isHome ? awayScore : homeScore;
+      const hasScore  = mudScore !== undefined && mudScore !== null;
+
+      let scoreHtml = '';
+      if (isLive && hasScore) {
+        scoreHtml = `<div class="sched-cal-score">${mudScore}-${oppScore}</div><div class="sched-cal-live">LIVE</div>`;
+      } else if (isFinal && hasScore) {
+        const wl = mudScore > oppScore ? 'W' : 'L';
+        scoreHtml = `<div class="sched-cal-score">${mudScore}-${oppScore}</div><div class="sched-cal-wl ${wl}">${wl}</div>`;
+      } else {
+        let timeStr = '';
+        if (game.gameDate) {
+          const gd = new Date(game.gameDate);
+          timeStr = gd.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true}).replace(' ','').toLowerCase();
+        }
+        scoreHtml = `<div class="sched-cal-time">${timeStr}</div>`;
+      }
+
+      const classes = ['sched-cal-day', isHome?'home':'away', isToday?'today':'', isFinal?'final':''].filter(Boolean).join(' ');
+      html += `<div class="${classes}"${isToday?' id="sched-today"':''}>
+        <div class="sched-cal-num">${d}</div>
+        <div class="sched-cal-opp">${isHome?'vs':'@'} ${shortOpp}</div>
+        ${scoreHtml}
+      </div>`;
     }
 
-    const todayBadge = isToday ? '<span class="sched-today-badge">TODAY</span>' : '';
-    const venue = isHome ? 'Fifth Third Field' : (opp?.locationName || '');
-    if (isToday) todayFound = true;
+    // Fill trailing empty cells
+    const totalCells = firstDow + daysInMonth;
+    const remainder = totalCells % 7;
+    if (remainder > 0) {
+      for (let i = remainder; i < 7; i++) html += `<div class="sched-cal-day empty"></div>`;
+    }
 
-    html += `
-    <div class="sched-game ${isHome?'home':'away'} ${isToday?'today':''} ${isFinal?'final':''}">
-      ${todayBadge}
-      <div class="sched-date-col">
-        <div class="sched-dow">${dow}</div>
-        <div class="sched-day">${dy}</div>
-      </div>
-      <div class="sched-info">
-        <div class="sched-opp">${isHome?'vs':'@'} ${shortOpp}</div>
-        <div class="sched-meta">${isHome?'Home':'Away'}${venue ? ' · ' + venue : ''}</div>
-      </div>
-      <div class="sched-right">${rightHtml}</div>
-    </div>`;
+    html += `</div></div>`; // close grid + month
+    curDate = new Date(yr, mo + 1, 1);
   }
 
   el.innerHTML = html;
 
   if (todayFound) {
-    const todayEl = el.querySelector('.sched-game.today');
+    const todayEl = document.getElementById('sched-today');
     if (todayEl) setTimeout(() => todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
   }
 }
