@@ -3040,6 +3040,62 @@ async function fetchGameNotes() {
 }
 
 
+function renderGameNotesPdf(dateLabel, pdfUrl, isToday, isDirect) {
+  const el = document.getElementById('gn-content');
+  if (!el) return;
+  let html = '';
+  html += `<div class="gn-meta">
+    <div class="gn-meta-date">Game Notes &mdash; ${esc(dateLabel)}</div>
+    <div class="gn-meta-matchup">Toledo Mud Hens</div>
+    <div class="gn-meta-time">Tap below to open</div>
+  </div>`;
+  if (!isToday && !isDirect) {
+    html += `<div style="background:rgba(200,168,75,0.08);border:1px solid rgba(200,168,75,0.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:rgba(26,43,94,0.6);">Today&#39;s notes aren&#39;t posted yet &mdash; showing ${esc(dateLabel)}.</div>`;
+  }
+  const btnLabel = isDirect ? 'View Game Notes on MiLB.com' : 'Open Game Notes PDF';
+  const btnIcon  = isDirect ? '&#127760;' : '&#128196;';
+  html += `<a href="${pdfUrl}" target="_blank" style="display:block;background:linear-gradient(135deg,#1a2b5e,#0f1d40);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:20px;text-align:center;text-decoration:none;margin-bottom:10px;">
+    <div style="font-size:32px;margin-bottom:8px;">${btnIcon}</div>
+    <div style="font-size:14px;font-weight:700;">${btnLabel}</div>
+    <div style="font-size:10px;opacity:0.6;margin-top:4px;">${isDirect ? 'Opens MiLB.com game notes page' : esc(dateLabel)}</div>
+  </a>`;
+  html += `<div class="gn-status" style="font-size:11px;">Also at: <a href="https://www.milb.com/toledo/team/game-notes" target="_blank" style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes</a></div>`;
+  el.innerHTML = html;
+}
+
+function renderFood() {
+  const search = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
+  const results = document.getElementById('food-results');
+  const countEl = document.getElementById('food-map-count');
+  if (!results) return;
+  const filtered = FOOD_LOCATIONS.filter(loc => {
+    const matchFilter = foodFilter === 'all' || loc.tags.some(t => t === foodFilter);
+    const matchSearch = !search || loc.name.toLowerCase().includes(search) ||
+      loc.items.some(i => i.toLowerCase().includes(search)) ||
+      loc.section.toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+  const visibleIds = filtered.map(l => l.id);
+  renderFoodMap(visibleIds);
+  if (countEl) countEl.textContent = 'Showing ' + filtered.length + ' of ' + FOOD_LOCATIONS.length + ' locations';
+  if (!filtered.length) {
+    results.innerHTML = '<div class="food-empty">No locations match your search.</div>';
+    return;
+  }
+  const typeLabels = { restaurant: 'Ballpark Restaurant', cart: 'Portable Cart', club: 'Club Level' };
+  results.innerHTML = filtered.map(loc => {
+    const isHL = foodHighlight === loc.id;
+    return '<div class="food-card' + (isHL ? ' highlight' : '') + '" id="food-card-' + loc.id + '">' +
+      '<div class="food-card-top" onclick="highlightFoodPin(' + loc.id + ')">' +
+      '<div class="food-pin ' + loc.type + '">' + loc.id + '</div>' +
+      '<div style="flex:1;"><div class="food-card-name">' + esc(loc.name) + '</div>' +
+      '<div class="food-card-section">' + esc(loc.section) + ' &middot; ' + typeLabels[loc.type] + '</div></div>' +
+      '<div class="food-card-arrow">' + (isHL ? '&#9662;' : '&#9658;') + '</div></div>' +
+      '<div class="food-items">' + loc.items.map(i => '<span class="food-item-tag">' + esc(i) + '</span>').join('') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
 async function loadSchedule() {
   if (scheduleCache) { renderSchedule(scheduleCache); return; }
   const el = document.getElementById('sched-content');
@@ -3202,6 +3258,7 @@ function renderSchedule(data) {
 
 // ── NEWS FEED ────────────────────────────────────────────────
 let newsCache = null;
+let scheduleCache = null;
 
 async function loadNews() {
   if (newsCache) { renderNews(newsCache); return; }
@@ -3347,7 +3404,7 @@ async function loadPodcast() {
   el.innerHTML = '<div class="stats-loading">Loading episodes...</div>';
   try {
     // Buzzsprout RSS feed
-    const rssUrl = 'https://feeds.buzzsprout.com/2082535.rss';
+    const rssUrl = 'https://feeds.buzzsprout.com/1744046.rss';
     const proxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(rssUrl)}`;
     const res = await fetch(proxyUrl);
     if (!res.ok) throw new Error('HTTP ' + res.status);
