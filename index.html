@@ -184,8 +184,8 @@ body{
   background:radial-gradient(ellipse at top right,rgba(200,16,46,0.1) 0%,transparent 60%);
   pointer-events:none;
 }
-.matchup-row{display:flex;align-items:center;justify-content:center;gap:0;}
-.team-block{flex:0 0 auto;max-width:42%;}
+.matchup-row{display:flex;align-items:center;justify-content:space-between;padding:0 8px;}
+.team-block{flex:0 1 38%;}
 .team-block:last-child{text-align:right;}
 .team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .team-rec{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:500;}
@@ -1639,8 +1639,9 @@ function renderStandingsTable(records, containerId) {
   let html = '';
   records.forEach(div => {
     const divName = div.division?.name || 'Division';
-    html += `<div class="standings-div-title">${divName}</div>`;
-    html += `<table class="standings-tbl">
+    html += `<div class="standings-div-title">${divName}</div>
+    <div class="tbl-wrap" style="margin-bottom:12px;">
+    <table class="standings-tbl">
       <thead><tr>
         <th class="team-col">Team</th>
         <th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th><th>L10</th>
@@ -1660,7 +1661,7 @@ function renderStandingsTable(records, containerId) {
         <td>${w}</td><td>${l}</td><td>${pct}</td><td>${gb}</td><td>${strk}</td><td>${l10str}</td>
       </tr>`;
     });
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
   });
   el.innerHTML = html;
 }
@@ -2096,9 +2097,12 @@ function updateLinescoreFromFeed(ls, isHome) {
 async function fetchGame() {
   try {
     const _et = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+    // Between midnight and 2am ET, load yesterday's game so results stay visible
+    const _fetchDate = new Date(_et);
+    if (_et.getHours() < 2) _fetchDate.setDate(_fetchDate.getDate() - 1);
     const pad = n => String(n).padStart(2,'0');
-    const ds = `${_et.getFullYear()}-${pad(_et.getMonth()+1)}-${pad(_et.getDate())}`;
-    document.getElementById('meta-date').textContent = _et.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const ds = `${_fetchDate.getFullYear()}-${pad(_fetchDate.getMonth()+1)}-${pad(_fetchDate.getDate())}`;
+    document.getElementById('meta-date').textContent = _fetchDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     console.log('Fetching games for date:', ds, '— Team ID:', TEAM_ID);
 
     let data = null;
@@ -2155,9 +2159,10 @@ async function fetchGame() {
     document.getElementById('app-venue-sub').textContent = isHome ? `${venueName} · Toledo, OH` : `${venueName} · ${venueCity}`;
     fetchVenueWeather(game.venue?.id, venueName, isHome);
 
-    // Scores
-    document.getElementById('mud-sc').textContent = game.teams[mi].score ?? '—';
-    document.getElementById('opp-sc').textContent = game.teams[oi].score ?? '—';
+    // Scores - only show numeric score if game has started
+    const gameStarted = ['Live','Final','Game Over','Completed'].some(s => (game.status?.detailedState||'').includes(s)) || (game.teams[mi].score ?? 0) > 0 || (game.teams[oi].score ?? 0) > 0;
+    document.getElementById('mud-sc').textContent = gameStarted ? (game.teams[mi].score ?? '0') : '—';
+    document.getElementById('opp-sc').textContent = gameStarted ? (game.teams[oi].score ?? '0') : '—';
 
     const status = game.status?.detailedState || '';
     window._gameStatus  = status;
@@ -3006,246 +3011,34 @@ let gameNotesCache = null; // { pdfUrl, date, parsed, fetchedAt }
 
 async function fetchGameNotes() {
   const btn = document.getElementById('gn-fetch-btn');
-  const content = document.getElementById('gn-content');
+  const contentEl = document.getElementById('gn-content');
   const pdfLink = document.getElementById('gn-pdf-link');
+  if (!btn || !contentEl) return;
 
-  // If cached within the last 30 minutes, show cached version
   if (gameNotesCache && (Date.now() - gameNotesCache.fetchedAt < 30 * 60 * 1000)) {
-    renderGameNotesPdf(gameNotesCache.date, gameNotesCache.pdfUrl, gameNotesCache.isToday);
+    renderGameNotesPdf(gameNotesCache.date, gameNotesCache.pdfUrl, gameNotesCache.isToday, gameNotesCache.isDirect);
     btn.textContent = '🔄 Refresh Game Notes';
     btn.disabled = false;
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = '⏳ Finding today\'s notes...';
-  content.innerHTML = '<div class="gn-status">Checking MiLB.com for today\'s game notes...</div>';
-  pdfLink.style.display = 'none';
+  btn.textContent = '⏳ Loading...';
+  if (pdfLink) pdfLink.style.display = 'none';
 
-  try {
-    // Use Worker /game-notes-url which scrapes MiLB server-side
-    const gnRes = await fetch(`${WORKER}/game-notes-url`);
-    if (!gnRes.ok) throw new Error('Worker HTTP ' + gnRes.status);
-    const gnData = await gnRes.json();
-    console.log('[gamenotes] Worker response:', JSON.stringify({found:gnData.found,date:gnData.date,total:gnData.totalLinks,recent:gnData.recentLinks}));
-    if (!gnData.pdfUrl) {
-      const _n = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
-      const _mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const _dl = _mn[_n.getMonth()] + ' ' + _n.getDate();
-      gameNotesCache = { pdfUrl:'https://www.milb.com/toledo/team/game-notes', date:_dl, isToday:true, fetchedAt:Date.now(), isDirect:true };
-      renderGameNotesPdf(_dl,'https://www.milb.com/toledo/team/game-notes',true,true);
-      btn.disabled=false; btn.textContent='🔄 Refresh Game Notes'; return;
-    }
-    const isToday = gnData.found===true;
-    const chosenLink = {url:gnData.pdfUrl, text:gnData.date||'Latest Game Notes'};
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dateLabel = `${dayNames[now.getDay()]}, ${monthNames[now.getMonth()]} ${now.getDate()}`;
+  const milbUrl = 'https://www.milb.com/toledo/team/game-notes';
 
-    if (!chosenLink) {
-      throw new Error("No game notes found. They're typically posted ~3 hours before first pitch.");
-    }
-
-    // Try to extract a readable date label from surrounding text
-    const dateLabel = chosenLink.text && !chosenLink.text.includes('upload') 
-      ? chosenLink.text 
-      : `Latest Game Notes`;
-    const pdfUrl = chosenLink.url;
-    // Cache and render the PDF link
-    gameNotesCache = { pdfUrl, date: dateLabel, isToday, fetchedAt: Date.now() };
-
-    renderGameNotesPdf(dateLabel, pdfUrl, isToday);
-
-    btn.disabled = false;
-    btn.textContent = isToday ? '🔄 Refresh Game Notes' : `📋 ${dateLabel} (tap to refresh)`;
-
-  } catch (err) {
-    console.error('Game notes error:', err);
-    content.innerHTML = `
-      <div class="gn-error">
-        <div class="gn-error-title">Couldn't load game notes</div>
-        <div class="gn-error-msg">${esc(err.message)}</div>
-      </div>
-      <div class="gn-status">
-        Game notes are posted ~3 hours before first pitch.<br><br>
-        View them directly at:<br>
-        <a href="https://www.milb.com/toledo/team/game-notes" target="_blank"
-           style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes ↗</a>
-      </div>`;
-    btn.disabled = false;
-    btn.textContent = '📋 Try Again';
-  }
+  // Game notes PDFs are JS-rendered on MiLB — link directly to the page
+  gameNotesCache = { pdfUrl: milbUrl, date: dateLabel, isToday: true, fetchedAt: Date.now(), isDirect: true };
+  renderGameNotesPdf(dateLabel, milbUrl, true, true);
+  btn.disabled = false;
+  btn.textContent = '🔄 Refresh Game Notes';
 }
 
-function renderGameNotesPdf(dateLabel, pdfUrl, isToday, isDirect) {
-  const content = document.getElementById('gn-content');
-  const pdfLink = document.getElementById('gn-pdf-link');
-
-  let html = '';
-
-  // Header
-  html += `<div class="gn-meta">
-    <div class="gn-meta-date">📋 Game Notes — ${esc(dateLabel)}</div>
-    <div class="gn-meta-matchup">Toledo Mud Hens</div>
-    <div class="gn-meta-time">Tap below to open the full PDF</div>
-  </div>`;
-
-  if (!isToday) {
-    html += `<div style="background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:rgba(26,43,94,0.6);">
-      📌 Today's notes aren't posted yet — showing ${esc(dateLabel)}. Notes are typically posted ~3 hours before first pitch.
-    </div>`;
-  }
-
-  // Big open button
-  const btnLabel = isDirect ? 'View Game Notes on MiLB.com' : 'Open Game Notes PDF';
-  const btnIcon  = isDirect ? '🌐' : '📄';
-  html += `<a href="${pdfUrl}" target="_blank" style="display:block;background:linear-gradient(135deg,#1a2b5e,#0f1d40);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:20px;text-align:center;text-decoration:none;margin-bottom:10px;">
-    <div style="font-size:32px;margin-bottom:8px;">${btnIcon}</div>
-    <div style="font-size:14px;font-weight:700;letter-spacing:0.5px;">${btnLabel}</div>
-    <div style="font-size:10px;opacity:0.6;margin-top:4px;">${isDirect ? 'Opens MiLB.com game notes page' : esc(dateLabel)}</div>
-  </a>`;
-
-  html += `<div class="gn-status" style="font-size:11px;">
-    Opens in a new tab. Also available at:<br>
-    <a href="https://www.milb.com/toledo/team/game-notes" target="_blank"
-       style="color:#c8102e;font-weight:600;">milb.com/toledo/team/game-notes ↗</a>
-  </div>`;
-
-  content.innerHTML = html;
-  if (pdfLink) pdfLink.style.display = 'none'; // already linked above
-}
-
-// ── FOOD FINDER DATA// ── FOOD FINDER DATA ──────────────────────────────────────
-const FOOD_LOCATIONS = [
-  { id:1,  type:'restaurant', name:'Toft\'s Sundaes',              section:'Sections 101–102',        mapX:348, mapY:178, items:['Funnel Cakes','Root Beer Float','Sundaes','Toft\'s Soft Serve Ice Cream'], tags:['dessert','sweet','ice cream','funnel cake','root beer'] },
-  { id:2,  type:'cart',       name:'Marco\'s Pizza',                section:'Sections 103–104',        mapX:326, mapY:135, items:['Marco\'s Pizza'], tags:['pizza'] },
-  { id:3,  type:'cart',       name:'Hot Dogs & Nachos',             section:'Sections 104–105',        mapX:302, mapY:107, items:['All-Beef Hot Dogs','Nachos','Popcorn','Johnsonville Brat','BacHen Burger'], tags:['hot dog','brat','nachos','popcorn','burger'] },
-  { id:4,  type:'restaurant', name:'Gilhooleys',                    section:'Sections 107–108',        mapX:205, mapY:56,  items:['Bloomin Bacon Burger','French Fries','Grilled Chicken Sandwich','Lot-A-Cheddar Burger','Pulled Pork'], tags:['burger','fries','chicken','sandwich','pulled pork'] },
-  { id:5,  type:'restaurant', name:'Hen & Hound Grab & Go',         section:'Section 115',             mapX:56,  mapY:220, items:['All-Beef Hot Dogs','Chicken Tenders','French Fries','Mac & Cheese','Cheeseburgers','Pretzel Bites','Chicken Sandwich'], tags:['hot dog','chicken','fries','mac cheese','burger','pretzel','sandwich'] },
-  { id:6,  type:'restaurant', name:'Frözhen Cocktail Bar',          section:'Section 118',             mapX:46,  mapY:302, items:['Specialty Drinks','Frozen Cocktails','Mixed Drinks','Draft Beer'], tags:['drinks','cocktails','frozen','beer','alcohol'] },
-  { id:7,  type:'restaurant', name:'Frözhen Ice Cream & Bar',       section:'Section 119',             mapX:54,  mapY:330, items:['All-Beef Hot Dog','Popcorn','Root Beer Float','Sundaes','Toft\'s Hand Dipped Ice Cream','Bottle Beer','Craft Beer','Mixed Drinks'], tags:['ice cream','hot dog','popcorn','root beer','sundae','beer','drinks'] },
-  { id:8,  type:'restaurant', name:'Fleetwood\'s Corner Bar',       section:'Left field (120–121)',    mapX:160, mapY:348, items:['Bottle Beer','Craft Beer','Mixed Drinks'], tags:['beer','drinks','craft beer'] },
-  { id:9,  type:'restaurant', name:'Hen House Eats',                section:'Right field (122)',       mapX:354, mapY:308, items:['All-Beef Hot Dogs','Bavarian Pretzel','Nachos','Popcorn','Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['hot dog','pretzel','nachos','popcorn','beer','drinks'] },
-  { id:10, type:'club',       name:'Lexus Birdcage Club',           section:'Club Level — 109–110',   mapX:136, mapY:46,  items:['Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['beer','drinks','craft beer','specialty','club level'] },
-  { id:11, type:'club',       name:'Frogtown Cantina',              section:'Club Level — 105–106',   mapX:256, mapY:48,  items:['Frogtown Nachos','Chips and Salsa','Tacos','Quesadilla','Mixed Drinks','Draft Beer'], tags:['nachos','chips','salsa','tacos','quesadilla','mexican','beer','drinks'] },
-  { id:12, type:'cart',       name:'Frogtown Nachos',               section:'Section 103',             mapX:316, mapY:116, items:['Frogtown Nachos','Chips and Salsa','Bottle Beer'], tags:['nachos','chips','salsa','beer'] },
-  { id:13, type:'cart',       name:'Grab & Go',                     section:'Sections 105–106',        mapX:272, mapY:74,  items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
-  { id:14, type:'cart',       name:'Yuengling Draft & Craft',       section:'Sections 107–108',        mapX:222, mapY:62,  items:['Yuengling & Craft Beers'], tags:['beer','yuengling','craft beer','draft'] },
-  { id:15, type:'cart',       name:'Bottle Beer',                   section:'Sections 108–109',        mapX:184, mapY:58,  items:['Bottle Beer','Seltzers'], tags:['beer','seltzer'] },
-  { id:16, type:'cart',       name:'Tito\'s Vodka Bar',             section:'Section 113',             mapX:62,  mapY:164, items:['Mixed Drinks','Specialty Cocktails','Bottled Beer & Wine','Seltzers'], tags:['vodka','cocktails','drinks','beer','wine','seltzer'] },
-  { id:17, type:'cart',       name:'Draft Beer',                    section:'Sections 103–104',        mapX:310, mapY:128, items:['Draft Beer'], tags:['beer','draft'] },
-  { id:18, type:'cart',       name:'Popcorn & Pretzel',             section:'Section 108',             mapX:174, mapY:60,  items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
-  { id:19, type:'cart',       name:'Glass City Cheesesteaks',       section:'Section 114',             mapX:56,  mapY:192, items:['Bases Loaded Brat','Philly Steak','Peanuts','Bottled Beer & Pepsi'], tags:['cheesesteak','philly','brat','peanuts','beer','pepsi'] },
-  { id:20, type:'cart',       name:'Grab & Go (116)',               section:'Section 116',             mapX:44,  mapY:248, items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
-  { id:21, type:'cart',       name:'Popcorn & Pretzel (117)',       section:'Section 117',             mapX:44,  mapY:276, items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
-];
-
-let foodFilter = 'all';
-let foodHighlight = null;
-
-function setFoodFilter(f, el) {
-  foodFilter = f;
-  document.querySelectorAll('.food-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
-  foodHighlight = null;
-  renderFood();
-}
-
-function highlightFoodPin(id) {
-  foodHighlight = foodHighlight === id ? null : id;
-  renderFood();
-  if (foodHighlight) {
-    // Scroll the matching card into view
-    const card = document.getElementById(`food-card-${id}`);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-function renderFood() {
-  const query  = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
-  const filter = foodFilter;
-
-  const filtered = FOOD_LOCATIONS.filter(loc => {
-    // Category filter — exact tag match to avoid 'beer' matching 'root beer'
-    if (filter !== 'all') {
-      const tagMatch  = loc.tags.some(t => t === filter);
-      const itemMatch = loc.items.some(i => i.toLowerCase().includes(filter));
-      if (!tagMatch && !itemMatch) return false;
-    }
-    // Text search — substring match is fine here (user is typing freely)
-    if (query) {
-      const inName  = loc.name.toLowerCase().includes(query);
-      const inItems = loc.items.some(i => i.toLowerCase().includes(query));
-      const inTags  = loc.tags.some(t => t.includes(query));
-      if (!inName && !inItems && !inTags) return false;
-    }
-    return true;
-  });
-
-  // Render map pins
-  const visibleIds = new Set(filtered.map(l => l.id));
-  renderFoodMap(visibleIds);
-
-  // Update count
-  const countEl = document.getElementById('food-map-count');
-  if (countEl) countEl.textContent = `Showing ${filtered.length} of 21 locations`;
-
-  // Render cards
-  const resultsEl = document.getElementById('food-results');
-  if (!resultsEl) return;
-
-  if (!filtered.length) {
-    resultsEl.innerHTML = '<div class="food-empty">No locations match — try a different search or filter.</div>';
-    return;
-  }
-
-  const typeLabels = { restaurant: 'Ballpark Restaurant', cart: 'Portable Cart', club: 'Club Level' };
-
-  resultsEl.innerHTML = filtered.map(loc => {
-    const isHL = foodHighlight === loc.id;
-    return `<div class="food-card${isHL ? ' highlight' : ''}" id="food-card-${loc.id}">
-      <div class="food-card-top" onclick="highlightFoodPin(${loc.id})">
-        <div class="food-pin ${loc.type}">${loc.id}</div>
-        <div style="flex:1;">
-          <div class="food-card-name">${esc(loc.name)}</div>
-          <div class="food-card-section">📍 ${loc.section} &nbsp;·&nbsp; ${typeLabels[loc.type]}</div>
-        </div>
-        <div class="food-card-arrow">${isHL ? '▾' : '▸'}</div>
-      </div>
-      <div class="food-items">
-        ${loc.items.map(item => `<span class="food-item-tag">${esc(item)}</span>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderFoodMap(visibleIds) {
-  const pinsEl = document.getElementById('food-pins');
-  if (!pinsEl) return;
-
-  const pinColors = { restaurant: '#c8a84b', cart: '#c8102e', club: '#1a2b5e' };
-
-  pinsEl.innerHTML = FOOD_LOCATIONS.map(loc => {
-    const visible = visibleIds.has(loc.id);
-    const isHL = foodHighlight === loc.id;
-    const color = pinColors[loc.type];
-    const opacity = visible ? 1 : 0.15;
-    const r = isHL ? 13 : 10;
-    const fontSize = isHL ? 8 : 7;
-    return `<g onclick="highlightFoodPin(${loc.id})" style="cursor:pointer" opacity="${opacity}">
-      <circle cx="${loc.mapX}" cy="${loc.mapY}" r="${r}" fill="${color}" stroke="#fff" stroke-width="${isHL ? 2.5 : 1.5}"/>
-      ${isHL ? `<circle cx="${loc.mapX}" cy="${loc.mapY}" r="17" fill="none" stroke="${color}" stroke-width="2" opacity="0.4"/>` : ''}
-      <text x="${loc.mapX}" y="${loc.mapY + fontSize/2 - 0.5}" text-anchor="middle" font-size="${fontSize}" fill="#fff" font-weight="800" font-family="sans-serif">${loc.id}</text>
-    </g>`;
-  }).join('');
-}
-
-// ── FOOD SECTION INIT ─────────────────────────────────────
-function initFood() {
-  renderFood();
-}
-
-// ── MIDNIGHT RESET ─────────────────────────────────────────
-
-// ── SCHEDULE ────────────────────────────────────────────────
-let scheduleCache = null;
 
 async function loadSchedule() {
   if (scheduleCache) { renderSchedule(scheduleCache); return; }
