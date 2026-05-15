@@ -184,13 +184,13 @@ body{
   background:radial-gradient(ellipse at top right,rgba(200,16,46,0.1) 0%,transparent 60%);
   pointer-events:none;
 }
-.matchup-row{display:flex;align-items:center;justify-content:space-between;}
-.team-block{flex:1;}
+.matchup-row{display:flex;align-items:center;justify-content:center;gap:0;}
+.team-block{flex:0 0 auto;max-width:42%;}
 .team-block:last-child{text-align:right;}
-.team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;}
+.team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .team-rec{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:500;}
 .team-sc{font-size:44px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1;}
-.matchup-vs{color:rgba(255,255,255,0.25);font-size:13px;padding:0 8px;font-weight:500;flex-shrink:0;}
+.matchup-vs{color:rgba(255,255,255,0.25);font-size:13px;padding:0 12px;font-weight:500;flex-shrink:0;}
 .matchup-fp{font-size:11px;color:var(--gold);text-align:center;margin-top:10px;font-weight:600;}
 .matchup-si{font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:2px;}
 .matchup-si span{color:rgba(200,168,75,0.6);}
@@ -280,12 +280,13 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .stats-tbl td:first-child{text-align:left;padding-left:10px;font-weight:600;}
 .stats-loading{text-align:center;padding:28px;color:var(--text3);font-size:12px;font-style:italic;}
 .standings-tbl{border-collapse:collapse;width:100%;}
-.standings-tbl th{background:var(--navy);color:rgba(200,168,75,0.9);font-size:9px;padding:8px 6px;text-align:center;font-weight:600;letter-spacing:0.5px;}
-.standings-tbl td{border-top:1px solid rgba(26,43,94,0.06);font-size:11px;text-align:center;padding:8px 4px;color:var(--navy);background:var(--surf);}
+.standings-tbl th{background:var(--navy);color:rgba(200,168,75,0.9);font-size:9px;padding:8px 4px;text-align:center;font-weight:600;letter-spacing:0.5px;white-space:nowrap;}
+.standings-tbl th.team-col{text-align:left;padding-left:10px;min-width:120px;}
+.standings-tbl td{border-top:1px solid rgba(26,43,94,0.06);font-size:11px;text-align:center;padding:7px 4px;color:var(--navy);background:var(--surf);white-space:nowrap;}
 .standings-tbl tr:nth-child(even) td{background:var(--surf2);}
-.standings-tbl td.team-cell{text-align:left;padding-left:12px;font-size:11px;}
+.standings-tbl td.team-cell{text-align:left;padding-left:10px;font-size:11px;min-width:120px;}
 .standings-tbl td.team-cell.mud-hens{color:var(--red);font-weight:700;}
-.standings-tbl tr.div-header td{background:rgba(26,43,94,0.05);color:var(--text3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
+.standings-tbl tr.div-header td{background:rgba(26,43,94,0.06);color:var(--text2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:10px;border-top:none;}
 .standings-div-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:10px 12px 4px;}
 
 /* ── TRANSACTIONS ───────────────────────────────────────── */
@@ -737,7 +738,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="subnav" id="subnav-stats">
     <button class="subnav-tab active" onclick="showSection('standings',this,'stats');loadStandingsTab()">Standings</button>
     <button class="subnav-tab" onclick="showSection('henstats',this,'stats');loadHensStats()">Hens Stats</button>
-    <button class="subnav-tab" id="opp-stats-tab" onclick="showSection('oppstats',this,'stats')">Opp Stats</button>
+    <button class="subnav-tab" id="opp-stats-tab" onclick="showSection('oppstats',this,'stats');loadOppStats()">Opp Stats</button>
     <button class="subnav-tab" onclick="showSection('transactions',this,'stats');loadTransactions()">Transactions</button>
   </div>
   <div class="pg-content">
@@ -2131,10 +2132,15 @@ async function fetchGame() {
     if (oscl) oscl.textContent = oppTeamName + ' Starter';
     const oppStatsTab = document.getElementById('opp-stats-tab');
     if (oppStatsTab) oppStatsTab.textContent = oppTeamName.split(' ').pop() + ' Stats';
+    // Also update opp pitch title
+    const oppPitchTitleEl = document.getElementById('opp-pitch-title');
+    if (oppPitchTitleEl) oppPitchTitleEl.textContent = oppTeamName + ' — 2026 Pitching';
     const vsEl = document.getElementById('matchup-vs');
     if (vsEl) vsEl.textContent = isHome ? 'vs' : '@';
     const oppScHeader = document.getElementById('opp-sc-header');
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
+    const oppScTab = document.getElementById('opp-sc-tab');
+    if (oppScTab) oppScTab.textContent = oppTeamName.split(' ').pop() + ' SC';
     const oppStatsTitle = document.getElementById('opp-stats-title');
     if (oppStatsTitle) oppStatsTitle.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
     const oppTab = document.querySelector('.bnav-tab:nth-child(2)');
@@ -3687,9 +3693,23 @@ function scheduleMidnightReset() {
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
     gameNotesCache = null;
     newsCache = null;
-    txnCache = null; // clear so tomorrow's notes fetch fresh
-    scheduleCache = null; // clear schedule so TODAY badge re-evaluates
-    foodFilter = 'all'; foodHighlight = null; // reset food finder state
+    txnCache = null;
+    scheduleCache = null;
+    foodFilter = 'all'; foodHighlight = null;
+    // Reset scorecard display
+    lineup = mockLineup(); oppLineup = mockLineup();
+    renderScorecard(); renderOppScorecard();
+    // Reset linescore display
+    const lsBody = document.getElementById('linescore-body');
+    if (lsBody) {
+      lsBody.querySelectorAll('tr').forEach(row => {
+        row.querySelectorAll('td:not(.tn)').forEach(td => td.textContent = '—');
+      });
+    }
+    document.getElementById('mud-sc').textContent = '—';
+    document.getElementById('opp-sc').textContent = '—';
+    document.getElementById('s-inn').textContent = '—';
+    document.getElementById('s-cnt').textContent = '';
     clearInterval(window._liveFeedInterval);
     clearTimeout(window._fetchGameTimeout);
     renderScorecard(); renderOppScorecard();
