@@ -348,6 +348,10 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .food-map-wrap{background:var(--surf);border-radius:12px;border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
 .food-map-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 6px;font-weight:600;}
 .food-map-count{font-size:10px;color:var(--text3);padding:6px 14px 10px;text-align:center;}
+.food-type-legend{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+.food-type-dot{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-weight:600;}
+.food-type-dot span{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.food-map-svg-wrap{padding:0 14px 14px;}
 .food-empty{text-align:center;padding:30px 20px;color:var(--text3);font-size:12px;font-style:italic;}
 
 /* ── PROMO/GIVEAWAY CARDS ───────────────────────────────── */
@@ -485,6 +489,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
 /* ── MISC ───────────────────────────────────────────────── */
 .nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:var(--text3);line-height:1;flex-shrink:0;}
+.empty-state{text-align:center;padding:30px 16px;}
 .loading-msg{text-align:center;padding:20px;color:var(--text3);font-size:12px;font-style:italic;}
 .section-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-weight:700;}
 .link-btn{display:block;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;text-align:center;margin-bottom:8px;}
@@ -531,18 +536,12 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <!-- ═══════════════════════════════════════════ -->
 <div class="page active" id="page-game">
   <div class="subnav" id="subnav-game">
-    <button class="subnav-tab active" onclick="showSection('news',this,'game')">News</button>
+    <button class="subnav-tab active" onclick="showSection('game',this,'game')">Game</button>
     <button class="subnav-tab" onclick="showSection('gamenotes',this,'game')">Game Notes</button>
-    <button class="subnav-tab" onclick="showSection('game',this,'game')">Game</button>
     <button class="subnav-tab" onclick="showSection('scorecard',this,'game')">Mud Hens SC</button>
-    <button class="subnav-tab" onclick="showSection('oppscore',this,'game')">Opp SC</button>
+    <button class="subnav-tab" id="opp-sc-tab" onclick="showSection('oppscore',this,'game')">Opp SC</button>
   </div>
   <div class="pg-content">
-
-    <!-- NEWS -->
-    <div class="section active" id="sec-news">
-      <div id="news-content"><div class="news-loading">Loading Mud Hens news...</div></div>
-    </div>
 
     <!-- GAME NOTES -->
     <div class="section" id="sec-gamenotes">
@@ -561,7 +560,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 </div>
 
     <!-- GAME -->
-    <div class="section" id="sec-game">
+    <div class="section active" id="sec-game">
       <div class="cd-card" id="countdown-card">
         <div class="cd-label">Next Home Game</div>
         <div class="cd-opp" id="countdown-opp">—</div>
@@ -640,6 +639,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
           </tbody>
         </table>
       </div>
+      <div class="sec-lbl" style="margin-top:16px;">Mud Hens News</div>
+      <div id="news-content"><div class="news-loading">Loading news...</div></div>
     </div><!-- /sec-game -->
 
     <!-- MUD HENS SCORECARD -->
@@ -734,8 +735,8 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <!-- ═══════════════════════════════════════════ -->
 <div class="page" id="page-stats">
   <div class="subnav" id="subnav-stats">
-    <button class="subnav-tab active" onclick="showSection('standings',this,'stats')">Standings</button>
-    <button class="subnav-tab" onclick="showSection('henstats',this,'stats')">Hens Stats</button>
+    <button class="subnav-tab active" onclick="showSection('standings',this,'stats');loadStandingsTab()">Standings</button>
+    <button class="subnav-tab" onclick="showSection('henstats',this,'stats');loadHensStats()">Hens Stats</button>
     <button class="subnav-tab" id="opp-stats-tab" onclick="showSection('oppstats',this,'stats')">Opp Stats</button>
     <button class="subnav-tab" onclick="showSection('transactions',this,'stats');loadTransactions()">Transactions</button>
   </div>
@@ -799,8 +800,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <!-- PAGE: SCHEDULE                              -->
 <!-- ═══════════════════════════════════════════ -->
 <div class="page" id="page-schedule">
-  <div class="pg-content">
-    <div class="sec-lbl">2026 Season Schedule</div>
+  <div class="pg-content" style="padding-top:14px;">
     <div id="sched-content"><div class="sched-loading">Loading schedule...</div></div>
   </div>
 </div>
@@ -812,7 +812,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="subnav" id="subnav-ballpark">
     <button class="subnav-tab active" onclick="showSection('food',this,'ballpark')">Food Finder</button>
     <button class="subnav-tab" onclick="showSection('fleetwood',this,'ballpark')">Fleetwood Tap</button>
-    <button class="subnav-tab" onclick="showSection('promotions',this,'ballpark')">Promos</button>
+    <button class="subnav-tab" onclick="showSection('promotions',this,'ballpark');loadPromos()">Promos</button>
     <button class="subnav-tab" onclick="showSection('giveaways',this,'ballpark')">Giveaways</button>
   </div>
   <div class="pg-content">
@@ -1649,7 +1649,7 @@ function renderStandingsTable(records, containerId) {
   records.forEach(div => {
     const divName = div.division?.name || 'Division';
     html += `<div class="standings-div-title">${divName}</div>`;
-    html += `<table class="standings-table">
+    html += `<table class="standings-tbl">
       <thead><tr>
         <th class="team-col">Team</th>
         <th>W</th><th>L</th><th>PCT</th><th>GB</th><th>STRK</th><th>L10</th>
@@ -3333,7 +3333,20 @@ function renderSchedule(data) {
   }
 
   // Get date range from all games
-  const allDates = Object.keys(gamesByDate).sort();
+  let allDates = Object.keys(gamesByDate).sort();
+  
+  // If API returned no dates, build from hardcoded SCHEDULE array
+  if (!allDates.length && typeof SCHEDULE !== 'undefined') {
+    for (const g of SCHEDULE) {
+      gamesByDate[g.date] = {
+        _fromSchedule: true,
+        teams: { home: { team: { id: g.home ? TEAM_ID : 999 } }, away: { team: { id: g.home ? 999 : TEAM_ID } } },
+        _opp: g.opp, _time: g.time, _isHome: g.home,
+        status: { abstractGameState: 'Preview' }
+      };
+    }
+    allDates = Object.keys(gamesByDate).sort();
+  }
   if (!allDates.length) { el.innerHTML = '<div class="sched-loading">No games found.</div>'; return; }
 
   const firstDate = new Date(allDates[0] + 'T12:00:00');
@@ -3376,10 +3389,9 @@ function renderSchedule(data) {
         continue;
       }
 
-      const isHome = game.teams?.home?.team?.id === TEAM_ID;
-      const opp = isHome ? game.teams?.away?.team : game.teams?.home?.team;
+      const isHome = game._fromSchedule ? game._isHome : game.teams?.home?.team?.id === TEAM_ID;
+      const opp = game._fromSchedule ? { name: game._opp } : (isHome ? game.teams?.away?.team : game.teams?.home?.team);
       const oppName = opp?.name || '';
-      // Short name: last word if >12 chars, else full name
       const words = oppName.split(' ');
       const shortOpp = words[words.length-1] || oppName;
 
@@ -3402,7 +3414,13 @@ function renderSchedule(data) {
         scoreHtml = `<div class="sched-cal-score">${mudScore}-${oppScore}</div><div class="sched-cal-wl ${wl}">${wl}</div>`;
       } else {
         let timeStr = '';
-        if (game.gameDate) {
+        if (game._fromSchedule && game._time) {
+          // Convert 24h to 12h
+          const [hh, mm] = game._time.split(':').map(Number);
+          const ampm = hh >= 12 ? 'pm' : 'am';
+          const h12 = hh % 12 || 12;
+          timeStr = `${h12}:${String(mm).padStart(2,'0')}${ampm}`;
+        } else if (game.gameDate) {
           const gd = new Date(game.gameDate);
           timeStr = gd.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true}).replace(' ','').toLowerCase();
         }
