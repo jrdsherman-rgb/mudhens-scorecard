@@ -3064,6 +3064,7 @@ function renderGameNotesPdf(dateLabel, pdfUrl, isToday, isDirect) {
 }
 
 function renderFood() {
+  if (typeof FOOD_LOCATIONS === 'undefined') return;
   const search = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
   const results = document.getElementById('food-results');
   const countEl = document.getElementById('food-map-count');
@@ -3398,31 +3399,9 @@ function renderTransactions(txns) {
 let podCache = null;
 
 async function loadPodcast() {
-  if (podCache) { renderPodcast(podCache); return; }
   const el = document.getElementById('podcast-content');
   if (!el) return;
-  el.innerHTML = '<div class="stats-loading">Loading episodes...</div>';
-  try {
-    // Buzzsprout RSS feed
-    const rssUrl = 'https://feeds.buzzsprout.com/1744046.rss';
-    const proxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(rssUrl)}`;
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    
-    // Parse RSS
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'text/xml');
-    const items = Array.from(xml.querySelectorAll('item')).slice(0, 8);
-    
-    if (!items.length) throw new Error('No episodes');
-    podCache = items;
-    renderPodcast(items);
-  } catch(e) {
-    console.log('[podcast] Error:', e.message);
-    const el = document.getElementById('podcast-content');
-    if (el) el.innerHTML = '<div class="stats-loading">Episodes available at holytoledo.buzzsprout.com</div>';
-  }
+  el.innerHTML = '<div class="stats-loading">Episodes available at the link below.</div>';
 }
 
 function renderPodcast(items) {
