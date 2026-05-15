@@ -8,582 +8,966 @@
 <meta name="theme-color" content="#1a2b5e">
 <title>Mud Hens Scorecard</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#e8e0cc;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;min-height:100vh;padding:0 0 80px;}
-.app-header{padding:14px 16px 12px;background:linear-gradient(180deg,#1a2b5e 0%,#152349 100%);border-bottom:3px solid #c8102e;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.app-title{color:#c8a84b;font-size:16px;font-weight:700;letter-spacing:0.5px;}
-.app-sub{color:rgba(255,255,255,0.7);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
-.radio-btn{background:rgba(200,16,46,0.9);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:0.5px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;backdrop-filter:blur(10px);}
-.nav-tabs{display:flex;gap:0;margin-bottom:0;overflow-x:auto;padding:0;background:#1a2b5e;border-bottom:2px solid #c8102e;scrollbar-width:none;}
-.nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{flex:0 0 auto;padding:10px 14px;font-size:10px;background:transparent;color:rgba(255,255,255,0.95);cursor:pointer;font-family:inherit;border:none;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:all 0.2s;}
-.nav-tab.active{color:#c8a84b;border-bottom-color:#c8a84b;background:rgba(255,255,255,0.05);}
+/* ── DESIGN TOKENS ──────────────────────────────────────── */
+:root {
+  --navy:      #1a2b5e;
+  --navy-d:    #0f1d40;
+  --navy-l:    #243570;
+  --red:       #c8102e;
+  --red-d:     #a00020;
+  --gold:      #c8a84b;
+  --gold-d:    #8a6d00;
+  --bg:        #f2f4f7;
+  --surf:      #ffffff;
+  --surf2:     #f8f9fb;
+  --border:    rgba(26,43,94,0.09);
+  --text:      #0d1f3c;
+  --text2:     rgba(13,31,60,0.55);
+  --text3:     rgba(13,31,60,0.33);
+  --nav-h:     62px;
+  --hdr-h:     52px;
+  --sub-h:     44px;
+  --safe-b:    env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html{height:100%;}
+body{
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,sans-serif;
+  color:var(--text);
+  padding-top:var(--hdr-h);
+  padding-bottom:calc(var(--nav-h) + var(--safe-b));
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── APP HEADER ─────────────────────────────────────────── */
+.app-hdr{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:var(--hdr-h);
+  background:var(--navy);
+  display:flex;align-items:center;padding:0 16px;gap:10px;
+  border-bottom:2px solid var(--red);
+  box-shadow:0 2px 12px rgba(13,31,60,0.25);
+}
+.app-hdr-titles{flex:1;}
+.app-hdr-team{font-size:15px;font-weight:800;color:var(--gold);letter-spacing:0.2px;line-height:1.1;}
+.app-hdr-sub{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
+.app-hdr-radio{
+  background:var(--red);color:#fff;border:none;border-radius:16px;
+  padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;
+  letter-spacing:0.3px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;
+  font-family:inherit;
+}
+
+/* ── BOTTOM NAV ─────────────────────────────────────────── */
+.bnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  height:var(--nav-h);
+  background:var(--surf);
+  border-top:1px solid var(--border);
+  display:flex;
+  padding-bottom:var(--safe-b);
+  box-shadow:0 -1px 0 rgba(26,43,94,0.06), 0 -4px 16px rgba(13,31,60,0.06);
+}
+.bnav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;border:none;background:transparent;padding:6px 0 4px;
+  font-family:inherit;color:var(--text3);transition:color 0.15s;position:relative;
+}
+.bnav-tab.active{color:var(--navy);}
+.bnav-tab.active::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:2px;
+  background:var(--red);border-radius:0 0 2px 2px;
+}
+.bnav-icon{font-size:21px;line-height:1;}
+.bnav-lbl{font-size:9px;font-weight:600;letter-spacing:0.2px;text-transform:uppercase;}
+
+/* ── PAGES ──────────────────────────────────────────────── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── SUB-NAV ────────────────────────────────────────────── */
+.subnav{
+  position:sticky;top:var(--hdr-h);z-index:100;
+  background:var(--surf);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 1px 4px rgba(13,31,60,0.06);
+}
+.subnav::-webkit-scrollbar{display:none;}
+.subnav-tab{
+  flex:0 0 auto;padding:0 16px;height:var(--sub-h);
+  display:flex;align-items:center;
+  font-size:12px;font-weight:600;color:var(--text2);
+  cursor:pointer;border:none;background:transparent;font-family:inherit;
+  border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;
+}
+.subnav-tab.active{color:var(--navy);border-bottom-color:var(--red);}
+
+/* ── PAGE CONTENT ───────────────────────────────────────── */
+.pg-content{padding:12px 16px 24px;}
 .section{display:none;}
-.section.active{display:block;padding:14px 14px 0;background:#e8e0cc;}
-.card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid rgba(26,43,94,0.15);box-shadow:0 1px 4px rgba(26,43,94,0.08);}
-.card.gold{border-color:rgba(200,168,75,0.4);}
-.card.red{border-color:rgba(200,16,46,0.2);}
-.card-label{font-size:9px;color:rgba(0,0,0,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-weight:600;}
-.card-val{font-size:14px;font-weight:700;color:#000000;}
-.card-sub{font-size:10px;color:rgba(0,0,0,0.6);margin-top:3px;font-weight:500;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.matchup-card{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:16px;padding:20px 16px 14px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.3);position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(26,43,94,0.25);}
-.matchup-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(200,16,46,0.1) 0%,transparent 70%);pointer-events:none;}
+.section.active{display:block;}
+
+/* ── SECTION LABEL ──────────────────────────────────────── */
+.sec-lbl{
+  font-size:10px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1.5px;
+  margin:14px 0 8px;
+}
+.sec-lbl:first-child{margin-top:0;}
+
+/* ── CARDS ──────────────────────────────────────────────── */
+.card{
+  background:var(--surf);border-radius:14px;
+  padding:14px 16px;margin-bottom:10px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(13,31,60,0.05);
+}
+.card.accent{border-left:3px solid var(--red);}
+.card.gold{border-color:rgba(200,168,75,0.3);}
+.card-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;}
+.card-val{font-size:15px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+
+/* ── NEWS FEED ──────────────────────────────────────────── */
+.news-hero{
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy-d) 100%);
+  border-radius:16px;padding:18px 16px;margin-bottom:12px;
+  border:1px solid rgba(200,168,75,0.2);
+  box-shadow:0 4px 20px rgba(13,31,60,0.15);
+  position:relative;overflow:hidden;
+}
+.news-hero::before{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,16,46,0.15),transparent 70%);
+  pointer-events:none;
+}
+.news-hero-tag{font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.news-hero-title{font-size:17px;font-weight:800;color:#fff;line-height:1.35;margin-bottom:6px;}
+.news-hero-date{font-size:10px;color:rgba(255,255,255,0.4);}
+.news-hero-link{
+  display:inline-block;margin-top:10px;
+  background:var(--red);color:#fff;border:none;border-radius:8px;
+  padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;
+  font-family:inherit;cursor:pointer;
+}
+.news-card{
+  background:var(--surf);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(13,31,60,0.04);
+  display:flex;gap:12px;align-items:flex-start;
+  text-decoration:none;color:inherit;
+}
+.news-card:active{background:var(--surf2);}
+.news-card-content{flex:1;min-width:0;}
+.news-card-tag{font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.news-card-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
+.news-card-date{font-size:10px;color:var(--text3);margin-top:3px;}
+.news-card-arrow{font-size:14px;color:var(--text3);align-self:center;flex-shrink:0;}
+.news-loading{text-align:center;padding:30px 0;color:var(--text3);font-size:12px;}
+.news-err{background:rgba(200,16,46,0.05);border:1px solid rgba(200,16,46,0.15);border-radius:12px;padding:14px;text-align:center;font-size:12px;color:var(--text2);}
+
+/* ── MATCHUP HERO ───────────────────────────────────────── */
+.matchup-card{
+  background:linear-gradient(160deg,var(--navy) 0%,var(--navy-d) 100%);
+  border-radius:16px;padding:18px 16px 14px;margin-bottom:10px;
+  border:1px solid rgba(200,168,75,0.2);position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(13,31,60,0.18);
+}
+.matchup-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at top right,rgba(200,16,46,0.1) 0%,transparent 60%);
+  pointer-events:none;
+}
 .matchup-row{display:flex;align-items:center;justify-content:space-between;}
-.team-block{text-align:center;flex:1;}
-.team-nm{font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;}
-.team-rec{font-size:10px;color:#ffffff;margin-top:3px;font-weight:600;}
-.team-sc{font-size:40px;font-weight:800;color:#fff;margin-top:4px;letter-spacing:-1px;}
-.vs{color:rgba(255,255,255,0.8);font-size:15px;padding:0 10px;font-weight:500;}
-.fp{font-size:10px;color:#c8a84b;text-align:center;margin-top:10px;letter-spacing:0.5px;font-weight:600;}
-.standings-info{font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-top:3px;}
-.standings-info span{color:rgba(200,168,75,0.8);}
-.status-bar{display:flex;align-items:center;gap:10px;background:#1a2b5e;border-radius:12px;padding:10px 14px;margin-bottom:10px;border:1px solid rgba(200,16,46,0.4);}
-.s-inn{font-size:13px;font-weight:700;color:#c8a84b;}
-.s-cnt{font-size:11px;color:rgba(255,255,255,0.9);font-weight:500;}
-.auto-badge{margin-left:auto;background:rgba(200,168,75,0.2);color:#c8a84b;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:600;border:1px solid rgba(200,168,75,0.3);}
-.bases{display:flex;align-items:center;gap:3px;margin-left:4px;}
-.base{width:12px;height:12px;border:1.5px solid rgba(200,168,75,0.4);transform:rotate(45deg);background:transparent;border-radius:2px;}
-.base.on{background:#c8a84b;border-color:#c8a84b;}
-.inning-score{background:#fff;border-radius:12px;margin-bottom:10px;overflow-x:auto;border:1px solid rgba(26,43,94,0.12);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.inning-score table{border-collapse:collapse;width:100%;min-width:380px;}
-.inning-score th{background:rgba(200,16,46,0.7);color:#fff;font-size:9px;padding:6px 4px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;}
-.inning-score th.tc{text-align:left;padding-left:12px;min-width:75px;}
-.inning-score td{border-top:1px solid rgba(26,43,94,0.08);font-size:11px;text-align:center;padding:6px 4px;color:#1a2b5e;background:transparent;}
-.inning-score td.tn{text-align:left;padding-left:12px;color:#1a2b5e;font-weight:700;font-size:11px;}
-.inning-score td.tot{background:rgba(26,43,94,0.06);font-weight:700;color:#1a2b5e;border-left:1px solid rgba(26,43,94,0.12);}
-.sc-tabs{display:flex;gap:0;margin-bottom:12px;background:rgba(26,43,94,0.08);border-radius:10px;padding:3px;}
-.sc-tab{flex:1;padding:7px;text-align:center;font-size:11px;border-radius:4px;background:#0f1d40;color:#888;cursor:pointer;font-family:'Georgia',serif;}
-.sc-tab.active{background:rgba(200,16,46,0.8);color:#fff;}
-.table-wrap{overflow-x:auto;border-radius:4px;margin-bottom:10px;}
+.team-block{flex:1;}
+.team-block:last-child{text-align:right;}
+.team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;}
+.team-rec{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:500;}
+.team-sc{font-size:44px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1;}
+.matchup-vs{color:rgba(255,255,255,0.25);font-size:13px;padding:0 8px;font-weight:500;flex-shrink:0;}
+.matchup-fp{font-size:11px;color:var(--gold);text-align:center;margin-top:10px;font-weight:600;}
+.matchup-si{font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:2px;}
+.matchup-si span{color:rgba(200,168,75,0.6);}
+
+/* ── STATUS BAR ─────────────────────────────────────────── */
+.status-bar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--navy);border-radius:12px;padding:10px 14px;
+  margin-bottom:10px;border:1px solid rgba(200,16,46,0.25);
+}
+.s-inn{font-size:13px;font-weight:700;color:var(--gold);}
+.s-cnt{font-size:11px;color:rgba(255,255,255,0.8);font-weight:500;}
+.bases{display:flex;gap:3px;margin-left:2px;}
+.base{width:11px;height:11px;border:1.5px solid rgba(200,168,75,0.4);transform:rotate(45deg);background:transparent;border-radius:1px;}
+.base.on{background:var(--gold);border-color:var(--gold);}
+.auto-badge{
+  margin-left:auto;background:rgba(200,168,75,0.15);color:var(--gold);
+  padding:3px 8px;border-radius:8px;font-size:9px;font-weight:600;
+  border:1px solid rgba(200,168,75,0.25);
+}
+
+/* ── LINESCORE ──────────────────────────────────────────── */
+.linescore-wrap{
+  background:var(--surf);border-radius:12px;margin-bottom:10px;
+  overflow-x:auto;border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(13,31,60,0.05);
+}
+.linescore-wrap table{border-collapse:collapse;width:100%;}
+.linescore-wrap th{
+  background:var(--red);color:rgba(255,255,255,0.85);font-size:9px;
+  padding:7px 4px;text-align:center;font-weight:600;letter-spacing:0.5px;
+}
+.linescore-wrap td{
+  border-top:1px solid rgba(26,43,94,0.06);font-size:11px;
+  text-align:center;padding:7px 4px;color:var(--navy);
+}
+.linescore-wrap td.tn{text-align:left;padding-left:12px;font-weight:700;font-size:11px;}
+.linescore-wrap td.tot{background:rgba(26,43,94,0.04);font-weight:700;border-left:1px solid var(--border);}
+
+/* ── SCORECARD TABLE ────────────────────────────────────── */
+.sc-toggle{display:flex;gap:0;margin-bottom:10px;background:rgba(26,43,94,0.06);border-radius:10px;padding:3px;}
+.sc-tab{flex:1;padding:7px;text-align:center;font-size:11px;border-radius:7px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Georgia',serif;}
+.sc-tab.active{background:var(--red);color:#fff;}
+.table-scroll{overflow-x:auto;}
 table.sc{border-collapse:collapse;width:100%;min-width:490px;font-family:'Georgia',serif;}
-table.sc th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:6px 2px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;}
-table.sc th.ph{text-align:left;padding-left:6px;min-width:95px;}
-table.sc th.ps{min-width:22px;}
-table.sc th.pi{min-width:36px;}
-table.sc th.pst{min-width:22px;background:rgba(200,16,46,0.8);}
-table.sc td{border:1px solid rgba(26,43,94,0.08);font-size:11px;text-align:center;padding:0;height:52px;vertical-align:top;background:#fff;}
-table.sc td.pn{text-align:left;padding:4px 5px;background:#fff;vertical-align:middle;border-left:3px solid #c8102e;}
-table.sc td.pn .nm{font-size:11px;font-weight:700;color:#1a2b5e;cursor:pointer;text-decoration:underline dotted rgba(26,43,94,0.3);}
-table.sc td.pn .av{font-size:9px;color:rgba(26,43,94,0.4);margin-top:1px;}
-table.sc td.pp{background:#fff;vertical-align:middle;font-size:11px;color:#c8102e;font-weight:600;}
-table.sc td.pst{background:rgba(26,43,94,0.05);font-size:11px;font-weight:700;color:#1a2b5e;vertical-align:middle;}
-table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#f9f7f2;}
-.ab{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:1px;padding:2px;}
-.ab:active{background:rgba(200,16,46,0.1);}
-.ab svg{width:19px;height:19px;}
+table.sc th{background:var(--navy);color:rgba(200,168,75,0.85);font-size:9px;padding:6px 2px;text-align:center;font-weight:600;letter-spacing:0.5px;}
+table.sc th.ph{text-align:left;padding-left:10px;min-width:90px;}
+table.sc th.ps{min-width:26px;}
+table.sc th.pi{min-width:38px;}
+table.sc th.pst{min-width:22px;background:rgba(200,16,46,0.75);}
+table.sc td{border:1px solid rgba(26,43,94,0.07);font-size:11px;text-align:center;padding:0;height:52px;vertical-align:top;background:#fff;}
+table.sc td.pn{text-align:left;padding:4px 5px;background:#fff;vertical-align:middle;border-left:3px solid var(--red);}
+table.sc td.pn .nm{font-size:11px;font-weight:700;color:var(--navy);cursor:pointer;text-decoration:underline dotted rgba(26,43,94,0.3);}
+table.sc td.pn .av{font-size:9px;color:var(--text3);margin-top:1px;}
+table.sc td.pp{background:#fff;vertical-align:middle;font-size:11px;color:var(--red);font-weight:600;}
+table.sc td.pst-td{background:rgba(26,43,94,0.03);font-size:11px;font-weight:700;color:var(--navy);vertical-align:middle;}
+table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#f9f9fb;}
 .ab-res{font-size:9px;font-weight:bold;line-height:1;max-width:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ab-auto{font-size:7px;color:#888;font-style:italic;}
-.ab-dot{color:#d0c8a8;font-size:15px;}
-.legend{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-.leg{display:flex;align-items:center;gap:3px;font-size:9px;color:rgba(26,43,94,0.45);}
-.leg-dot{width:7px;height:7px;border-radius:50%;}
-.pc-panel{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid rgba(26,43,94,0.12);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.pc-label{font-size:9px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;}
-.pc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.pc-num{font-size:36px;font-weight:800;color:#1a2b5e;line-height:1;}
+.ab-auto{font-size:7px;color:#aaa;font-style:italic;}
+.ab-dot{color:#ddd;font-size:15px;}
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:8px 4px;align-items:center;}
+.leg{display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text2);}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.notation-key{background:var(--surf);border-radius:12px;padding:14px;margin-bottom:10px;font-size:10px;color:var(--text2);line-height:2.1;border:1px solid var(--border);}
+.notation-key b{color:var(--navy);font-weight:700;}
+
+/* ── PITCH COUNT ────────────────────────────────────────── */
+.pc-panel{background:var(--surf);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--border);}
+.pc-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:600;}
+.pc-pitcher{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.pc-num{font-size:36px;font-weight:800;color:var(--navy);line-height:1;}
 .pc-num.warn{color:#d4820a;}
-.pc-num.danger{color:#c8102e;}
-.pc-btns{display:flex;gap:6px;}
-.pc-btn{background:#1a2b5e;color:#c8a84b;border:1.5px solid #1a2b5e;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;}
-.pc-btn.minus{border-color:#ccc;color:#888;background:#f5f5f5;}
-.pc-btn:active{background:#c8a84b;color:#1a2b5e;}
-.pc-btn.minus:active{background:#ccc;color:#555;}
-.pc-pitcher{font-size:11px;color:#aaa;margin-bottom:6px;}
-.pc-reset{background:transparent;border:1px solid rgba(26,43,94,0.2);border-radius:6px;color:rgba(26,43,94,0.4);font-size:10px;padding:4px 10px;cursor:pointer;font-family:inherit;}
-.promo-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.promo-date{font-size:9px;color:rgba(26,43,94,0.4);text-transform:uppercase;letter-spacing:1px;font-weight:500;}
-.promo-name{font-size:14px;font-weight:700;color:#1a2b5e;margin:4px 0;}
-.promo-desc{font-size:11px;color:rgba(26,43,94,0.5);line-height:1.6;}
-.promo-badge{display:inline-block;background:#c8102e;color:#fff;font-size:9px;padding:3px 8px;border-radius:20px;margin-top:6px;font-weight:600;}
-.promo-today{border-color:rgba(200,16,46,0.3);background:rgba(200,16,46,0.04);}
-.trivia-card{background:#fff;border-radius:16px;padding:20px 16px;margin-bottom:10px;text-align:center;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.trivia-q{font-size:14px;color:#1a2b5e;margin-bottom:14px;line-height:1.7;font-weight:600;}
-.trivia-a{font-size:12px;color:rgba(26,43,94,0.55);display:none;margin-bottom:14px;line-height:1.7;border-top:1px solid rgba(26,43,94,0.08);padding-top:12px;}
-.trivia-a.show{display:block;}
+.pc-num.danger{color:var(--red);}
+.pc-btn{background:var(--navy);color:var(--gold);border:none;border-radius:8px;padding:9px 18px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pc-btn.minus{border:1px solid var(--border);color:var(--text3);background:var(--surf2);}
+.pc-reset{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;font-family:inherit;}
+
+/* ── STATS TABLES ───────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(13,31,60,0.05);margin-bottom:10px;}
+.stats-tbl{border-collapse:collapse;width:100%;}
+.stats-tbl th{background:var(--navy);color:rgba(200,168,75,0.9);font-size:9px;padding:8px 5px;text-align:center;font-weight:600;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;user-select:none;}
+.stats-tbl th:hover{background:var(--navy-l);}
+.stats-tbl th.sort-asc::after{content:' ▲';font-size:8px;opacity:0.8;}
+.stats-tbl th.sort-desc::after{content:' ▼';font-size:8px;opacity:0.8;}
+.stats-tbl td{border-top:1px solid rgba(26,43,94,0.06);font-size:11px;text-align:center;padding:8px 5px;color:var(--navy);background:var(--surf);}
+.stats-tbl tr:nth-child(even) td{background:var(--surf2);}
+.stats-tbl td:first-child{text-align:left;padding-left:10px;font-weight:600;}
+.stats-loading{text-align:center;padding:28px;color:var(--text3);font-size:12px;font-style:italic;}
+.standings-tbl{border-collapse:collapse;width:100%;}
+.standings-tbl th{background:var(--navy);color:rgba(200,168,75,0.9);font-size:9px;padding:8px 6px;text-align:center;font-weight:600;letter-spacing:0.5px;}
+.standings-tbl td{border-top:1px solid rgba(26,43,94,0.06);font-size:11px;text-align:center;padding:8px 4px;color:var(--navy);background:var(--surf);}
+.standings-tbl tr:nth-child(even) td{background:var(--surf2);}
+.standings-tbl td.team-cell{text-align:left;padding-left:12px;font-size:11px;}
+.standings-tbl td.team-cell.mud-hens{color:var(--red);font-weight:700;}
+.standings-tbl tr.div-header td{background:rgba(26,43,94,0.05);color:var(--text3);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
+.standings-div-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:10px 12px 4px;}
+
+/* ── TRANSACTIONS ───────────────────────────────────────── */
+.txn-card{background:var(--surf);border-radius:12px;padding:12px 14px;margin-bottom:6px;border:1px solid var(--border);border-left:3px solid var(--navy);}
+.txn-date{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:3px;}
+.txn-type{display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.5px;padding:2px 7px;border-radius:6px;margin-bottom:5px;text-transform:uppercase;}
+.txn-type.call{background:rgba(45,106,31,0.1);color:#2d6a1f;}
+.txn-type.option{background:rgba(26,43,94,0.08);color:var(--navy);}
+.txn-type.release{background:rgba(200,16,46,0.08);color:var(--red);}
+.txn-type.trade{background:rgba(200,168,75,0.15);color:var(--gold-d);}
+.txn-type.other{background:rgba(13,31,60,0.06);color:var(--text2);}
+.txn-player{font-size:13px;font-weight:700;color:var(--navy);}
+.txn-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
+
+/* ── SCHEDULE CALENDAR ──────────────────────────────────── */
+.cal-month{margin-bottom:20px;}
+.cal-month-hdr{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid var(--red);margin-bottom:8px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{font-size:9px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
+.cal-day{border-radius:8px;min-height:54px;padding:4px;background:var(--surf);border:1px solid var(--border);}
+.cal-day.empty{background:transparent;border-color:transparent;}
+.cal-day.home{border-color:rgba(26,43,94,0.2);}
+.cal-day.away{background:#f5f3ee;border-color:rgba(26,43,94,0.08);}
+.cal-day.today{background:linear-gradient(135deg,rgba(26,43,94,0.07),rgba(200,16,46,0.04));border:2px solid var(--red) !important;box-shadow:0 2px 8px rgba(200,16,46,0.12);}
+.cal-day.final{opacity:0.58;}
+.cal-num{font-size:11px;font-weight:800;color:var(--navy);line-height:1;}
+.cal-day.today .cal-num{color:var(--red);}
+.cal-opp{font-size:8px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-time{font-size:7px;color:var(--text3);margin-top:1px;font-weight:600;}
+.cal-score{font-size:9px;font-weight:800;color:var(--navy);margin-top:2px;}
+.cal-wl{font-size:7px;font-weight:800;}
+.cal-wl.W{color:#2e7d32;}
+.cal-wl.L{color:var(--red);}
+.cal-live{font-size:7px;font-weight:700;color:var(--red);animation:pulse 1.2s infinite;}
+.cal-legend{display:flex;gap:12px;padding:6px 0 10px;flex-wrap:wrap;}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-weight:500;}
+.cal-leg-box{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.sched-loading{text-align:center;padding:40px 0;color:var(--text3);font-size:13px;}
+
+/* ── BALLPARK / FOOD ────────────────────────────────────── */
+.food-search-wrap{position:relative;margin-bottom:10px;}
+.food-search{width:100%;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;padding:11px 14px 11px 38px;font-size:13px;font-family:inherit;color:var(--navy);outline:none;}
+.food-search:focus{border-color:var(--navy);}
+.food-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+.food-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px;}
+.food-chips::-webkit-scrollbar{display:none;}
+.food-chip{flex:0 0 auto;background:var(--surf);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap;}
+.food-chip.active{background:var(--red);border-color:var(--red);color:#fff;}
+.food-card{background:var(--surf);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(13,31,60,0.05);overflow:hidden;margin-bottom:8px;}
+.food-card-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;}
+.food-card-name{font-size:13px;font-weight:700;color:var(--navy);flex:1;}
+.food-card-section{font-size:10px;color:var(--text2);margin-top:1px;}
+.food-pin{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;color:#fff;}
+.food-pin.restaurant{background:var(--gold);}
+.food-pin.cart{background:var(--red);}
+.food-pin.club{background:var(--navy);}
+.food-card-arrow{font-size:12px;color:var(--text3);flex-shrink:0;}
+.food-items{padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:6px;}
+.food-item-tag{background:rgba(26,43,94,0.05);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--text2);}
+.food-map-wrap{background:var(--surf);border-radius:12px;border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+.food-map-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 6px;font-weight:600;}
+.food-map-count{font-size:10px;color:var(--text3);padding:6px 14px 10px;text-align:center;}
+.food-empty{text-align:center;padding:30px 20px;color:var(--text3);font-size:12px;font-style:italic;}
+
+/* ── PROMO/GIVEAWAY CARDS ───────────────────────────────── */
+.promo-card{background:var(--surf);border-radius:12px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(13,31,60,0.04);}
+.promo-date{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+.promo-name{font-size:15px;font-weight:700;color:var(--navy);margin:4px 0;}
+.promo-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+.promo-badge{display:inline-block;background:var(--red);color:#fff;font-size:9px;padding:3px 8px;border-radius:20px;margin-top:6px;font-weight:600;}
+.promo-today{border-color:rgba(200,16,46,0.3);background:rgba(200,16,46,0.02);}
+.milb-link-card{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,var(--navy),var(--navy-d));
+  border-radius:14px;padding:16px;margin-bottom:10px;
+  text-decoration:none;border:1px solid rgba(200,168,75,0.2);
+  box-shadow:0 4px 16px rgba(13,31,60,0.15);
+}
+.milb-link-icon{font-size:28px;flex-shrink:0;}
+.milb-link-text{flex:1;}
+.milb-link-title{font-size:14px;font-weight:700;color:var(--gold);}
+.milb-link-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.milb-link-arr{font-size:16px;color:rgba(255,255,255,0.3);}
+
+/* ── PODCAST ────────────────────────────────────────────── */
+.pod-card{background:var(--surf);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(13,31,60,0.04);}
+.pod-hero{background:linear-gradient(135deg,var(--navy),var(--navy-d));border-radius:14px;padding:18px 16px;margin-bottom:12px;border:1px solid rgba(200,168,75,0.2);text-align:center;}
+.pod-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:4px;}
+.pod-sub{font-size:11px;color:rgba(255,255,255,0.5);}
+.pod-ep-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.pod-ep-date{font-size:10px;color:var(--text3);}
+.pod-ep-desc{font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5;}
+.pod-listen-btn{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+  background:var(--red);color:#fff;border:none;border-radius:8px;
+  padding:7px 14px;font-size:11px;font-weight:700;text-decoration:none;
+  font-family:inherit;cursor:pointer;
+}
+
+/* ── TRIVIA/HISTORY/ARCHIVE ─────────────────────────────── */
+.trivia-card{background:var(--surf);border-radius:14px;padding:18px 16px;margin-bottom:10px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(13,31,60,0.05);}
+.trivia-q{font-size:15px;color:var(--navy);margin-bottom:14px;line-height:1.7;font-weight:600;}
+.trivia-a{font-size:13px;color:var(--text2);display:none;margin-bottom:14px;line-height:1.7;border-top:1px solid var(--border);padding-top:12px;}
 .trivia-btns{display:flex;gap:8px;justify-content:center;}
-.trivia-btn{background:#c8102e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;}
-.trivia-next{background:rgba(26,43,94,0.06);color:rgba(26,43,94,0.5);border:1px solid rgba(26,43,94,0.15);border-radius:10px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;}
-.history-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.history-year{font-size:24px;font-weight:800;color:rgba(200,16,46,0.6);float:right;margin-left:10px;letter-spacing:-1px;}
-.history-title{font-size:13px;font-weight:700;color:#1a2b5e;margin-bottom:5px;}
-.history-desc{font-size:11px;color:rgba(26,43,94,0.5);line-height:1.6;clear:both;}
-.archive-entry{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.archive-top{display:flex;justify-content:space-between;align-items:flex-start;}
-.archive-date{font-size:9px;color:rgba(26,43,94,0.4);text-transform:uppercase;letter-spacing:1px;}
-.archive-matchup{font-size:14px;font-weight:700;color:#1a2b5e;margin:3px 0;}
-.archive-result{font-size:11px;color:rgba(26,43,94,0.5);}
-.archive-attendees{font-size:10px;color:#c8102e;margin-top:5px;font-weight:600;}
-.archive-del{background:transparent;border:none;color:rgba(26,43,94,0.2);font-size:16px;cursor:pointer;padding:0 2px;}
-.archive-del:hover{color:#c8102e;}
-.save-form{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);}
-.save-form-title{font-size:12px;color:#1a2b5e;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
-.f-label{font-size:9px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:block;font-weight:600;}
-.f-input{width:100%;background:#f5f3ee;border:1px solid rgba(26,43,94,0.15);border-radius:10px;color:#1a2b5e;font-size:13px;padding:10px 12px;font-family:inherit;margin-bottom:10px;}
-.f-input::placeholder{color:rgba(26,43,94,0.25);}
-.save-btn{width:100%;background:linear-gradient(135deg,#c8102e,#a00020);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.5px;}
-.empty-state{text-align:center;padding:30px 20px;}
-.empty-icon{font-size:30px;margin-bottom:8px;}
-.empty-text{font-size:12px;color:#555;}
-/* MODAL BASE */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.trivia-btn{background:var(--red);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;}
+.trivia-next{background:rgba(26,43,94,0.06);color:var(--text2);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;}
+.history-card{background:var(--surf);border-radius:12px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);}
+.history-year{font-size:24px;font-weight:800;color:rgba(200,16,46,0.45);float:right;margin-left:10px;letter-spacing:-1px;}
+.history-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:5px;}
+.history-desc{font-size:12px;color:var(--text2);line-height:1.6;clear:both;}
+.archive-entry{background:var(--surf);border-radius:12px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);}
+.archive-top{display:flex;align-items:flex-start;justify-content:space-between;}
+.archive-date{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.archive-matchup{font-size:15px;font-weight:700;color:var(--navy);margin:3px 0;}
+.archive-result{font-size:12px;color:var(--text2);}
+.archive-attendees{font-size:11px;color:var(--red);margin-top:5px;font-weight:600;}
+.archive-del{background:transparent;border:none;color:var(--text3);font-size:16px;cursor:pointer;}
+.save-form{background:var(--surf);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);}
+.save-form-title{font-size:12px;color:var(--navy);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.f-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;display:block;font-weight:600;}
+.f-input{width:100%;background:var(--surf2);border:1.5px solid var(--border);border-radius:10px;color:var(--navy);font-size:13px;padding:11px 12px;font-family:inherit;margin-bottom:10px;outline:none;}
+.f-input:focus{border-color:var(--navy);}
+.f-input::placeholder{color:var(--text3);}
+.save-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.empty-icon{font-size:28px;margin-bottom:6px;}
+.empty-text{font-size:12px;color:var(--text2);}
+
+/* ── GAME NOTES ─────────────────────────────────────────── */
+.gn-fetch-btn{width:100%;background:linear-gradient(135deg,var(--navy),var(--navy-d));color:var(--gold);border:1px solid rgba(200,168,75,0.25);border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;}
+.gn-meta{background:linear-gradient(135deg,var(--navy),var(--navy-d));border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.2);}
+.gn-meta-date{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px;}
+.gn-meta-matchup{font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;}
+.gn-meta-time{font-size:11px;color:rgba(255,255,255,0.5);}
+.gn-status{text-align:center;padding:28px 16px;color:var(--text3);font-size:12px;font-style:italic;}
+
+/* ── PLAYER STATS POPUP ─────────────────────────────────── */
+.player-stats-popup{background:rgba(26,43,94,0.03);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);}
+.psp-name{font-size:18px;font-weight:700;color:var(--navy);}
+.psp-meta{font-size:11px;color:var(--red);margin-bottom:12px;font-weight:600;}
+.stat-box{background:var(--surf);border-radius:10px;padding:10px 4px;text-align:center;border:1px solid var(--border);}
+.stat-box .sv{font-size:16px;font-weight:700;color:var(--navy);}
+.stat-box .sl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;}
+.stat-box.hi .sv{color:var(--red);}
+
+/* ── WEATHER ────────────────────────────────────────────── */
+.wx-icon{font-size:26px;}
+.wx-temp{font-size:20px;font-weight:800;color:var(--text);}
+.wx-desc{font-size:10px;color:var(--text2);line-height:1.5;}
+
+/* ── COUNTDOWN ──────────────────────────────────────────── */
+.cd-card{background:linear-gradient(135deg,var(--navy),var(--navy-d));border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.15);text-align:center;}
+.cd-label{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-weight:700;}
+.cd-opp{font-size:13px;font-weight:600;color:#fff;margin-bottom:3px;}
+.cd-date{font-size:10px;color:rgba(255,255,255,0.5);}
+.cd-units{display:flex;justify-content:center;gap:12px;margin-top:10px;}
+.cd-unit{text-align:center;}
+.cd-num{font-size:26px;font-weight:800;color:#fff;line-height:1;}
+.cd-unit-lbl{font-size:8px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* ── MODALS ─────────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
 .modal-overlay.open{display:flex;}
-.modal{background:#f5f0e4;border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:500px;font-family:inherit;border-top:3px solid #c8102e;max-height:90vh;overflow-y:auto;}
-.modal h3{color:#1a2b5e;font-size:16px;margin-bottom:2px;font-weight:700;}
-.modal-sub{font-size:11px;color:rgba(26,43,94,0.4);margin-bottom:14px;}
-.mc{width:100%;background:rgba(26,43,94,0.06);border:1px solid rgba(26,43,94,0.12);border-radius:10px;padding:12px;font-family:inherit;font-size:13px;color:rgba(26,43,94,0.4);cursor:pointer;margin-top:8px;}
-/* SCORING MODAL STEPS */
-.step{display:none;}
-.step.active{display:block;}
+.modal{background:#f5f0e8;border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:500px;font-family:inherit;border-top:3px solid var(--red);max-height:90vh;overflow-y:auto;}
+.modal h3{color:var(--navy);font-size:16px;margin-bottom:2px;font-weight:700;}
+.modal-sub{font-size:11px;color:var(--text2);margin-bottom:14px;}
+.mc{width:100%;background:rgba(26,43,94,0.05);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:inherit;font-size:13px;color:var(--text2);cursor:pointer;margin-top:8px;}
 .step-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
-/* Result grid — 4 cols */
-.rg{display:grid;gap:7px;margin-bottom:8px;}
-.rg-4{grid-template-columns:repeat(4,1fr);}
-.rg-3{grid-template-columns:repeat(3,1fr);}
-.rb{background:#fff;border:1.5px solid rgba(26,43,94,0.15);border-radius:10px;padding:12px 4px;font-size:13px;font-weight:700;color:#1a2b5e;cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;transition:all 0.15s;}
-.rb:active{transform:scale(0.93);}
-.rb.out{border-color:rgba(200,16,46,0.4);color:#c8102e;background:rgba(200,16,46,0.05);}
-.rb.out:active{background:#c8102e;color:#fff;}
-.rb.hit{border-color:rgba(45,106,31,0.4);color:#2d6a1f;background:rgba(45,106,31,0.05);}
-.rb.hit:active{background:#2d6a1f;color:#fff;}
-.rb.walk{border-color:rgba(26,95,160,0.4);color:#1a5fa0;background:rgba(26,95,160,0.05);}
-.rb.walk:active{background:#1a5fa0;color:#fff;}
-.rb.misc{border-color:rgba(200,168,75,0.4);color:#8a6d00;background:rgba(200,168,75,0.08);}
-.rb.misc:active{background:#c8a84b;color:#fff;}
-.rb.gold{border-color:rgba(200,168,75,0.3);color:rgba(138,109,0,0.6);}
-.rb.gold:active{background:rgba(200,168,75,0.3);}
-.rb.sel{background:rgba(26,43,94,0.1);color:#1a2b5e !important;border-color:rgba(26,43,94,0.3) !important;}
-/* fielder numpad */
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
-.npbtn{background:#fff;border:1.5px solid rgba(26,43,94,0.15);border-radius:10px;padding:14px;font-size:16px;font-weight:700;color:#1a2b5e;cursor:pointer;text-align:center;transition:all 0.15s;}
-.npbtn:active{background:#1a2b5e;color:#c8a84b;transform:scale(0.95);}
-.npbtn.confirm{background:#c8102e;color:#fff;border-color:#c8102e;grid-column:1/-1;}
-.step-back{background:transparent;border:none;color:rgba(26,43,94,0.3);font-size:11px;cursor:pointer;padding:4px 0;text-decoration:none;display:block;margin-bottom:8px;}
-/* player popup */
-.player-stats-popup{background:rgba(26,43,94,0.05);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid rgba(26,43,94,0.12);}
-.psp-name{font-size:18px;font-weight:700;color:#1a2b5e;}
-.psp-meta{font-size:11px;color:#c8102e;margin-bottom:12px;font-weight:600;}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px;}
-.stat-box{background:#fff;border-radius:10px;padding:10px 4px;text-align:center;border:1px solid rgba(26,43,94,0.08);}
-.stat-box .sv{font-size:16px;font-weight:700;color:#1a2b5e;}
-.stat-box .sl{font-size:8px;color:rgba(26,43,94,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;font-weight:500;}
-.stat-box.hi .sv{color:#c8102e;}
-.wx-row{display:flex;align-items:center;gap:10px;}
-.wx-icon{font-size:24px;}
-.wx-temp{font-size:20px;font-weight:800;color:#fff;}
-.wx-desc{font-size:10px;color:rgba(26,43,94,0.65);line-height:1.5;}
-.loading-msg{text-align:center;padding:20px;color:rgba(26,43,94,0.35);font-size:12px;font-style:italic;background:transparent;}
-/* GAME SUMMARY CARD */
+.rb{background:var(--surf);border:1.5px solid var(--border);border-radius:10px;padding:12px 4px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;font-family:inherit;text-align:center;line-height:1.2;}
+.rb.out{border-color:rgba(200,16,46,0.35);color:var(--red);background:rgba(200,16,46,0.03);}
+.rb.hit{border-color:rgba(45,106,31,0.35);color:#2d6a1f;background:rgba(45,106,31,0.03);}
+.rb.walk{border-color:rgba(26,95,160,0.35);color:#1a5fa0;background:rgba(26,95,160,0.03);}
+.rb.misc{border-color:rgba(200,168,75,0.35);color:var(--gold-d);background:rgba(200,168,75,0.05);}
+.rb.gold{border-color:rgba(200,168,75,0.2);color:rgba(138,109,0,0.5);}
+.rb.sel{background:rgba(26,43,94,0.08);color:var(--navy) !important;border-color:rgba(26,43,94,0.25) !important;}
+.npbtn{background:var(--surf);border:1.5px solid var(--border);border-radius:10px;padding:14px;font-size:16px;font-weight:700;color:var(--navy);cursor:pointer;text-align:center;}
+.npbtn.confirm{background:var(--red);color:#fff;border-color:var(--red);grid-column:1/-1;}
+.step-back{background:transparent;border:none;color:var(--text3);font-size:11px;cursor:pointer;padding:4px 0;display:block;margin-bottom:8px;}
+
+/* ── GAME SUMMARY OVERLAY ───────────────────────────────── */
 .summary-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:400;align-items:center;justify-content:center;padding:20px;}
 .summary-overlay.open{display:flex;}
 .summary-card{background:linear-gradient(160deg,#0d1f3c 0%,#1a0a12 100%);border-radius:24px;padding:28px 24px;width:100%;max-width:360px;border:1px solid rgba(200,168,75,0.3);position:relative;overflow:hidden;}
-.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c8102e,#c8a84b,#c8102e);}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--gold),var(--red));}
 .summary-card-title{font-size:10px;color:rgba(200,168,75,0.6);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:16px;font-weight:600;}
-.summary-score-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.summary-team{text-align:center;flex:1;}
 .summary-team-name{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
 .summary-team-score{font-size:52px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;}
 .summary-vs{color:rgba(255,255,255,0.2);font-size:14px;}
-.summary-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
 .summary-meta-item{background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center;}
 .summary-meta-label{font-size:8px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
 .summary-meta-val{font-size:12px;font-weight:700;color:#fff;}
-.summary-attendees{background:rgba(200,168,75,0.08);border-radius:10px;padding:12px;text-align:center;margin-bottom:16px;border:1px solid rgba(200,168,75,0.15);}
+.summary-attendees{background:rgba(200,168,75,0.07);border-radius:10px;padding:12px;text-align:center;margin-bottom:16px;border:1px solid rgba(200,168,75,0.12);}
 .summary-attendees-label{font-size:9px;color:rgba(200,168,75,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
-.summary-attendees-val{font-size:13px;font-weight:600;color:#c8a84b;}
-.summary-branding{text-align:center;font-size:9px;color:rgba(255,255,255,0.15);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
-.summary-btn-row{display:flex;gap:8px;}
-.summary-close{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;font-family:inherit;}
-.summary-save-btn{flex:2;background:linear-gradient(135deg,#c8102e,#a00020);border:none;border-radius:10px;padding:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
-/* NEXT GAME COUNTDOWN */
-.countdown-card{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:16px;padding:18px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.25);text-align:center;box-shadow:0 4px 16px rgba(26,43,94,0.2);}
-.countdown-label{font-size:11px;color:#c8a84b;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-weight:700;}
-.countdown-opp{font-size:13px;font-weight:600;color:#ffffff;margin-bottom:4px;}
-.countdown-time{font-size:28px;font-weight:800;color:#c8a84b;letter-spacing:-1px;margin-bottom:4px;}
-.countdown-date{font-size:11px;color:#ffffff;}
-.countdown-units{display:flex;justify-content:center;gap:12px;margin-top:10px;}
-.countdown-unit{text-align:center;}
-.countdown-num{font-size:28px;font-weight:800;color:#ffffff;line-height:1;}
-.countdown-unit-label{font-size:8px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-.section-title{font-size:10px;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;font-weight:700;}
-.notation-key{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;font-size:10px;color:rgba(26,43,94,0.5);line-height:2;border:1px solid rgba(26,43,94,0.08);}
-.notation-key b{color:#1a2b5e;font-weight:700;}
-/* PLAYER STATS TABLE */
-.stats-table{width:100%;border-collapse:collapse;margin-bottom:14px;border-radius:10px;overflow:hidden;}
-.stats-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 5px;text-align:center;border:none;font-weight:600;letter-spacing:0.5px;cursor:pointer;user-select:none;white-space:nowrap;}
-.stats-table th:first-child{text-align:left;padding-left:10px;min-width:130px;}
-.stats-table th:hover{background:#253e7a;color:#c8a84b;}
-.stats-table th.sort-asc::after{content:' ▲';font-size:8px;opacity:0.8;}
-.stats-table th.sort-desc::after{content:' ▼';font-size:8px;opacity:0.8;}
-.stats-table td{border-top:1px solid rgba(26,43,94,0.07);font-size:11px;text-align:center;padding:7px 4px;color:#1a2b5e;background:#fff;}
-.stats-table tr:nth-child(even) td{background:#f5f3ee;}
-.stats-table td:first-child{text-align:left;padding-left:10px;font-weight:600;color:#1a2b5e;}
-.stats-table td.highlight{color:#c8102e;font-weight:700;}
-.stats-loading{text-align:center;padding:30px;color:rgba(26,43,94,0.4);font-style:italic;font-size:12px;}
-.standings-table{width:100%;border-collapse:collapse;margin-bottom:14px;border-radius:10px;overflow:hidden;}
-.standings-table th{background:#1a2b5e;color:rgba(200,168,75,0.85);font-size:9px;padding:8px 6px;text-align:center;border:none;letter-spacing:0.5px;font-weight:600;}
-.standings-table th.team-col{text-align:left;padding-left:12px;min-width:150px;}
-.standings-table td{border-top:1px solid rgba(26,43,94,0.07);font-size:11px;text-align:center;padding:7px 4px;color:#1a2b5e;background:#fff;}
-.standings-table tr:nth-child(even) td{background:#f5f3ee;}
-.standings-table td.team-cell{text-align:left;padding-left:12px;color:#1a2b5e;font-size:11px;font-weight:500;}
-.standings-table td.team-cell.mud-hens{color:#c8102e;font-weight:700;}
-.standings-div-title{font-size:10px;font-weight:700;color:rgba(26,43,94,0.45);text-transform:uppercase;letter-spacing:1.5px;padding:10px 12px 4px;margin-top:8px;}
-.standings-table tr.div-header td{background:#e8e0cc;color:rgba(26,43,94,0.5);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;text-align:left;padding-left:12px;}
-.nm-wrap{display:flex;align-items:center;gap:4px;}
-.nm{cursor:pointer;border-bottom:1px dashed rgba(26,43,94,0.25);min-width:60px;display:inline-block;}
-.nm:active{opacity:0.6;}
-.nm.is-placeholder{color:rgba(26,43,94,0.3);font-style:italic;}
-.nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:rgba(26,43,94,0.25);line-height:1;flex-shrink:0;}
-.nm-stats:hover{color:#1a2b5e;}
-/* ── FOOD FINDER ── */
-.food-search-wrap{position:relative;margin-bottom:10px;}
-.food-search{width:100%;background:#fff;border:1.5px solid rgba(26,43,94,0.2);border-radius:12px;padding:11px 14px 11px 38px;font-size:13px;font-family:inherit;color:#1a2b5e;outline:none;}
-.food-search:focus{border-color:#c8102e;}
-.food-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
-.food-filter-row{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
-.food-filter-row::-webkit-scrollbar{display:none;}
-.food-chip{flex:0 0 auto;background:#fff;border:1.5px solid rgba(26,43,94,0.15);border-radius:20px;padding:5px 12px;font-size:10px;font-weight:600;color:rgba(26,43,94,0.5);cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
-.food-chip.active{background:#c8102e;border-color:#c8102e;color:#fff;}
-.food-chip:active{transform:scale(0.95);}
-.food-results{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
-.food-card{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);overflow:hidden;transition:box-shadow 0.15s;}
-.food-card:active{box-shadow:0 2px 8px rgba(26,43,94,0.15);}
-.food-card-top{display:flex;align-items:center;gap:10px;padding:11px 14px;}
-.food-pin{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;color:#fff;}
-.food-pin.restaurant{background:#c8a84b;}
-.food-pin.cart{background:#c8102e;}
-.food-pin.club{background:#1a2b5e;}
-.food-card-name{font-size:13px;font-weight:700;color:#1a2b5e;flex:1;}
-.food-card-section{font-size:10px;color:rgba(26,43,94,0.45);margin-top:1px;}
-.food-items{padding:0 14px 12px;display:flex;flex-wrap:wrap;gap:5px;}
-.food-item-tag{background:rgba(26,43,94,0.05);border-radius:6px;padding:3px 8px;font-size:10px;color:rgba(26,43,94,0.6);font-weight:500;}
-.food-card-arrow{font-size:12px;color:rgba(26,43,94,0.35);flex-shrink:0;}
-.food-empty{text-align:center;padding:30px 20px;color:rgba(26,43,94,0.35);font-size:12px;font-style:italic;}
-.food-type-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
-.food-type-dot{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(26,43,94,0.5);font-weight:600;}
-.food-map-wrap{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);margin-bottom:10px;overflow:hidden;}
-.food-map-label{font-size:9px;color:rgba(26,43,94,0.4);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 6px;font-weight:600;}
-.food-map-svg-wrap{position:relative;width:100%;}
-.food-map-count{font-size:10px;color:rgba(26,43,94,0.4);padding:6px 14px 10px;text-align:center;}
-/* ── GAME NOTES ── */
-.gn-status{text-align:center;padding:28px 16px;color:rgba(26,43,94,0.4);font-size:12px;font-style:italic;}
-.gn-fetch-btn{width:100%;background:linear-gradient(135deg,#1a2b5e,#0f1d40);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.5px;margin-bottom:10px;}
-.gn-fetch-btn:active{opacity:0.85;}
-.gn-fetch-btn:disabled{opacity:0.5;cursor:default;}
-.gn-meta{background:linear-gradient(135deg,#1a2b5e 0%,#0f1d40 100%);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(200,168,75,0.25);}
-.gn-meta-date{font-size:10px;color:#c8a84b;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px;}
-.gn-meta-matchup{font-size:16px;font-weight:800;color:#fff;margin-bottom:2px;}
-.gn-meta-time{font-size:11px;color:rgba(255,255,255,0.6);}
-.gn-section{background:#fff;border-radius:12px;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 4px rgba(26,43,94,0.07);margin-bottom:10px;overflow:hidden;}
-.gn-section-hdr{background:rgba(26,43,94,0.04);padding:10px 14px;font-size:9px;font-weight:700;color:rgba(26,43,94,0.5);text-transform:uppercase;letter-spacing:1.5px;border-bottom:1px solid rgba(26,43,94,0.07);}
-.gn-section-body{padding:12px 14px;}
-.gn-pitcher-row{display:flex;gap:10px;margin-bottom:8px;}
-.gn-pitcher{flex:1;background:rgba(26,43,94,0.04);border-radius:10px;padding:10px 12px;border:1px solid rgba(26,43,94,0.08);}
-.gn-pitcher-team{font-size:9px;color:#c8102e;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
-.gn-pitcher-name{font-size:13px;font-weight:700;color:#1a2b5e;margin-bottom:2px;}
-.gn-pitcher-stat{font-size:10px;color:rgba(26,43,94,0.5);font-weight:500;}
-.gn-narrative{font-size:12px;color:rgba(26,43,94,0.75);line-height:1.75;}
-.gn-narrative p{margin-bottom:10px;}
-.gn-narrative p:last-child{margin-bottom:0;}
-.gn-spotlight-item{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(26,43,94,0.07);}
-.gn-spotlight-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
-.gn-spotlight-name{font-size:13px;font-weight:700;color:#1a2b5e;margin-bottom:4px;}
-.gn-spotlight-stat{display:inline-block;background:rgba(200,16,46,0.08);color:#c8102e;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;margin-bottom:6px;}
-.gn-spotlight-text{font-size:11px;color:rgba(26,43,94,0.6);line-height:1.65;}
-.gn-stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(26,43,94,0.06);}
-.gn-stat-row:last-child{border-bottom:none;}
-.gn-stat-label{font-size:11px;color:rgba(26,43,94,0.5);}
-.gn-stat-val{font-size:12px;font-weight:700;color:#1a2b5e;}
-.gn-pdf-link{display:block;text-align:center;padding:10px;font-size:10px;color:rgba(26,43,94,0.35);text-decoration:none;margin-top:4px;}
-.gn-pdf-link:hover{color:#c8102e;}
-.gn-error{background:rgba(200,16,46,0.06);border:1px solid rgba(200,16,46,0.2);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;}
-.gn-error-title{font-size:13px;font-weight:700;color:#c8102e;margin-bottom:4px;}
-.gn-error-msg{font-size:11px;color:rgba(26,43,94,0.5);}
+.summary-attendees-val{font-size:13px;font-weight:600;color:var(--gold);}
+.summary-branding{text-align:center;font-size:9px;color:rgba(255,255,255,0.12);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.summary-close{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;font-family:inherit;}
+.summary-save-btn{flex:2;background:linear-gradient(135deg,var(--red),var(--red-d));border:none;border-radius:10px;padding:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
 
-/* ── SCHEDULE ─────────────────────────── */
-.sched-cal-month{margin-bottom:20px;}
-.sched-cal-month-title{font-size:13px;font-weight:800;color:#1a2b5e;text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid #c8102e;margin-bottom:10px;}
-.sched-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.sched-cal-dow{font-size:9px;font-weight:700;color:rgba(26,43,94,0.4);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
-.sched-cal-day{border-radius:8px;min-height:52px;padding:4px;position:relative;background:#fff;border:1px solid rgba(26,43,94,0.08);}
-.sched-cal-day.empty{background:transparent;border-color:transparent;}
-.sched-cal-day.home{border-color:rgba(26,43,94,0.2);background:#fff;}
-.sched-cal-day.away{background:#f5f3ee;border-color:rgba(26,43,94,0.1);}
-.sched-cal-day.today{background:linear-gradient(135deg,rgba(26,43,94,0.08),rgba(200,16,46,0.05));border:2px solid #c8102e !important;box-shadow:0 2px 8px rgba(200,16,46,0.15);}
-.sched-cal-day.final{opacity:0.6;}
-.sched-cal-num{font-size:11px;font-weight:800;color:#1a2b5e;line-height:1;}
-.sched-cal-day.today .sched-cal-num{color:#c8102e;}
-.sched-cal-opp{font-size:8px;font-weight:700;color:#1a2b5e;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sched-cal-time{font-size:7px;color:rgba(26,43,94,0.5);margin-top:1px;font-weight:600;}
-.sched-cal-ha{font-size:7px;font-weight:800;letter-spacing:0.5px;margin-top:1px;}
-.sched-cal-ha.home{color:#1a2b5e;}
-.sched-cal-ha.away{color:rgba(26,43,94,0.4);}
-.sched-cal-score{font-size:9px;font-weight:800;color:#1a2b5e;margin-top:2px;}
-.sched-cal-wl{font-size:7px;font-weight:800;}
-.sched-cal-wl.W{color:#2e7d32;}
-.sched-cal-wl.L{color:#c8102e;}
-.sched-cal-live{font-size:7px;font-weight:700;color:#c8102e;animation:pulse 1.2s infinite;}
-.sched-cal-legend{display:flex;gap:12px;padding:8px 0 4px;flex-wrap:wrap;}
-.sched-cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(26,43,94,0.55);font-weight:500;}
-.sched-cal-legend-box{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
-.sched-month{font-size:11px;font-weight:700;color:rgba(26,43,94,0.5);text-transform:uppercase;letter-spacing:1.5px;padding:14px 0 6px;margin-top:4px;}
-.sched-month:first-child{padding-top:2px;}
-.sched-game{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:5px;background:#fff;border:1px solid rgba(26,43,94,0.1);box-shadow:0 1px 3px rgba(26,43,94,0.06);position:relative;}
-.sched-game.home{border-left:3px solid #1a2b5e;}
-.sched-game.away{border-left:3px solid rgba(26,43,94,0.25);}
-.sched-game.today{background:linear-gradient(135deg,rgba(26,43,94,0.06) 0%,rgba(200,16,46,0.04) 100%);border-color:rgba(200,16,46,0.4);box-shadow:0 2px 8px rgba(200,16,46,0.12);}
-.sched-game.final{opacity:0.65;}
-.sched-date-col{min-width:38px;text-align:center;}
-.sched-dow{font-size:9px;color:rgba(26,43,94,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
-.sched-day{font-size:18px;font-weight:800;color:#1a2b5e;line-height:1.1;}
-.sched-info{flex:1;min-width:0;}
-.sched-opp{font-size:13px;font-weight:700;color:#1a2b5e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sched-meta{font-size:10px;color:rgba(26,43,94,0.5);margin-top:2px;}
-.sched-right{text-align:right;min-width:44px;}
-.sched-score{font-size:13px;font-weight:800;color:#1a2b5e;}
-.sched-result{font-size:9px;font-weight:700;letter-spacing:0.5px;margin-top:1px;}
-.sched-result.W{color:#2e7d32;}
-.sched-result.L{color:#c8102e;}
-.sched-result.live{color:#c8102e;animation:pulse 1.2s ease-in-out infinite;}
-.sched-time{font-size:11px;color:rgba(26,43,94,0.55);font-weight:600;}
-.sched-today-badge{position:absolute;top:6px;right:8px;font-size:8px;font-weight:700;letter-spacing:1px;color:#c8102e;text-transform:uppercase;}
-.sched-ha{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:rgba(26,43,94,0.4);}
-.sched-loading{text-align:center;padding:40px 0;color:rgba(26,43,94,0.4);font-size:13px;}
+/* ── MISC ───────────────────────────────────────────────── */
+.nm-stats{background:none;border:none;padding:0 2px;cursor:pointer;font-size:11px;color:var(--text3);line-height:1;flex-shrink:0;}
+.loading-msg{text-align:center;padding:20px;color:var(--text3);font-size:12px;font-style:italic;}
+.section-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-weight:700;}
+.link-btn{display:block;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;text-align:center;margin-bottom:8px;}
+
+/* ── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn 0.3s ease forwards;}
 </style>
 </head>
 <body>
 
-<div class="app-header">
-  <div>
-    <div class="app-title">Toledo Mud Hens Scorecard</div>
-    <div class="app-sub" id="app-venue-sub">Fifth Third Field &bull; Toledo, OH</div>
+<!-- APP HEADER -->
+<div class="app-hdr">
+  <div class="app-hdr-titles">
+    <div class="app-hdr-team">Toledo Mud Hens</div>
+    <div class="app-hdr-sub" id="app-venue-sub">Fifth Third Field &bull; Toledo, OH</div>
   </div>
-  <a class="radio-btn" href="iheart://live/7480" onclick="setTimeout(()=>{window.open('https://www.iheart.com/live/the-gambler-1260-7480/','_blank')},500);return false;">&#9654; RADIO</a>
+  <a class="app-hdr-radio" href="iheart://live/7480" onclick="setTimeout(()=>{window.open('https://www.iheart.com/live/the-gambler-1260-7480/','_blank')},500);return false;">&#9654; Radio</a>
 </div>
 
-<div class="nav-tabs">
-  <div class="nav-tab active" onclick="showSection('game',this)">Game</div>
-  <div class="nav-tab" onclick="showSection('scorecard',this)">Toledo Mud Hens</div>
-  <div class="nav-tab" onclick="showSection('oppscore',this)">Opponent</div>
-  <div class="nav-tab" onclick="showSection('standings',this)">Standings</div>
-  <div class="nav-tab" onclick="showSection('henstats',this)">Hens Stats</div>
-  <div class="nav-tab" onclick="showSection('oppstats',this)" id="opp-stats-tab">Opp Stats</div>
-  <div class="nav-tab" onclick="showSection('promotions',this)">Promos</div>
-  <div class="nav-tab" onclick="showSection('trivia',this)">Trivia</div>
-  <div class="nav-tab" onclick="showSection('gamenotes',this)">📋 Game Notes</div>
-  <div class="nav-tab" onclick="showSection('food',this)">🍟 Food</div>
-  <div class="nav-tab" onclick="showSection('history',this)">History</div>
-  <div class="nav-tab" onclick="showSection('archive',this)">Archive</div>
-  <div class="nav-tab" onclick="showSection('schedule',this);loadSchedule()">📅 Schedule</div>
-  <div class="nav-tab" onclick="window.open('https://mudhens.com/tickets','_blank')">🎟 Tickets</div>
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bnav-tab active" onclick="showPage('game',this)">
+    <span class="bnav-icon">⚾</span><span class="bnav-lbl">Game</span>
+  </button>
+  <button class="bnav-tab" onclick="showPage('stats',this)">
+    <span class="bnav-icon">📊</span><span class="bnav-lbl">Stats</span>
+  </button>
+  <button class="bnav-tab" onclick="showPage('schedule',this);loadSchedule()">
+    <span class="bnav-icon">📅</span><span class="bnav-lbl">Schedule</span>
+  </button>
+  <button class="bnav-tab" onclick="showPage('ballpark',this)">
+    <span class="bnav-icon">🏟</span><span class="bnav-lbl">Ballpark</span>
+  </button>
+  <button class="bnav-tab" onclick="showPage('more',this)">
+    <span class="bnav-icon">☰</span><span class="bnav-lbl">More</span>
+  </button>
 </div>
 
-<!-- ══════════════ GAME ══════════════ -->
-<div class="section active" id="sec-game">
-  <div class="countdown-card" id="countdown-card">
-    <div class="countdown-label">Next Mud Hens Game</div>
-    <div class="countdown-opp" id="countdown-opp">—</div>
-    <div class="countdown-date" id="countdown-date">—</div>
-    <div class="countdown-units">
-      <div class="countdown-unit"><div class="countdown-num" id="cd-d">0</div><div class="countdown-unit-label">Days</div></div>
-      <div class="countdown-unit"><div class="countdown-num" id="cd-h">0</div><div class="countdown-unit-label">Hrs</div></div>
-      <div class="countdown-unit"><div class="countdown-num" id="cd-m">0</div><div class="countdown-unit-label">Min</div></div>
-      <div class="countdown-unit"><div class="countdown-num" id="cd-s">0</div><div class="countdown-unit-label">Sec</div></div>
-    </div>
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE: GAME                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page active" id="page-game">
+  <div class="subnav" id="subnav-game">
+    <button class="subnav-tab active" onclick="showSection('news',this,'game')">News</button>
+    <button class="subnav-tab" onclick="showSection('gamenotes',this,'game')">Game Notes</button>
+    <button class="subnav-tab" onclick="showSection('game',this,'game')">Game</button>
+    <button class="subnav-tab" onclick="showSection('scorecard',this,'game')">Mud Hens SC</button>
+    <button class="subnav-tab" onclick="showSection('oppscore',this,'game')">Opp SC</button>
   </div>
-  <div class="matchup-card">
-    <div class="matchup-row">
-      <div class="team-block">
-        <div class="team-nm">Toledo Mud Hens</div>
-        <div class="team-rec" id="mud-rec" style="color:#ffffff !important;opacity:1;">—</div>
-        <div class="team-sc" id="mud-sc">—</div>
-      </div>
-      <div class="vs" id="matchup-vs">vs</div>
-      <div class="team-block">
-        <div class="team-nm" id="opp-nm">OPPONENT</div>
-        <div class="team-rec" id="opp-rec" style="color:#ffffff !important;opacity:1;">—</div>
-        <div class="team-sc" id="opp-sc">—</div>
-      </div>
-    </div>
-    <div class="fp" id="fp-time">Loading...</div>
-    <div class="standings-info" id="standings-info"></div>
-  </div>
+  <div class="pg-content">
 
-  <div class="grid2">
-    <div class="card gold">
-      <div class="card-label">Date</div>
-      <div class="card-val" id="meta-date" style="font-size:18px;font-weight:800;">—</div>
+    <!-- NEWS -->
+    <div class="section active" id="sec-news">
+      <div id="news-content"><div class="news-loading">Loading Mud Hens news...</div></div>
     </div>
-    <div class="card gold">
-      <div class="card-label" id="wx-label">Weather at Fifth Third</div>
-      <div class="wx-row" style="align-items:center;gap:8px;">
-        <div class="wx-icon" id="wx-icon" style="font-size:28px;flex-shrink:0;">—</div>
-        <div style="flex:1;">
-          <div class="wx-temp" id="wx-temp" style="font-size:20px;font-weight:800;color:#000000;">—</div>
-          <div id="wx-desc" style="font-size:10px;color:rgba(0,0,0,0.55);margin-top:2px;line-height:1.5;">—</div>
+
+    <!-- GAME NOTES -->
+    <div class="section" id="sec-gamenotes">
+  <button class="gn-fetch-btn" id="gn-fetch-btn" onclick="fetchGameNotes()">
+    📋 Load Today's Game Notes
+  </button>
+  <div id="gn-content">
+    <div class="gn-status">
+      Tap above to load today's game notes.<br>
+      Posted ~3 hours before first pitch.
+    </div>
+  </div>
+  <a class="gn-pdf-link" id="gn-pdf-link" href="#" target="_blank" style="display:none">
+    📄 View full PDF on MiLB.com ↗
+  </a>
+</div>
+
+    <!-- GAME -->
+    <div class="section" id="sec-game">
+      <div class="cd-card" id="countdown-card">
+        <div class="cd-label">Next Home Game</div>
+        <div class="cd-opp" id="countdown-opp">—</div>
+        <div class="cd-date" id="countdown-date">—</div>
+        <div class="cd-units">
+          <div class="cd-unit"><div class="cd-num" id="cd-d">0</div><div class="cd-unit-lbl">Days</div></div>
+          <div class="cd-unit"><div class="cd-num" id="cd-h">0</div><div class="cd-unit-lbl">Hrs</div></div>
+          <div class="cd-unit"><div class="cd-num" id="cd-m">0</div><div class="cd-unit-lbl">Min</div></div>
+          <div class="cd-unit"><div class="cd-num" id="cd-s">0</div><div class="cd-unit-lbl">Sec</div></div>
         </div>
       </div>
-    </div>
-  </div>
+      <div class="matchup-card">
+        <div class="matchup-row">
+          <div class="team-block">
+            <div class="team-nm">Toledo Mud Hens</div>
+            <div class="team-rec" id="mud-rec" style="color:rgba(255,255,255,0.7)">—</div>
+            <div class="team-sc" id="mud-sc">—</div>
+          </div>
+          <div class="matchup-vs" id="matchup-vs">vs</div>
+          <div class="team-block" style="text-align:right">
+            <div class="team-nm" id="opp-nm">OPPONENT</div>
+            <div class="team-rec" id="opp-rec" style="color:rgba(255,255,255,0.7)">—</div>
+            <div class="team-sc" id="opp-sc">—</div>
+          </div>
+        </div>
+        <div class="matchup-fp" id="fp-time">Loading...</div>
+        <div class="matchup-si" id="standings-info"></div>
+      </div>
+      <div class="grid2">
+        <div class="card gold">
+          <div class="card-lbl">Date</div>
+          <div class="card-val" id="meta-date" style="font-size:17px;font-weight:800;">—</div>
+        </div>
+        <div class="card gold">
+          <div class="card-lbl" id="wx-label">Weather</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="wx-icon" id="wx-icon">—</div>
+            <div><div class="wx-temp" id="wx-temp">—</div><div class="wx-desc" id="wx-desc">—</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-lbl">Toledo Starter</div>
+          <div class="card-val" id="mud-starter">TBD</div>
+          <div class="card-sub" id="mud-starter-era"></div>
+        </div>
+        <div class="card">
+          <div class="card-lbl" id="opp-starter-card-label">Opp Starter</div>
+          <div class="card-val" id="opp-starter">TBD</div>
+          <div class="card-sub" id="opp-starter-era"></div>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span class="s-inn" id="s-inn">Loading...</span>
+        <span class="s-cnt" id="s-cnt"></span>
+        <div class="bases">
+          <div class="base" id="b2"></div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div class="base" id="b3"></div>
+            <div class="base" id="b1"></div>
+          </div>
+        </div>
+        <span class="auto-badge" id="auto-badge" style="display:none">AUTO-FILL ON</span>
+      </div>
+      <div class="linescore-wrap">
+        <table>
+          <thead id="linescore-head"><tr>
+            <th style="text-align:left;padding-left:10px;">Team</th>
+            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+            <th>R</th><th>H</th><th>E</th>
+          </tr></thead>
+          <tbody id="linescore-body">
+            <tr><td class="tn" id="ls-row1-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
+            <tr><td class="tn" id="ls-row2-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /sec-game -->
 
-  <div class="grid2">
-    <div class="card">
-      <div class="card-label">Toledo Mud Hens Starter</div>
-      <div class="card-val" id="mud-starter">TBD</div>
-      <div class="card-sub" id="mud-starter-era"></div>
-    </div>
-    <div class="card">
-      <div class="card-label" id="opp-starter-card-label">Opp Starter</div>
-      <div class="card-val" id="opp-starter">TBD</div>
-      <div class="card-sub" id="opp-starter-era"></div>
-    </div>
-  </div>
+    <!-- MUD HENS SCORECARD -->
+    <div class="section" id="sec-scorecard">
+      <div class="sc-toggle">
+        <div class="sc-tab active" onclick="switchScTab('live')">Live Scoring</div>
+        <div class="sc-tab" onclick="switchScTab('full')">Notation Key</div>
+      </div>
+      <div id="live-view">
+        <div class="table-scroll"><table class="sc">
+          <thead><tr>
+            <th class="ph">Toledo Mud Hens</th><th class="ps">Pos</th>
+            <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
+            <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
+            <th class="pi">7</th><th class="pi">8</th><th class="pi">9</th>
+            <th class="pst">AB</th><th class="pst">H</th><th class="pst">R</th><th class="pst">RBI</th>
+          </tr></thead>
+          <tbody id="sc-body"></tbody>
+        </table></div>
+        <div class="legend">
+          <div class="leg"><div class="leg-dot" style="background:#2d6a1f"></div>Hit</div>
+          <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
+          <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
+          <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
+          <div class="leg">🔥 Hot</div><div class="leg">❄️ Cold</div>
+          <span style="margin-left:auto;font-size:9px;color:#aaa;font-style:italic">* = predicted · Tap name · Tap cell = score</span>
+        </div>
+      </div>
+      <div id="key-view" style="display:none;">
+        <div class="notation-key">
+          <b>Hits:</b> 1B · 2B · 3B · HR<br>
+          <b>Walks/On Base:</b> BB · IBB · HBP<br>
+          <b>Strikeouts:</b> K (swinging) · Kc (called)<br>
+          <b>Flyouts:</b> F# · Popups: P# · Lineouts: L#<br>
+          <b>Groundouts:</b> #-# (e.g. 6-3 = SS to 1B) · U# = unassisted<br>
+          <b>Special:</b> FC · E · DP · SAC · SF<br>
+          <b>Fielders:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
+        </div>
+      </div>
+      <div class="pc-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div><div class="pc-label">Pitch Count</div><div class="pc-pitcher" id="pc-pitcher">Current Pitcher</div></div>
+          <button class="pc-reset" onclick="resetPC()">Reset</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <button class="pc-btn minus" onclick="adjustPC(-1)">−</button>
+          <div class="pc-num" id="pc-display">0</div>
+          <button class="pc-btn" onclick="adjustPC(1)">+</button>
+        </div>
+      </div>
+    </div><!-- /sec-scorecard -->
 
-  <div class="status-bar">
-    <span class="s-inn" id="s-inn">Loading...</span>
-    <span class="s-cnt" id="s-cnt"></span>
-    <div class="bases">
-      <div class="base" id="b2"></div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div class="base" id="b3"></div>
-        <div class="base" id="b1"></div>
+    <!-- OPPONENT SCORECARD -->
+    <div class="section" id="sec-oppscore">
+      <div class="sc-toggle">
+        <div class="sc-tab active" onclick="switchOppTab('live')">Live Scoring</div>
+        <div class="sc-tab" onclick="switchOppTab('full')">Notation Key</div>
+      </div>
+      <div id="opp-live-view">
+        <div class="table-scroll"><table class="sc">
+          <thead><tr>
+            <th class="ph" id="opp-sc-header">Opponent Batter</th><th class="ps">Pos</th>
+            <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
+            <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
+            <th class="pi">7</th><th class="pi">8</th><th class="pi">9</th>
+            <th class="pst">AB</th><th class="pst">H</th><th class="pst">R</th><th class="pst">RBI</th>
+          </tr></thead>
+          <tbody id="opp-sc-body"></tbody>
+        </table></div>
+        <div class="legend">
+          <div class="leg"><div class="leg-dot" style="background:#2d6a1f"></div>Hit</div>
+          <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
+          <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
+          <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
+        </div>
+      </div>
+      <div id="opp-key-view" style="display:none;">
+        <div class="notation-key">
+          <b>Hits:</b> 1B · 2B · 3B · HR<br><b>Walks/On Base:</b> BB · IBB · HBP<br>
+          <b>Strikeouts:</b> K · Kc<br><b>Groundouts/Flyouts:</b> #-# · F# · L# · P#<br>
+          <b>Special:</b> FC · E · DP · SAC · SF<br>
+          <b>Fielders:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
+        </div>
+      </div>
+    </div><!-- /sec-oppscore -->
+
+  </div>
+</div><!-- /page-game -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE: STATS                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-stats">
+  <div class="subnav" id="subnav-stats">
+    <button class="subnav-tab active" onclick="showSection('standings',this,'stats')">Standings</button>
+    <button class="subnav-tab" onclick="showSection('henstats',this,'stats')">Hens Stats</button>
+    <button class="subnav-tab" id="opp-stats-tab" onclick="showSection('oppstats',this,'stats')">Opp Stats</button>
+    <button class="subnav-tab" onclick="showSection('transactions',this,'stats');loadTransactions()">Transactions</button>
+  </div>
+  <div class="pg-content">
+
+    <div class="section active" id="sec-standings">
+      <div class="sec-lbl">International League</div>
+      <div class="tbl-wrap"><div id="standings-il"></div></div>
+      <div class="sec-lbl" style="margin-top:16px;">Pacific Coast League</div>
+      <div class="tbl-wrap"><div id="standings-pcl"></div></div>
+    </div>
+
+    <div class="section" id="sec-henstats">
+      <div class="sc-toggle" style="margin-bottom:10px;">
+        <div class="sc-tab active" onclick="switchStatTab('hens','bat',this)">Batting</div>
+        <div class="sc-tab" onclick="switchStatTab('hens','pit',this)">Pitching</div>
+      </div>
+      <div id="hens-bat-view">
+        <div class="tbl-wrap"><table class="stats-tbl">
+          <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
+          <tbody id="hens-stats-body"><tr><td colspan="11" class="stats-loading">Loading...</td></tr></tbody>
+        </table></div>
+      </div>
+      <div id="hens-pit-view" style="display:none;">
+        <div class="tbl-wrap"><table class="stats-tbl">
+          <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+          <tbody id="hens-pitch-body"><tr><td colspan="10" class="stats-loading">Loading...</td></tr></tbody>
+        </table></div>
       </div>
     </div>
-    <span class="auto-badge" id="auto-badge" style="display:none">AUTO-FILL ON</span>
-  </div>
 
-  <div class="inning-score">
-    <table>
-      <thead id="linescore-head"><tr>
-        <th class="tc">Team</th>
-        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
-        <th>6</th><th>7</th><th>8</th><th>9</th>
-        <th>R</th><th>H</th><th>E</th>
-      </tr></thead>
-      <tbody id="linescore-body">
-        <tr><td class="tn" id="ls-row1-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
-        <tr><td class="tn" id="ls-row2-name">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="tot">—</td><td class="tot">—</td><td class="tot">—</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ══════════════ SCORECARD ══════════════ -->
-<div class="section" id="sec-scorecard">
-  <div class="sc-tabs">
-    <div class="sc-tab active" onclick="switchScTab('live')">Live Scoring</div>
-    <div class="sc-tab" onclick="switchScTab('full')">Notation Key</div>
-  </div>
-
-  <div id="live-view">
-    <div class="table-wrap">
-      <table class="sc">
-        <thead><tr>
-          <th class="ph">Toledo Mud Hens</th>
-          <th class="ps">Pos</th>
-          <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
-          <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
-          <th class="pi">7</th><th class="pi">8</th><th class="pi">9</th>
-          <th class="pst">AB</th><th class="pst">H</th>
-          <th class="pst">R</th><th class="pst">RBI</th>
-        </tr></thead>
-        <tbody id="sc-body"></tbody>
-      </table>
-    </div>
-    <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:#2d6a1f"></div>Hit</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
-      <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
-      <div class="leg">🔥 Hot</div>
-      <div class="leg">❄️ Cold</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name to edit · 📊 = stats · Tap cell = score</span>
-    </div>
-  </div>
-
-  <div class="pc-panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div>
-        <div class="pc-label">Pitch Count</div>
-        <div class="pc-pitcher" id="pc-pitcher">Current Pitcher</div>
+    <div class="section" id="sec-oppstats">
+      <div class="sc-toggle" style="margin-bottom:10px;">
+        <div class="sc-tab active" onclick="switchStatTab('opp','bat',this)">Batting</div>
+        <div class="sc-tab" onclick="switchStatTab('opp','pit',this)">Pitching</div>
       </div>
-      <button class="pc-reset" onclick="resetPC()">Reset</button>
+      <div id="opp-bat-view">
+        <div class="sec-lbl" id="opp-stats-title">Opponent — 2026 Batting</div>
+        <div class="tbl-wrap"><table class="stats-tbl">
+          <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
+          <tbody id="opp-stats-body"><tr><td colspan="11" class="stats-loading">Load game first.</td></tr></tbody>
+        </table></div>
+      </div>
+      <div id="opp-pit-view" style="display:none;">
+        <div class="sec-lbl" id="opp-pitch-title">Opponent — 2026 Pitching</div>
+        <div class="tbl-wrap"><table class="stats-tbl">
+          <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
+          <tbody id="opp-pitch-body"><tr><td colspan="10" class="stats-loading">Load game first.</td></tr></tbody>
+        </table></div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <button class="pc-btn minus" onclick="adjustPC(-1)">−</button>
-      <div class="pc-num" id="pc-display">0</div>
-      <button class="pc-btn" onclick="adjustPC(1)">+</button>
-    </div>
-  </div>
 
-  <div id="key-view" style="display:none;">
-    <div class="notation-key">
-      <b>Hits:</b> 1B · 2B · 3B · HR<br>
-      <b>Walks/On Base:</b> BB · IBB · HBP<br>
-      <b>Strikeouts:</b> K (swinging) · Kc (called)<br>
-      <b>Flyouts:</b> F# (fly to fielder #) · e.g. F8 = fly to CF<br>
-      <b>Popups:</b> P# (popup to fielder #) · e.g. P2 = popup to C<br>
-      <b>Lineouts:</b> L# (line to fielder #) · e.g. L6 = line to SS<br>
-      <b>Groundouts:</b> #-# (e.g. 6-3 = SS to 1B) · U# = unassisted<br>
-      <b>Special:</b> FC (fielder's choice) · E (error) · DP (double play)<br>
-      <b>Sacrifices:</b> SAC (bunt) · SF (sacrifice fly)<br>
-      <b>Fielder Numbers:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
+    <div class="section" id="sec-transactions">
+      <div id="txn-content"><div class="stats-loading">Loading transactions...</div></div>
     </div>
-  </div>
-</div>
 
-<!-- ══════════════ OPPONENT SCORECARD ══════════════ -->
-<div class="section" id="sec-oppscore">
-  <div class="sc-tabs">
-    <div class="sc-tab active" onclick="switchOppTab('live')">Live Scoring</div>
-    <div class="sc-tab" onclick="switchOppTab('full')">Notation Key</div>
   </div>
+</div><!-- /page-stats -->
 
-  <div id="opp-live-view">
-    <div class="table-wrap">
-      <table class="sc">
-        <thead><tr>
-          <th class="ph" id="opp-sc-header">Opponent Batter</th>
-          <th class="ps">Pos</th>
-          <th class="pi">1</th><th class="pi">2</th><th class="pi">3</th>
-          <th class="pi">4</th><th class="pi">5</th><th class="pi">6</th>
-          <th class="pi">7</th><th class="pi">8</th><th class="pi">9</th>
-          <th class="pst">AB</th><th class="pst">H</th>
-          <th class="pst">R</th><th class="pst">RBI</th>
-        </tr></thead>
-        <tbody id="opp-sc-body"></tbody>
-      </table>
-    </div>
-    <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:#2d6a1f"></div>Hit</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8102e"></div>Out</div>
-      <div class="leg"><div class="leg-dot" style="background:#1a5fa0"></div>Walk</div>
-      <div class="leg"><div class="leg-dot" style="background:#c8a84b"></div>Auto</div>
-      <span style="margin-left:auto;font-size:9px;color:#555;font-style:italic">* = predicted · Tap name to edit · 📊 = stats · Tap cell = score</span>
-    </div>
-  </div>
-
-  <div id="opp-key-view" style="display:none;">
-    <div class="notation-key">
-      <b>Hits:</b> 1B · 2B · 3B · HR<br>
-      <b>Walks/On Base:</b> BB · IBB · HBP<br>
-      <b>Strikeouts:</b> K (swinging) · Kc (called)<br>
-      <b>Flyouts:</b> F# · Popups: P# · Lineouts: L#<br>
-      <b>Groundouts:</b> #-# (e.g. 6-3) · U# = unassisted<br>
-      <b>Special:</b> FC · E · DP · SAC · SF<br>
-      <b>Fielders:</b> 1=P · 2=C · 3=1B · 4=2B · 5=3B · 6=SS · 7=LF · 8=CF · 9=RF
-    </div>
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE: SCHEDULE                              -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-schedule">
+  <div class="pg-content">
+    <div class="sec-lbl">2026 Season Schedule</div>
+    <div id="sched-content"><div class="sched-loading">Loading schedule...</div></div>
   </div>
 </div>
 
-<!-- ══════════════ PROMOTIONS ══════════════ -->
-<div class="section" id="sec-promotions">
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE: BALLPARK                              -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-ballpark">
+  <div class="subnav" id="subnav-ballpark">
+    <button class="subnav-tab active" onclick="showSection('food',this,'ballpark')">Food Finder</button>
+    <button class="subnav-tab" onclick="showSection('fleetwood',this,'ballpark')">Fleetwood Tap</button>
+    <button class="subnav-tab" onclick="showSection('promotions',this,'ballpark')">Promos</button>
+    <button class="subnav-tab" onclick="showSection('giveaways',this,'ballpark')">Giveaways</button>
+  </div>
+  <div class="pg-content">
+
+    <div class="section active" id="sec-food">
+
+  <!-- Search -->
+  <div class="food-search-wrap">
+    <span class="food-search-icon">🔍</span>
+    <input class="food-search" id="food-search-input" type="text"
+      placeholder="Search food, drinks, stands…"
+      oninput="renderFood()">
+  </div>
+
+  <!-- Category filters -->
+  <div class="food-filter-row" id="food-filter-row">
+    <button class="food-chip active" data-filter="all" onclick="setFoodFilter('all',this)">All</button>
+    <button class="food-chip" data-filter="burger" onclick="setFoodFilter('burger',this)">🍔 Burgers</button>
+    <button class="food-chip" data-filter="hot dog" onclick="setFoodFilter('hot dog',this)">🌭 Hot Dogs</button>
+    <button class="food-chip" data-filter="chicken" onclick="setFoodFilter('chicken',this)">🍗 Chicken</button>
+    <button class="food-chip" data-filter="pizza" onclick="setFoodFilter('pizza',this)">🍕 Pizza</button>
+    <button class="food-chip" data-filter="nachos" onclick="setFoodFilter('nachos',this)">🧀 Nachos</button>
+    <button class="food-chip" data-filter="tacos" onclick="setFoodFilter('tacos',this)">🌮 Tacos</button>
+    <button class="food-chip" data-filter="pretzel" onclick="setFoodFilter('pretzel',this)">🥨 Pretzels</button>
+    <button class="food-chip" data-filter="fries" onclick="setFoodFilter('fries',this)">🍟 Fries</button>
+    <button class="food-chip" data-filter="ice cream" onclick="setFoodFilter('ice cream',this)">🍦 Ice Cream</button>
+    <button class="food-chip" data-filter="dessert" onclick="setFoodFilter('dessert',this)">🍩 Desserts</button>
+    <button class="food-chip" data-filter="beer" onclick="setFoodFilter('beer',this)">🍺 Beer</button>
+    <button class="food-chip" data-filter="cocktails" onclick="setFoodFilter('cocktails',this)">🍹 Cocktails</button>
+    <button class="food-chip" data-filter="snacks" onclick="setFoodFilter('snacks',this)">🍿 Snacks</button>
+  </div>
+
+  <!-- Legend -->
+  <div class="food-type-legend">
+    <div class="food-type-dot"><span style="background:#c8a84b"></span>Ballpark Restaurant</div>
+    <div class="food-type-dot"><span style="background:#c8102e"></span>Portable Cart</div>
+    <div class="food-type-dot"><span style="background:#1a2b5e"></span>Club Level</div>
+  </div>
+
+  <!-- Map -->
+  <div class="food-map-wrap">
+    <div class="food-map-label">📍 Stadium Map — Tap a pin to highlight</div>
+    <div class="food-map-svg-wrap">
+      <svg id="food-map-svg" viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+        <!-- Field background -->
+        <rect width="400" height="360" fill="#dbe8f0"/>
+        <!-- Outfield grass -->
+        <ellipse cx="200" cy="220" rx="165" ry="145" fill="#4a8c3f"/>
+        <!-- Infield dirt -->
+        <ellipse cx="200" cy="255" rx="90" ry="75" fill="#c4955a"/>
+        <!-- Infield grass -->
+        <ellipse cx="200" cy="255" rx="68" ry="58" fill="#4a8c3f"/>
+        <!-- Home plate area -->
+        <ellipse cx="200" cy="308" rx="22" ry="16" fill="#c4955a"/>
+        <!-- Foul lines -->
+        <line x1="200" y1="308" x2="52" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <line x1="200" y1="308" x2="348" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <!-- Warning track -->
+        <ellipse cx="200" cy="215" rx="155" ry="133" fill="none" stroke="#c4955a" stroke-width="8" opacity="0.5"/>
+        <!-- Stands outline -->
+        <path d="M 35 338 L 10 200 Q 20 60 200 30 Q 380 60 390 200 L 365 338 Z" fill="#1a2b5e" fill-opacity="0.12" stroke="#1a2b5e" stroke-width="1" stroke-opacity="0.2"/>
+        <!-- Section markers -->
+        <text x="340" y="185" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">101</text>
+        <text x="328" y="148" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">102</text>
+        <text x="308" y="118" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">103</text>
+        <text x="284" y="96" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">104</text>
+        <text x="258" y="82" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">105</text>
+        <text x="232" y="74" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">106</text>
+        <text x="205" y="70" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">107</text>
+        <text x="178" y="72" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">108</text>
+        <text x="152" y="80" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">109</text>
+        <text x="126" y="93" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">110</text>
+        <text x="100" y="112" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">111</text>
+        <text x="78" y="136" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">112</text>
+        <text x="62" y="164" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">113</text>
+        <text x="52" y="196" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">114</text>
+        <text x="48" y="226" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">115</text>
+        <text x="44" y="256" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">116</text>
+        <text x="42" y="284" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">117</text>
+        <text x="42" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">118</text>
+        <text x="48" y="334" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">119</text>
+        <text x="160" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">120</text>
+        <text x="240" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">121</text>
+        <text x="362" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">122</text>
+        <!-- Home plate diamond -->
+        <polygon points="200,300 208,308 200,316 192,308" fill="#fff" opacity="0.7"/>
+        <!-- Bases -->
+        <rect x="236" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 240 272)"/>
+        <rect x="196" y="238" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 200 242)"/>
+        <rect x="155" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 159 272)"/>
+        <!-- Pitcher's mound -->
+        <circle cx="200" cy="265" r="6" fill="#c4955a" opacity="0.8"/>
+        <!-- Food location pins - rendered by JS -->
+        <g id="food-pins"></g>
+      </svg>
+    </div>
+    <div class="food-map-count" id="food-map-count">Showing all 21 locations</div>
+  </div>
+
+  <!-- Results list -->
+  <div class="food-results" id="food-results"></div>
+</div>
+
+    <div class="section" id="sec-fleetwood">
+      <a class="milb-link-card" href="https://dgmhmc9unvrf9.cloudfront.net/uploads/gallery/FW-New-Menu-24_small.pdf" target="_blank">
+        <div class="milb-link-icon">🍺</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">Fleetwood Tap Room Menu</div>
+          <div class="milb-link-sub">Opens the full menu PDF</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
+      <div class="card">
+        <div class="card-lbl">Location</div>
+        <div class="card-val">Fleetwood Tap Room</div>
+        <div class="card-sub">Inside Fifth Third Field · Craft beers, cocktails, and bar bites</div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-promotions">
   <div class="section-title">2026 Promotions &amp; Theme Nights</div>
   <div id="promo-list"></div>
 </div>
 
-<!-- ══════════════ TRIVIA ══════════════ -->
-<div class="section" id="sec-trivia">
+    <div class="section" id="sec-giveaways">
+      <a class="milb-link-card" href="https://www.milb.com/toledo/tickets/giveaways" target="_blank">
+        <div class="milb-link-icon">🎁</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">2026 Giveaways</div>
+          <div class="milb-link-sub">Full giveaway schedule on MiLB.com</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
+      <div id="giveaways-content">
+        <div class="stats-loading">Tap above to view giveaways on MiLB.com</div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /page-ballpark -->
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE: MORE                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="page-more">
+  <div class="subnav" id="subnav-more">
+    <button class="subnav-tab active" onclick="showSection('trivia',this,'more')">Trivia</button>
+    <button class="subnav-tab" onclick="showSection('history',this,'more')">History</button>
+    <button class="subnav-tab" onclick="showSection('archive',this,'more')">Archive</button>
+    <button class="subnav-tab" onclick="showSection('podcast',this,'more');loadPodcast()">Podcast</button>
+    <button class="subnav-tab" onclick="showSection('tickets',this,'more')">Tickets</button>
+  </div>
+  <div class="pg-content">
+
+    <div class="section active" id="sec-trivia">
   <div class="section-title">Mud Hens Trivia</div>
   <div class="trivia-card">
     <div class="trivia-q" id="trivia-q">Loading...</div>
@@ -594,15 +978,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     </div>
   </div>
 </div>
-
-<!-- ══════════════ HISTORY ══════════════ -->
-<div class="section" id="sec-history">
+    <div class="section" id="sec-history">
   <div class="section-title" id="history-title">On This Date in Mud Hens History</div>
   <div id="history-list"></div>
 </div>
-
-<!-- ══════════════ ARCHIVE ══════════════ -->
-<div class="section" id="sec-archive">
+    <div class="section" id="sec-archive">
   <div class="save-form">
     <div class="save-form-title">Save This Game</div>
     <label class="f-label">Opponent</label>
@@ -620,73 +1000,52 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div id="archive-list"></div>
 </div>
 
-<!-- ══════════════ STANDINGS ══════════════ -->
-<div class="section" id="sec-standings">
-  <div class="section-title">Triple-A International League Standings</div>
-  <div id="standings-il"></div>
-  <div class="section-title" style="margin-top:16px;">Triple-A Pacific Coast League Standings</div>
-  <div id="standings-pcl"></div>
-</div>
-
-<!-- ══════════════ HENS STATS ══════════════ -->
-<div class="section" id="sec-henstats">
-  <div class="sc-tabs" style="margin-bottom:10px;">
-    <div class="sc-tab active" onclick="switchStatTab('hens','bat',this)">Batting</div>
-    <div class="sc-tab" onclick="switchStatTab('hens','pit',this)">Pitching</div>
-  </div>
-  <div id="hens-bat-view">
-    <div class="section-title">Toledo Mud Hens — 2026 Batting</div>
-    <div style="overflow-x:auto;">
-      <table class="stats-table">
-        <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
-        <tbody id="hens-stats-body"><tr><td colspan="11" class="stats-loading">Loading...</td></tr></tbody>
-      </table>
+    <div class="section" id="sec-podcast">
+      <div class="pod-hero">
+        <div class="pod-title">Holy Toledo Sports Edition</div>
+        <div class="pod-sub">The Official Toledo Mud Hens Podcast</div>
+      </div>
+      <div id="podcast-content"><div class="stats-loading">Loading episodes...</div></div>
+      <a class="milb-link-card" href="https://holytoledo.buzzsprout.com/" target="_blank" style="margin-top:10px;">
+        <div class="milb-link-icon">🎙</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">Listen on Buzzsprout</div>
+          <div class="milb-link-sub">All episodes available at holytoledo.buzzsprout.com</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
     </div>
-  </div>
-  <div id="hens-pit-view" style="display:none;">
-    <div class="section-title">Toledo Mud Hens — 2026 Pitching</div>
-    <div style="overflow-x:auto;">
-      <table class="stats-table">
-        <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
-        <tbody id="hens-pitch-body"><tr><td colspan="10" class="stats-loading">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
-<!-- ══════════════ OPP STATS ══════════════ -->
-<div class="section" id="sec-oppstats">
-  <div class="sc-tabs" style="margin-bottom:10px;">
-    <div class="sc-tab active" onclick="switchStatTab('opp','bat',this)">Batting</div>
-    <div class="sc-tab" onclick="switchStatTab('opp','pit',this)">Pitching</div>
-  </div>
-  <div id="opp-bat-view">
-    <div class="section-title" id="opp-stats-title">Opponent — 2026 Batting</div>
-    <div style="overflow-x:auto;">
-      <table class="stats-table">
-        <thead><tr><th>Player</th><th>POS</th><th>G</th><th>AB</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th>SB</th></tr></thead>
-        <tbody id="opp-stats-body"><tr><td colspan="11" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
-      </table>
+    <div class="section" id="sec-tickets">
+      <a class="milb-link-card" href="https://www.milb.com/toledo/tickets" target="_blank">
+        <div class="milb-link-icon">🎟</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">Buy Tickets</div>
+          <div class="milb-link-sub">Single game, group, and season tickets</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
+      <a class="milb-link-card" href="https://www.milb.com/toledo/tickets/promotional-schedule" target="_blank">
+        <div class="milb-link-icon">🗓</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">Promotional Schedule</div>
+          <div class="milb-link-sub">Full 2026 promotions on MiLB.com</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
+      <a class="milb-link-card" href="https://www.milb.com/toledo/tickets/giveaways" target="_blank">
+        <div class="milb-link-icon">🎁</div>
+        <div class="milb-link-text">
+          <div class="milb-link-title">Giveaways</div>
+          <div class="milb-link-sub">2026 giveaway nights on MiLB.com</div>
+        </div>
+        <div class="milb-link-arr">›</div>
+      </a>
     </div>
-  </div>
-  <div id="opp-pit-view" style="display:none;">
-    <div class="section-title" id="opp-pitch-title">Opponent — 2026 Pitching</div>
-    <div style="overflow-x:auto;">
-      <table class="stats-table">
-        <thead><tr><th>Player</th><th>G</th><th>GS</th><th>IP</th><th>ERA</th><th>W</th><th>L</th><th>SO</th><th>WHIP</th><th>SV</th></tr></thead>
-        <tbody id="opp-pitch-body"><tr><td colspan="10" class="stats-loading">Load game first to see opponent stats.</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
-<!-- ═══
+  </div>
+</div><!-- /page-more -->
 
-<!-- ══════ SCHEDULE ══════ -->
-<div class="section" id="sec-schedule">
-  <div class="section-title">2026 Toledo Mud Hens Schedule</div>
-  <div id="sched-content"><div class="sched-loading">Loading schedule...</div></div>
-</div>
 <div class="summary-overlay" id="summary-overlay">
   <div class="summary-card" id="summary-card-el">
     <div class="summary-card-title">Game Summary</div>
@@ -731,8 +1090,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     </div>
   </div>
 </div>
-
-<!-- ══════════════ SCORING MODAL ══════════════ -->
 <div class="modal-overlay" id="sc-modal">
   <div class="modal">
     <h3 id="sc-modal-title">Score this at-bat</h3>
@@ -840,8 +1197,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <button class="mc" onclick="closeScModal()">Cancel</button>
   </div>
 </div>
-
-<!-- ══════════════ PLAYER MODAL ══════════════ -->
 <div class="modal-overlay" id="player-modal">
   <div class="modal">
     <div class="player-stats-popup">
@@ -852,8 +1207,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <button class="mc" onclick="closePlayerModal()">Close</button>
   </div>
 </div>
-
-<!-- ══════════════ NAME EDIT MODAL ══════════════ -->
 <div class="modal-overlay" id="name-modal">
   <div class="modal" style="padding-bottom:24px;">
     <h3 id="name-modal-title" style="margin-bottom:6px;">Edit Player Name</h3>
@@ -897,24 +1250,27 @@ let hensPitchCache = null, oppPitchCache = null, oppPitchTeamId = null;
 let standingsCache = null;
 
 // ── NAV ────────────────────────────────────────────────────
-function showSection(name, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const sec = document.getElementById('sec-' + name);
-  if (sec) sec.classList.add('active');
+function showPage(pageName, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bnav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('page-' + pageName);
+  if (page) page.classList.add('active');
   if (el) el.classList.add('active');
-  if (name === 'trivia')     loadTrivia();
-  if (name === 'history')    loadHistory();
-  if (name === 'promotions') loadPromos();
-  if (name === 'archive')    loadArchive();
-  if (name === 'standings')  loadStandingsTab();
-  if (name === 'henstats')   loadHensStats();
-  if (name === 'oppstats')   loadOppStats();
-  if (name === 'food')       initFood();
-  // gamenotes loads on demand via button tap — no auto-load needed
 }
 
-// ── COLOR ──────────────────────────────────────────────────
+function showSection(name, el, pageId) {
+  const sec = document.getElementById('sec-' + name);
+  if (!sec) return;
+  const page = pageId ? document.getElementById('page-' + pageId) : sec.closest('.page');
+  if (page) {
+    page.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    page.querySelectorAll('.subnav-tab').forEach(t => t.classList.remove('active'));
+  }
+  if (sec) sec.classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+
 function col(r) {
   if (!r) return '#d0c8a8';
   if (hits.includes(r)) return '#2d6a1f';
@@ -1061,7 +1417,7 @@ function renderScorecard() {
   });
 }
 function switchScTab(t) {
-  const tabs = document.querySelectorAll('#sec-scorecard .sc-tab');
+  const tabs = document.querySelectorAll('#sec-scorecard .sc-toggle .sc-tab');
   tabs.forEach((el,i) => el.classList.toggle('active', (i===0&&t==='live')||(i===1&&t==='full')));
   document.getElementById('live-view').style.display = t === 'live' ? 'block' : 'none';
   document.getElementById('key-view').style.display  = t === 'full' ? 'block' : 'none';
@@ -1791,7 +2147,7 @@ async function fetchGame() {
     if (oppScHeader) oppScHeader.textContent = oppTeamName + ' Batter';
     const oppStatsTitle = document.getElementById('opp-stats-title');
     if (oppStatsTitle) oppStatsTitle.textContent = `${oppTeamName} — 2026 Season Batting Stats`;
-    const oppTab = document.querySelector('.nav-tab[onclick*="oppscore"]') || document.querySelector('.nav-tab:nth-child(3)');
+    const oppTab = document.querySelector('.bnav-tab:nth-child(2)');
     if (oppTab) oppTab.textContent = oppTeamName;
     document.querySelectorAll('#sec-game .card-label').forEach(el => {
       if (['OPP STARTER','Opp Starter'].includes(el.textContent)) el.textContent = oppTeamName + ' Starter';
@@ -2723,25 +3079,22 @@ async function fetchGameNotes() {
       return;
     }
 
-    // Sort by URL (more recent uploads tend to have higher numbers) — take last as most recent
-    allLinks.sort((a,b) => a.url.localeCompare(b.url));
-
-    // Find today's link
-    const todayPatterns = [
-      `${dayName}, ${monthName} ${dayNum}`,
-      `${dayName}, ${monthName} ${String(dayNum).padStart(2,'0')}`,
-    ];
-    let todayLink = allLinks.find(l => todayPatterns.some(p => l.text.toLowerCase().includes(p.toLowerCase())));
+    // Always use the most recently published PDF — MiLB lists them in chronological order
+    // so the last PDF URL found on the page is the most recent game notes
+    // No date matching needed — just grab the latest
     const mostRecent = allLinks[allLinks.length - 1];
-    const isToday = !!todayLink;
-    const chosenLink = todayLink || mostRecent;
+    const chosenLink = mostRecent;
 
     if (!chosenLink) {
       throw new Error("No game notes found. They're typically posted ~3 hours before first pitch.");
     }
 
-    const dateLabel = chosenLink.text;
-    const pdfUrl    = chosenLink.url;
+    // Try to extract a readable date label from surrounding text
+    const dateLabel = chosenLink.text && !chosenLink.text.includes('upload') 
+      ? chosenLink.text 
+      : `Latest Game Notes`;
+    const pdfUrl = chosenLink.url;
+    const isToday = false; // don't assume — just show whatever is most recent
 
     // Cache and render the PDF link
     gameNotesCache = { pdfUrl, date: dateLabel, isToday, fetchedAt: Date.now() };
@@ -3083,6 +3436,220 @@ function renderSchedule(data) {
   }
 }
 
+
+// ── NEWS FEED ────────────────────────────────────────────────
+let newsCache = null;
+
+async function loadNews() {
+  if (newsCache) { renderNews(newsCache); return; }
+  const el = document.getElementById('news-content');
+  if (!el) return;
+  el.innerHTML = '<div class="news-loading">Loading Mud Hens news...</div>';
+  try {
+    // Use MLB Stats API game content for recent news
+    // First get recent games to pull content from
+    const today = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+    const startDate = new Date(today); startDate.setDate(today.getDate() - 7);
+    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    
+    // Use MiLB news endpoint via worker proxy
+    const newsUrl = `${WORKER}/api/v1/teams/${TEAM_ID}/news?limit=15&sportId=11`;
+    let articles = [];
+    
+    try {
+      const res = await fetch(newsUrl);
+      if (res.ok) {
+        const data = await res.json();
+        articles = data.articles || data.news || [];
+      }
+    } catch(e) {}
+    
+    // Fallback: scrape MiLB news page via worker proxy
+    if (!articles.length) {
+      try {
+        const proxyUrl = `${WORKER}/proxy?url=${encodeURIComponent('https://www.milb.com/toledo/news')}`;
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          const html = await res.text();
+          // Extract news links from page
+          const linkRe = /href="(\/toledo\/news\/[^"]+)"[^>]*>([^<]{10,})</g;
+          let m;
+          while ((m = linkRe.exec(html)) !== null && articles.length < 10) {
+            const url = 'https://www.milb.com' + m[1];
+            const title = m[2].trim();
+            if (title.length > 15 && !articles.find(a => a.url === url)) {
+              articles.push({ url, title, date: '' });
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (!articles.length) throw new Error('No articles found');
+    newsCache = articles;
+    renderNews(articles);
+  } catch(e) {
+    console.log('[news] Error:', e.message);
+    renderNewsLinks();
+  }
+}
+
+function renderNews(articles) {
+  const el = document.getElementById('news-content');
+  if (!el) return;
+  
+  if (!articles || !articles.length) { renderNewsLinks(); return; }
+  
+  let html = '';
+  const first = articles[0];
+  
+  // Hero card for first article
+  const heroTitle = first.title || first.headline || 'Latest Mud Hens News';
+  const heroDate  = first.date ? new Date(first.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+  const heroUrl   = first.url || 'https://www.milb.com/toledo/news';
+  html += `<div class="news-hero">
+    <div class="news-hero-tag">Mud Hens News</div>
+    <div class="news-hero-title">${esc(heroTitle)}</div>
+    ${heroDate ? `<div class="news-hero-date">${esc(heroDate)}</div>` : ''}
+    <a class="news-hero-link" href="${heroUrl}" target="_blank">Read More ›</a>
+  </div>`;
+  
+  // Rest as list
+  for (let i = 1; i < articles.length && i < 12; i++) {
+    const a = articles[i];
+    const title = a.title || a.headline || '';
+    const date  = a.date ? new Date(a.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    const url   = a.url || 'https://www.milb.com/toledo/news';
+    html += `<a class="news-card" href="${url}" target="_blank">
+      <div class="news-card-content">
+        <div class="news-card-tag">Mud Hens</div>
+        <div class="news-card-title">${esc(title)}</div>
+        ${date ? `<div class="news-card-date">${esc(date)}</div>` : ''}
+      </div>
+      <div class="news-card-arrow">›</div>
+    </a>`;
+  }
+  
+  el.innerHTML = html;
+}
+
+function renderNewsLinks() {
+  const el = document.getElementById('news-content');
+  if (!el) return;
+  el.innerHTML = `<a class="milb-link-card" href="https://www.milb.com/toledo/news" target="_blank">
+    <div class="milb-link-icon">📰</div>
+    <div class="milb-link-text">
+      <div class="milb-link-title">Mud Hens News</div>
+      <div class="milb-link-sub">Latest news on MiLB.com</div>
+    </div>
+    <div class="milb-link-arr">›</div>
+  </a>`;
+}
+
+// ── TRANSACTIONS ─────────────────────────────────────────────
+let txnCache = null;
+
+async function loadTransactions() {
+  if (txnCache) { renderTransactions(txnCache); return; }
+  const el = document.getElementById('txn-content');
+  if (!el) return;
+  el.innerHTML = '<div class="stats-loading">Loading transactions...</div>';
+  try {
+    const today = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+    const start = new Date(today); start.setDate(today.getDate() - 60);
+    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const url = `${WORKER}/api/v1/transactions?teamId=${TEAM_ID}&startDate=${fmt(start)}&endDate=${fmt(today)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const txns = (data.transactions || []).reverse();
+    txnCache = txns;
+    renderTransactions(txns);
+  } catch(e) {
+    const el = document.getElementById('txn-content');
+    if (el) el.innerHTML = `<div class="stats-loading">Could not load transactions.</div>`;
+  }
+}
+
+function renderTransactions(txns) {
+  const el = document.getElementById('txn-content');
+  if (!el) return;
+  if (!txns.length) { el.innerHTML = '<div class="stats-loading">No recent transactions.</div>'; return; }
+  
+  const typeMap = {
+    'CALL_UP':'call','OPTION':'option','RELEASE':'release','TRADE':'trade',
+    'DFA':'release','WAIVERS':'other','INJURY':'other','SIGNING':'call',
+    'ASSIGNMENT':'option','TRANSFER':'other'
+  };
+  
+  let html = '';
+  for (const t of txns.slice(0, 40)) {
+    const typeKey = Object.keys(typeMap).find(k => (t.typeDesc||'').toUpperCase().includes(k)) || 'other';
+    const cssType = typeMap[typeKey] || 'other';
+    const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    const player  = t.player?.fullName || t.person?.fullName || 'Unknown Player';
+    const desc    = t.description || t.typeDesc || '';
+    html += `<div class="txn-card">
+      <div class="txn-date">${esc(dateStr)}</div>
+      <div class="txn-type ${cssType}">${esc(t.typeDesc || 'Transaction')}</div>
+      <div class="txn-player">${esc(player)}</div>
+      ${desc ? `<div class="txn-desc">${esc(desc)}</div>` : ''}
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ── PODCAST ──────────────────────────────────────────────────
+let podCache = null;
+
+async function loadPodcast() {
+  if (podCache) { renderPodcast(podCache); return; }
+  const el = document.getElementById('podcast-content');
+  if (!el) return;
+  el.innerHTML = '<div class="stats-loading">Loading episodes...</div>';
+  try {
+    // Buzzsprout RSS feed
+    const rssUrl = 'https://feeds.buzzsprout.com/2082535.rss';
+    const proxyUrl = `${WORKER}/proxy?url=${encodeURIComponent(rssUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    
+    // Parse RSS
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, 'text/xml');
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, 8);
+    
+    if (!items.length) throw new Error('No episodes');
+    podCache = items;
+    renderPodcast(items);
+  } catch(e) {
+    console.log('[podcast] Error:', e.message);
+    const el = document.getElementById('podcast-content');
+    if (el) el.innerHTML = '<div class="stats-loading">Episodes available at holytoledo.buzzsprout.com</div>';
+  }
+}
+
+function renderPodcast(items) {
+  const el = document.getElementById('podcast-content');
+  if (!el) return;
+  let html = '';
+  for (const item of items) {
+    const title   = item.querySelector('title')?.textContent || '';
+    const date    = item.querySelector('pubDate')?.textContent || '';
+    const desc    = item.querySelector('description')?.textContent?.replace(/<[^>]+>/g,'').trim().slice(0,120) || '';
+    const link    = item.querySelector('link')?.textContent || 'https://holytoledo.buzzsprout.com/';
+    const dateStr = date ? new Date(date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    html += `<div class="pod-card">
+      <div class="pod-ep-title">${esc(title)}</div>
+      <div class="pod-ep-date">${esc(dateStr)}</div>
+      ${desc ? `<div class="pod-ep-desc">${esc(desc)}...</div>` : ''}
+      <a class="pod-listen-btn" href="${link}" target="_blank">▶ Listen</a>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
 function scheduleMidnightReset() {
   const now = new Date();
   const est = new Date(now.toLocaleString('en-US', {timeZone:'America/New_York'}));
@@ -3098,13 +3665,16 @@ function scheduleMidnightReset() {
     standingsCache = null;
     hensStatsCache = null; oppStatsCache = null; oppStatsTeamId = null;
     hensPitchCache = null; oppPitchCache = null; oppPitchTeamId = null;
-    gameNotesCache = null; // clear so tomorrow's notes fetch fresh
+    gameNotesCache = null;
+    newsCache = null;
+    txnCache = null; // clear so tomorrow's notes fetch fresh
     scheduleCache = null; // clear schedule so TODAY badge re-evaluates
     foodFilter = 'all'; foodHighlight = null; // reset food finder state
     clearInterval(window._liveFeedInterval);
     clearTimeout(window._fetchGameTimeout);
     renderScorecard(); renderOppScorecard();
     fetchGame();
+    loadNews();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
     startCountdown();
     scheduleMidnightReset();
@@ -3112,151 +3682,6 @@ function scheduleMidnightReset() {
   console.log(`Midnight reset scheduled in ${Math.round(msUntilMidnight/60000)} minutes`);
 }
 scheduleMidnightReset();
-</script>
-
-
-<!-- ══════════════ GAME NOTES ══════════════ -->
-<div class="section" id="sec-gamenotes">
-  <button class="gn-fetch-btn" id="gn-fetch-btn" onclick="fetchGameNotes()">
-    📋 Load Today's Game Notes
-  </button>
-  <div id="gn-content">
-    <div class="gn-status">
-      Tap above to load today's game notes.<br>
-      Posted ~3 hours before first pitch.
-    </div>
-  </div>
-  <a class="gn-pdf-link" id="gn-pdf-link" href="#" target="_blank" style="display:none">
-    📄 View full PDF on MiLB.com ↗
-  </a>
-</div>
-
-<!-- ══════════════ FOOD FINDER ══════════════ -->
-<div class="section" id="sec-food">
-
-  <!-- Search -->
-  <div class="food-search-wrap">
-    <span class="food-search-icon">🔍</span>
-    <input class="food-search" id="food-search-input" type="text"
-      placeholder="Search food, drinks, stands…"
-      oninput="renderFood()">
-  </div>
-
-  <!-- Category filters -->
-  <div class="food-filter-row" id="food-filter-row">
-    <button class="food-chip active" data-filter="all" onclick="setFoodFilter('all',this)">All</button>
-    <button class="food-chip" data-filter="burger" onclick="setFoodFilter('burger',this)">🍔 Burgers</button>
-    <button class="food-chip" data-filter="hot dog" onclick="setFoodFilter('hot dog',this)">🌭 Hot Dogs</button>
-    <button class="food-chip" data-filter="chicken" onclick="setFoodFilter('chicken',this)">🍗 Chicken</button>
-    <button class="food-chip" data-filter="pizza" onclick="setFoodFilter('pizza',this)">🍕 Pizza</button>
-    <button class="food-chip" data-filter="nachos" onclick="setFoodFilter('nachos',this)">🧀 Nachos</button>
-    <button class="food-chip" data-filter="tacos" onclick="setFoodFilter('tacos',this)">🌮 Tacos</button>
-    <button class="food-chip" data-filter="pretzel" onclick="setFoodFilter('pretzel',this)">🥨 Pretzels</button>
-    <button class="food-chip" data-filter="fries" onclick="setFoodFilter('fries',this)">🍟 Fries</button>
-    <button class="food-chip" data-filter="ice cream" onclick="setFoodFilter('ice cream',this)">🍦 Ice Cream</button>
-    <button class="food-chip" data-filter="dessert" onclick="setFoodFilter('dessert',this)">🍩 Desserts</button>
-    <button class="food-chip" data-filter="beer" onclick="setFoodFilter('beer',this)">🍺 Beer</button>
-    <button class="food-chip" data-filter="cocktails" onclick="setFoodFilter('cocktails',this)">🍹 Cocktails</button>
-    <button class="food-chip" data-filter="snacks" onclick="setFoodFilter('snacks',this)">🍿 Snacks</button>
-  </div>
-
-  <!-- Legend -->
-  <div class="food-type-legend">
-    <div class="food-type-dot"><span style="background:#c8a84b"></span>Ballpark Restaurant</div>
-    <div class="food-type-dot"><span style="background:#c8102e"></span>Portable Cart</div>
-    <div class="food-type-dot"><span style="background:#1a2b5e"></span>Club Level</div>
-  </div>
-
-  <!-- Map -->
-  <div class="food-map-wrap">
-    <div class="food-map-label">📍 Stadium Map — Tap a pin to highlight</div>
-    <div class="food-map-svg-wrap">
-      <svg id="food-map-svg" viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
-        <!-- Field background -->
-        <rect width="400" height="360" fill="#dbe8f0"/>
-        <!-- Outfield grass -->
-        <ellipse cx="200" cy="220" rx="165" ry="145" fill="#4a8c3f"/>
-        <!-- Infield dirt -->
-        <ellipse cx="200" cy="255" rx="90" ry="75" fill="#c4955a"/>
-        <!-- Infield grass -->
-        <ellipse cx="200" cy="255" rx="68" ry="58" fill="#4a8c3f"/>
-        <!-- Home plate area -->
-        <ellipse cx="200" cy="308" rx="22" ry="16" fill="#c4955a"/>
-        <!-- Foul lines -->
-        <line x1="200" y1="308" x2="52" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
-        <line x1="200" y1="308" x2="348" y2="100" stroke="#fff" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
-        <!-- Warning track -->
-        <ellipse cx="200" cy="215" rx="155" ry="133" fill="none" stroke="#c4955a" stroke-width="8" opacity="0.5"/>
-        <!-- Stands outline -->
-        <path d="M 35 338 L 10 200 Q 20 60 200 30 Q 380 60 390 200 L 365 338 Z" fill="#1a2b5e" fill-opacity="0.12" stroke="#1a2b5e" stroke-width="1" stroke-opacity="0.2"/>
-        <!-- Section markers -->
-        <text x="340" y="185" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">101</text>
-        <text x="328" y="148" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">102</text>
-        <text x="308" y="118" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">103</text>
-        <text x="284" y="96" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">104</text>
-        <text x="258" y="82" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">105</text>
-        <text x="232" y="74" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">106</text>
-        <text x="205" y="70" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">107</text>
-        <text x="178" y="72" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">108</text>
-        <text x="152" y="80" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">109</text>
-        <text x="126" y="93" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">110</text>
-        <text x="100" y="112" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">111</text>
-        <text x="78" y="136" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">112</text>
-        <text x="62" y="164" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">113</text>
-        <text x="52" y="196" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">114</text>
-        <text x="48" y="226" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">115</text>
-        <text x="44" y="256" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">116</text>
-        <text x="42" y="284" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">117</text>
-        <text x="42" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">118</text>
-        <text x="48" y="334" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">119</text>
-        <text x="160" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">120</text>
-        <text x="240" y="350" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">121</text>
-        <text x="362" y="310" font-size="8" fill="rgba(26,43,94,0.5)" text-anchor="middle" font-family="sans-serif">122</text>
-        <!-- Home plate diamond -->
-        <polygon points="200,300 208,308 200,316 192,308" fill="#fff" opacity="0.7"/>
-        <!-- Bases -->
-        <rect x="236" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 240 272)"/>
-        <rect x="196" y="238" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 200 242)"/>
-        <rect x="155" y="268" width="9" height="9" fill="#fff" opacity="0.7" transform="rotate(45 159 272)"/>
-        <!-- Pitcher's mound -->
-        <circle cx="200" cy="265" r="6" fill="#c4955a" opacity="0.8"/>
-        <!-- Food location pins - rendered by JS -->
-        <g id="food-pins"></g>
-      </svg>
-    </div>
-    <div class="food-map-count" id="food-map-count">Showing all 21 locations</div>
-  </div>
-
-  <!-- Results list -->
-  <div class="food-results" id="food-results"></div>
-</div>
-
-<!-- PERMANENT FOOTER DISCLAIMER -->
-<div style="background:#0d1f3c;border-top:1px solid rgba(200,168,75,0.2);padding:14px 16px;margin-top:20px;text-align:center;">
-  <p style="font-size:9px;color:rgba(255,255,255,0.35);line-height:1.8;max-width:600px;margin:0 auto;">
-    This is an independent fan-created tool for personal use only. It is not affiliated with, endorsed by, or sponsored by the Toledo Mud Hens, Minor League Baseball (MiLB), Major League Baseball (MLB), the Detroit Tigers, or any related entities. All team names, player names, and statistics are the property of their respective owners and are referenced solely for informational purposes. No commercial use is intended or made. For official information visit <a href="https://mudhens.com" target="_blank" style="color:rgba(200,168,75,0.5);">mudhens.com</a>.
-  </p>
-</div>
-
-<!-- DISCLAIMER MODAL -->
-<div class="modal-overlay" id="disclaimer-modal" style="z-index:500;">
-  <div class="modal" style="border-top-color:#1a2b5e;max-height:80vh;overflow-y:auto;">
-    <h3 style="margin-bottom:10px;">⚖️ Legal Disclaimer</h3>
-    <div style="font-size:11px;color:rgba(26,43,94,0.7);line-height:1.8;">
-      <p style="margin-bottom:8px;"><strong>This is an independent fan-created application.</strong> It is not affiliated with, sponsored by, endorsed by, or connected in any way to the Toledo Mud Hens, Minor League Baseball (MiLB), Major League Baseball (MLB), the Detroit Tigers, or any of their respective affiliates, subsidiaries, or partners.</p>
-      <p style="margin-bottom:8px;">All team names, player names, statistics, logos, and related marks referenced in this application are the property of their respective owners. Their use here is for informational and fan purposes only and does not imply any association with or endorsement by those organizations.</p>
-      <p style="margin-bottom:8px;">Game data, statistics, and schedules are sourced from publicly available APIs. This application makes no guarantees as to the accuracy, completeness, or timeliness of any information displayed.</p>
-      <p style="margin-bottom:8px;">Toledo Mud Hens® and Fifth Third Field® are registered trademarks. This application is not an official Toledo Mud Hens product.</p>
-      <p style="margin-bottom:12px;font-size:10px;color:rgba(26,43,94,0.4);">For official team information, tickets, and merchandise, visit <strong>mudhens.com</strong>.</p>
-    </div>
-    <button class="save-btn" onclick="document.getElementById('disclaimer-modal').classList.remove('open');localStorage.setItem('disclaimerSeen','1');">I Understand</button>
-  </div>
-</div>
-
-<script>
-if (!localStorage.getItem('disclaimerSeen')) {
-  document.getElementById('disclaimer-modal').classList.add('open');
-}
 </script>
 
 </body>
