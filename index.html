@@ -3482,43 +3482,18 @@ async function loadNews() {
   if (!el) return;
   el.innerHTML = '<div class="news-loading">Loading Mud Hens news...</div>';
   try {
-    // Use MLB Stats API game content for recent news
-    // First get recent games to pull content from
-    const today = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
-    const startDate = new Date(today); startDate.setDate(today.getDate() - 7);
-    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    
-    // Use MiLB news endpoint via worker proxy
-    const newsUrl = `${WORKER}/api/v1/teams/${TEAM_ID}/news?limit=15&sportId=11`;
+    // Use Worker /news route which fetches MiLB RSS feed
+    const newsUrl = `${WORKER}/news`;
     let articles = [];
     
     try {
       const res = await fetch(newsUrl);
       if (res.ok) {
         const data = await res.json();
-        articles = data.articles || data.news || [];
+        articles = data.articles || [];
       }
-    } catch(e) {}
-    
-    // Fallback: scrape MiLB news page via worker proxy
-    if (!articles.length) {
-      try {
-        const proxyUrl = `${WORKER}/proxy?url=${encodeURIComponent('https://www.milb.com/toledo/news')}`;
-        const res = await fetch(proxyUrl);
-        if (res.ok) {
-          const html = await res.text();
-          // Extract news links from page
-          const linkRe = /href="(\/toledo\/news\/[^"]+)"[^>]*>([^<]{10,})</g;
-          let m;
-          while ((m = linkRe.exec(html)) !== null && articles.length < 10) {
-            const url = 'https://www.milb.com' + m[1];
-            const title = m[2].trim();
-            if (title.length > 15 && !articles.find(a => a.url === url)) {
-              articles.push({ url, title, date: '' });
-            }
-          }
-        }
-      } catch(e) {}
+    } catch(e) {
+      console.log('[news] fetch error:', e.message);
     }
 
     if (!articles.length) throw new Error('No articles found');
