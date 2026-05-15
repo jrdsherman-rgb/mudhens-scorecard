@@ -301,28 +301,28 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .txn-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
 
 /* ── SCHEDULE CALENDAR ──────────────────────────────────── */
-.cal-month{margin-bottom:20px;}
-.cal-month-hdr{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid var(--red);margin-bottom:8px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-dow{font-size:9px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
-.cal-day{border-radius:8px;min-height:54px;padding:4px;background:var(--surf);border:1px solid var(--border);}
-.cal-day.empty{background:transparent;border-color:transparent;}
-.cal-day.home{border-color:rgba(26,43,94,0.2);}
-.cal-day.away{background:#f5f3ee;border-color:rgba(26,43,94,0.08);}
-.cal-day.today{background:linear-gradient(135deg,rgba(26,43,94,0.07),rgba(200,16,46,0.04));border:2px solid var(--red) !important;box-shadow:0 2px 8px rgba(200,16,46,0.12);}
-.cal-day.final{opacity:0.58;}
-.cal-num{font-size:11px;font-weight:800;color:var(--navy);line-height:1;}
-.cal-day.today .cal-num{color:var(--red);}
-.cal-opp{font-size:8px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cal-time{font-size:7px;color:var(--text3);margin-top:1px;font-weight:600;}
-.cal-score{font-size:9px;font-weight:800;color:var(--navy);margin-top:2px;}
-.cal-wl{font-size:7px;font-weight:800;}
-.cal-wl.W{color:#2e7d32;}
-.cal-wl.L{color:var(--red);}
-.cal-live{font-size:7px;font-weight:700;color:var(--red);animation:pulse 1.2s infinite;}
-.cal-legend{display:flex;gap:12px;padding:6px 0 10px;flex-wrap:wrap;}
-.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-weight:500;}
-.cal-leg-box{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.sched-cal-month{margin-bottom:20px;}
+.sched-cal-month-title{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid var(--red);margin-bottom:8px;}
+.sched-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.sched-cal-dow{font-size:9px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
+.sched-cal-day{border-radius:8px;min-height:54px;padding:4px;background:var(--surf);border:1px solid var(--border);}
+.sched-cal-day.empty{background:transparent;border-color:transparent;}
+.sched-cal-day.home{border-color:rgba(26,43,94,0.2);}
+.sched-cal-day.away{background:#f5f3ee;border-color:rgba(26,43,94,0.08);}
+.sched-cal-day.today{background:linear-gradient(135deg,rgba(26,43,94,0.07),rgba(200,16,46,0.04));border:2px solid var(--red) !important;box-shadow:0 2px 8px rgba(200,16,46,0.12);}
+.sched-cal-day.final{opacity:0.58;}
+.sched-cal-num{font-size:11px;font-weight:800;color:var(--navy);line-height:1;}
+.cal-day.today .sched-cal-num{color:var(--red);}
+.sched-cal-opp{font-size:8px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sched-cal-time{font-size:7px;color:var(--text3);margin-top:1px;font-weight:600;}
+.sched-cal-score{font-size:9px;font-weight:800;color:var(--navy);margin-top:2px;}
+.sched-cal-wl{font-size:7px;font-weight:800;}
+.sched-cal-wl.W{color:#2e7d32;}
+.sched-cal-wl.L{color:var(--red);}
+.sched-cal-live{font-size:7px;font-weight:700;color:var(--red);animation:pulse 1.2s infinite;}
+.sched-cal-legend{display:flex;gap:12px;padding:6px 0 10px;flex-wrap:wrap;}
+.sched-cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);font-weight:500;}
+.sched-cal-legend-box{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
 .sched-loading{text-align:center;padding:40px 0;color:var(--text3);font-size:13px;}
 
 /* ── BALLPARK / FOOD ────────────────────────────────────── */
@@ -523,7 +523,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <button class="bnav-tab" onclick="showPage('schedule',this);loadSchedule()">
     <span class="bnav-icon">📅</span><span class="bnav-lbl">Schedule</span>
   </button>
-  <button class="bnav-tab" onclick="showPage('ballpark',this)">
+  <button class="bnav-tab" onclick="showPage('ballpark',this);renderFood()">
     <span class="bnav-icon">🏟</span><span class="bnav-lbl">Ballpark</span>
   </button>
   <button class="bnav-tab" onclick="showPage('more',this)">
@@ -810,10 +810,10 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <!-- ═══════════════════════════════════════════ -->
 <div class="page" id="page-ballpark">
   <div class="subnav" id="subnav-ballpark">
-    <button class="subnav-tab active" onclick="showSection('food',this,'ballpark')">Food Finder</button>
+    <button class="subnav-tab active" onclick="showSection('food',this,'ballpark');renderFood()">Food Finder</button>
     <button class="subnav-tab" onclick="showSection('fleetwood',this,'ballpark')">Fleetwood Tap</button>
     <button class="subnav-tab" onclick="showSection('promotions',this,'ballpark');loadPromos()">Promos</button>
-    <button class="subnav-tab" onclick="showSection('giveaways',this,'ballpark')">Giveaways</button>
+    <button class="subnav-tab" onclick="showSection('giveaways',this,'ballpark');loadGiveaways()">Giveaways</button>
   </div>
   <div class="pg-content">
 
@@ -938,17 +938,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 </div>
 
     <div class="section" id="sec-giveaways">
-      <a class="milb-link-card" href="https://www.milb.com/toledo/tickets/giveaways" target="_blank">
-        <div class="milb-link-icon">🎁</div>
-        <div class="milb-link-text">
-          <div class="milb-link-title">2026 Giveaways</div>
-          <div class="milb-link-sub">Full giveaway schedule on MiLB.com</div>
-        </div>
-        <div class="milb-link-arr">›</div>
-      </a>
-      <div id="giveaways-content">
-        <div class="stats-loading">Tap above to view giveaways on MiLB.com</div>
-      </div>
+      <div id="giveaways-content"><div class="stats-loading">Loading giveaways...</div></div>
     </div>
 
   </div>
@@ -2156,7 +2146,7 @@ async function fetchGame() {
     // Venue / weather
     const venueName = game.venue?.name || (isHome ? 'Fifth Third Field' : 'Away Ballpark');
     const venueCity = isHome ? 'Toledo, OH' : (oppTeam.locationName || '');
-    document.getElementById('app-venue-sub').textContent = `${venueName} · ${venueCity}`;
+    document.getElementById('app-venue-sub').textContent = isHome ? `${venueName} · Toledo, OH` : `${venueName} · ${venueCity}`;
     fetchVenueWeather(game.venue?.id, venueName, isHome);
 
     // Scores
@@ -2259,12 +2249,12 @@ async function fetchGame() {
       const isFinal = status === 'Final';
 
       if (isFinal) {
-        document.getElementById('countdown-card').style.display = 'none';
+        if (!isFinal) document.getElementById('countdown-card').style.display = 'none';
         clearInterval(window._liveFeedInterval);
         clearTimeout(window._fetchGameTimeout);
         window._fetchGameTimeout = setTimeout(fetchGame, 120000);
       } else if (isLive) {
-        document.getElementById('countdown-card').style.display = 'none';
+        if (!isFinal) document.getElementById('countdown-card').style.display = 'none';
         // Set up interval-based live feed polling (every 20s)
         clearInterval(window._liveFeedInterval);
         window._liveFeedInterval = setInterval(() => {
@@ -3079,11 +3069,39 @@ async function fetchGameNotes() {
       return;
     }
 
-    // Always use the most recently published PDF — MiLB lists them in chronological order
-    // so the last PDF URL found on the page is the most recent game notes
-    // No date matching needed — just grab the latest
-    const mostRecent = allLinks[allLinks.length - 1];
-    const chosenLink = mostRecent;
+    // Try to find today's notes first, fall back to most recent
+    const now2 = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const todayDay = now2.getDate();
+    const todayMonth = now2.getMonth(); // 0-indexed
+    const monthNames2 = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    const todayMonthName = monthNames2[todayMonth];
+    
+    // Sort links — try URL-based ordering (higher version numbers = newer)
+    // MiLB Cloudinary URLs often contain upload version numbers
+    const sortedLinks = [...allLinks].sort((a, b) => {
+      const aNum = parseInt((a.url.match(/v(\d+)/) || [0,0])[1]) || 0;
+      const bNum = parseInt((b.url.match(/v(\d+)/) || [0,0])[1]) || 0;
+      return aNum - bNum;
+    });
+    
+    // Try to find today's by day number in surrounding text
+    let todayLink2 = null;
+    for (const link of allLinks) {
+      const txt = link.text.toLowerCase();
+      if (txt.includes(todayMonthName) && txt.includes(String(todayDay))) {
+        todayLink2 = link;
+        break;
+      }
+      // Also check if URL contains today's date pattern
+      if (link.url.includes(`${now2.getFullYear()}${String(todayMonth+1).padStart(2,'0')}${String(todayDay).padStart(2,'0')}`)) {
+        todayLink2 = link;
+        break;
+      }
+    }
+    
+    const mostRecent = sortedLinks[sortedLinks.length - 1] || allLinks[allLinks.length - 1];
+    const chosenLink = todayLink2 || mostRecent;
+    console.log('[gamenotes] Links found:', allLinks.length, 'Today link:', todayLink2?.url, 'Using:', chosenLink?.url);
 
     if (!chosenLink) {
       throw new Error("No game notes found. They're typically posted ~3 hours before first pitch.");
@@ -3668,6 +3686,72 @@ function renderPodcast(items) {
   el.innerHTML = html;
 }
 
+
+// ── GIVEAWAYS ────────────────────────────────────────────────
+function loadGiveaways() {
+  const el = document.getElementById('giveaways-content');
+  if (!el) return;
+  
+  // 2026 Toledo Mud Hens Giveaways (from mudhens.com promotional schedule)
+  const giveaways = [
+    {date:'2026-04-07', name:'Opening Day', desc:'Opening Day festivities and celebrations', badge:'Opening Day'},
+    {date:'2026-04-11', name:'Mud Hens Bobblehead', desc:'First 1,000 fans receive a Mud Hens bobblehead', badge:'Giveaway'},
+    {date:'2026-05-10', name:"Mother's Day Presented by ProMedica", desc:"Special Mother's Day celebration", badge:"Mother's Day"},
+    {date:'2026-05-23', name:'Memorial Day Weekend', desc:'Memorial Day Weekend celebration', badge:'Holiday'},
+    {date:'2026-07-01', name:'Fourth of July Week', desc:'Patriotic celebration week at Fifth Third Field', badge:'Holiday'},
+    {date:'2026-07-04', name:'Fourth of July Fireworks', desc:'Post-game fireworks show', badge:'Fireworks'},
+    {date:'2026-09-20', name:'Final Home Game', desc:'Last home game of the 2026 regular season', badge:'Final Game'},
+  ];
+
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  
+  const upcoming = giveaways.filter(g => g.date >= today);
+  const past = giveaways.filter(g => g.date < today);
+  
+  let html = `<a class="milb-link-card" href="https://www.milb.com/toledo/tickets/giveaways" target="_blank" style="margin-bottom:12px;">
+    <div class="milb-link-icon">🎁</div>
+    <div class="milb-link-text">
+      <div class="milb-link-title">Full Giveaway Schedule</div>
+      <div class="milb-link-sub">View complete list on MiLB.com</div>
+    </div>
+    <div class="milb-link-arr">›</div>
+  </a>`;
+
+  if (upcoming.length) {
+    html += '<div class="sec-lbl">Upcoming Giveaways</div>';
+    for (const g of upcoming) {
+      const d = new Date(g.date + 'T12:00:00');
+      const isToday = g.date === today;
+      const dateStr = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
+      html += `<div class="promo-card${isToday?' promo-today':''}">
+        <div class="promo-date">${dateStr}${isToday?' — TODAY':''}</div>
+        <div class="promo-name">${esc(g.name)}</div>
+        <div class="promo-desc">${esc(g.desc)}</div>
+        <span class="promo-badge">${esc(g.badge)}</span>
+      </div>`;
+    }
+  }
+  
+  if (past.length) {
+    html += '<div class="sec-lbl" style="margin-top:16px;">Past Giveaways</div>';
+    for (const g of past) {
+      const d = new Date(g.date + 'T12:00:00');
+      const dateStr = `${monthNames[d.getMonth()]} ${d.getDate()}`;
+      html += `<div class="promo-card" style="opacity:0.6;">
+        <div class="promo-date">${dateStr}</div>
+        <div class="promo-name">${esc(g.name)}</div>
+        <div class="promo-desc">${esc(g.desc)}</div>
+      </div>`;
+    }
+  }
+  
+  el.innerHTML = html;
+}
+
 function scheduleMidnightReset() {
   const now = new Date();
   const est = new Date(now.toLocaleString('en-US', {timeZone:'America/New_York'}));
@@ -3693,6 +3777,8 @@ function scheduleMidnightReset() {
     renderScorecard(); renderOppScorecard();
     fetchGame();
     loadNews();
+    loadStandingsTab();
+    loadHensStats();
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
     startCountdown();
     scheduleMidnightReset();
