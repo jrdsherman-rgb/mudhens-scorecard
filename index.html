@@ -3042,8 +3042,6 @@ async function fetchGameNotes() {
       ? chosenLink.text 
       : `Latest Game Notes`;
     const pdfUrl = chosenLink.url;
-    const isToday = false; // don't assume — just show whatever is most recent
-
     // Cache and render the PDF link
     gameNotesCache = { pdfUrl, date: dateLabel, isToday, fetchedAt: Date.now() };
 
