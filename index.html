@@ -576,25 +576,6 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="milb-link-arr">&#8250;</div>
   </a>
 </div>
-    <div class="milb-link-text">
-      <div class="milb-link-title">Mud Hens News</div>
-      <div class="milb-link-sub">Latest news on MiLB.com</div>
-    </div>
-    <div class="milb-link-arr">&#8250;</div>
-  </a>
-  <button class="gn-fetch-btn" id="gn-fetch-btn" onclick="fetchGameNotes()">
-    📋 Load Today's Game Notes
-  </button>
-  <div id="gn-content">
-    <div class="gn-status">
-      Tap above to load today's game notes.<br>
-      Posted ~3 hours before first pitch.
-    </div>
-  </div>
-  <a class="gn-pdf-link" id="gn-pdf-link" href="#" target="_blank" style="display:none">
-    📄 View full PDF on MiLB.com ↗
-  </a>
-</div>
 
     <!-- GAME -->
     <div class="section active" id="sec-game">
@@ -3231,6 +3212,7 @@ const FOOD_LOCATIONS = [
 
 
 let foodFilter = 'all';
+let foodHighlight = null;
 
 function renderFood() {
   if (typeof FOOD_LOCATIONS === 'undefined') return;
