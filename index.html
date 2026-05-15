@@ -191,8 +191,9 @@ body{
   background:radial-gradient(ellipse at top right,rgba(200,16,46,0.1) 0%,transparent 60%);
   pointer-events:none;
 }
-.matchup-row{display:flex;align-items:center;width:100%;}
-.team-block{width:40%;flex-shrink:0;} .team-block + .matchup-vs{flex:1;text-align:center;}
+.matchup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.team-block{flex:0 0 auto;max-width:44%;}
+.matchup-vs{flex:0 0 auto;}
 .team-block:last-child{text-align:right;}
 .team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .team-rec{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:500;}
@@ -560,6 +561,21 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="section" id="sec-gamenotes">
   <a class="milb-link-card" href="https://www.milb.com/toledo/news" target="_blank" style="margin-bottom:10px;">
     <div class="milb-link-icon">&#128240;</div>
+    <div class="milb-link-text">
+      <div class="milb-link-title">Mud Hens News</div>
+      <div class="milb-link-sub">Latest news on MiLB.com</div>
+    </div>
+    <div class="milb-link-arr">&#8250;</div>
+  </a>
+  <a class="milb-link-card" href="https://www.milb.com/toledo/team/game-notes" target="_blank">
+    <div class="milb-link-icon">&#128196;</div>
+    <div class="milb-link-text">
+      <div class="milb-link-title">Game Notes PDF</div>
+      <div class="milb-link-sub">Today's pre-game notes on MiLB.com</div>
+    </div>
+    <div class="milb-link-arr">&#8250;</div>
+  </a>
+</div>
     <div class="milb-link-text">
       <div class="milb-link-title">Mud Hens News</div>
       <div class="milb-link-sub">Latest news on MiLB.com</div>
@@ -2049,6 +2065,25 @@ async function pollLiveFeed(gamePk) {
       // ── 3. PLAY-BY-PLAY AUTO-FILL
       // Detect when the top/bottom has changed since last poll
       const isFinal = (gameState === 'Final');
+    // Show scorebug for final games too
+    if (isFinal) {
+      const _sb2 = document.getElementById('scorebug');
+      if (_sb2) {
+        _sb2.classList.add('live');
+        const _mi2 = isHome ? 'home' : 'away', _oi2 = isHome ? 'away' : 'home';
+        const _lsT = feedData?.liveData?.linescore?.teams;
+        if (_lsT) {
+          const _sc2 = document.getElementById('sb-score');
+          const _il2 = document.getElementById('sb-inn-lbl');
+          if (_sc2) _sc2.textContent = (_lsT[_mi2]?.runs??0) + '-' + (_lsT[_oi2]?.runs??0);
+          if (_il2) _il2.textContent = 'F';
+          const _o1 = document.getElementById('sb-o1');
+          const _o2 = document.getElementById('sb-o2');
+          if (_o1) _o1.className = 'sb-out-dot on';
+          if (_o2) _o2.className = 'sb-out-dot on';
+        }
+      }
+    }
 
       // For Final games: first poll with lineups ready — catch up all innings immediately
       if (isFinal && lastInning === null && inn && ld?.plays?.allPlays && lineupIsReal && oppLineupIsReal) {
@@ -3169,6 +3204,34 @@ function renderFoodMap(visibleIds) {
   });
 }
 
+
+const FOOD_LOCATIONS = [
+  { id:1,  type:'restaurant', name:'Toft\'s Sundaes',              section:'Sections 101–102',        mapX:348, mapY:178, items:['Funnel Cakes','Root Beer Float','Sundaes','Toft\'s Soft Serve Ice Cream'], tags:['dessert','sweet','ice cream','funnel cake','root beer'] },
+  { id:2,  type:'cart',       name:'Marco\'s Pizza',                section:'Sections 103–104',        mapX:326, mapY:135, items:['Marco\'s Pizza'], tags:['pizza'] },
+  { id:3,  type:'cart',       name:'Hot Dogs & Nachos',             section:'Sections 104–105',        mapX:302, mapY:107, items:['All-Beef Hot Dogs','Nachos','Popcorn','Johnsonville Brat','BacHen Burger'], tags:['hot dog','brat','nachos','popcorn','burger'] },
+  { id:4,  type:'restaurant', name:'Gilhooleys',                    section:'Sections 107–108',        mapX:205, mapY:56,  items:['Bloomin Bacon Burger','French Fries','Grilled Chicken Sandwich','Lot-A-Cheddar Burger','Pulled Pork'], tags:['burger','fries','chicken','sandwich','pulled pork'] },
+  { id:5,  type:'restaurant', name:'Hen & Hound Grab & Go',         section:'Section 115',             mapX:56,  mapY:220, items:['All-Beef Hot Dogs','Chicken Tenders','French Fries','Mac & Cheese','Cheeseburgers','Pretzel Bites','Chicken Sandwich'], tags:['hot dog','chicken','fries','mac cheese','burger','pretzel','sandwich'] },
+  { id:6,  type:'restaurant', name:'Frözhen Cocktail Bar',          section:'Section 118',             mapX:46,  mapY:302, items:['Specialty Drinks','Frozen Cocktails','Mixed Drinks','Draft Beer'], tags:['drinks','cocktails','frozen','beer','alcohol'] },
+  { id:7,  type:'restaurant', name:'Frözhen Ice Cream & Bar',       section:'Section 119',             mapX:54,  mapY:330, items:['All-Beef Hot Dog','Popcorn','Root Beer Float','Sundaes','Toft\'s Hand Dipped Ice Cream','Bottle Beer','Craft Beer','Mixed Drinks'], tags:['ice cream','hot dog','popcorn','root beer','sundae','beer','drinks'] },
+  { id:8,  type:'restaurant', name:'Fleetwood\'s Corner Bar',       section:'Left field (120–121)',    mapX:160, mapY:348, items:['Bottle Beer','Craft Beer','Mixed Drinks'], tags:['beer','drinks','craft beer'] },
+  { id:9,  type:'restaurant', name:'Hen House Eats',                section:'Right field (122)',       mapX:354, mapY:308, items:['All-Beef Hot Dogs','Bavarian Pretzel','Nachos','Popcorn','Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['hot dog','pretzel','nachos','popcorn','beer','drinks'] },
+  { id:10, type:'club',       name:'Lexus Birdcage Club',           section:'Club Level — 109–110',   mapX:136, mapY:46,  items:['Bottle Beer','Craft Beer','Mixed Drinks','Specialty Drinks'], tags:['beer','drinks','craft beer','specialty','club level'] },
+  { id:11, type:'club',       name:'Frogtown Cantina',              section:'Club Level — 105–106',   mapX:256, mapY:48,  items:['Frogtown Nachos','Chips and Salsa','Tacos','Quesadilla','Mixed Drinks','Draft Beer'], tags:['nachos','chips','salsa','tacos','quesadilla','mexican','beer','drinks'] },
+  { id:12, type:'cart',       name:'Frogtown Nachos',               section:'Section 103',             mapX:316, mapY:116, items:['Frogtown Nachos','Chips and Salsa','Bottle Beer'], tags:['nachos','chips','salsa','beer'] },
+  { id:13, type:'cart',       name:'Grab & Go',                     section:'Sections 105–106',        mapX:272, mapY:74,  items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
+  { id:14, type:'cart',       name:'Yuengling Draft & Craft',       section:'Sections 107–108',        mapX:222, mapY:62,  items:['Yuengling & Craft Beers'], tags:['beer','yuengling','craft beer','draft'] },
+  { id:15, type:'cart',       name:'Bottle Beer',                   section:'Sections 108–109',        mapX:184, mapY:58,  items:['Bottle Beer','Seltzers'], tags:['beer','seltzer'] },
+  { id:16, type:'cart',       name:'Tito\'s Vodka Bar',             section:'Section 113',             mapX:62,  mapY:164, items:['Mixed Drinks','Specialty Cocktails','Bottled Beer & Wine','Seltzers'], tags:['vodka','cocktails','drinks','beer','wine','seltzer'] },
+  { id:17, type:'cart',       name:'Draft Beer',                    section:'Sections 103–104',        mapX:310, mapY:128, items:['Draft Beer'], tags:['beer','draft'] },
+  { id:18, type:'cart',       name:'Popcorn & Pretzel',             section:'Section 108',             mapX:174, mapY:60,  items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
+  { id:19, type:'cart',       name:'Glass City Cheesesteaks',       section:'Section 114',             mapX:56,  mapY:192, items:['Bases Loaded Brat','Philly Steak','Peanuts','Bottled Beer & Pepsi'], tags:['cheesesteak','philly','brat','peanuts','beer','pepsi'] },
+  { id:20, type:'cart',       name:'Grab & Go (116)',               section:'Section 116',             mapX:44,  mapY:248, items:['Bavarian Pretzels','Bottle Beer','Bottled Pepsi','Candy','Toft\'s Ice Cream','Urban Pine Sangrias','Snacks'], tags:['pretzel','beer','pepsi','candy','ice cream','snacks','sangria'] },
+  { id:21, type:'cart',       name:'Popcorn & Pretzel (117)',       section:'Section 117',             mapX:44,  mapY:276, items:['Bottled Pepsi Products','Bavarian Pretzels','Popcorn'], tags:['pretzel','popcorn','pepsi','snacks'] },
+];
+
+
+let foodFilter = 'all';
+
 function renderFood() {
   if (typeof FOOD_LOCATIONS === 'undefined') return;
   const search = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
@@ -3650,7 +3713,7 @@ function scheduleMidnightReset() {
     renderScorecard(); renderOppScorecard();
     fetchGame();
     loadNews();
-    setTimeout(() => { loadStandingsTab(); loadHensStats(); renderFood(); }, 100);
+    loadStandingsTab(); loadHensStats(); setTimeout(() => renderFood(), 50);
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
     startCountdown();
     scheduleMidnightReset();
