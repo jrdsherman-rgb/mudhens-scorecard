@@ -1579,8 +1579,13 @@ async function pollLiveFeed(gamePk) {
     console.log(`[poll] gamePk=${gamePk} state="${detailedState}" inning=${ls?.currentInning} isTop=${ls?.isTopInning} isHome=${isHome} lineupIsReal=${lineupIsReal}`);
 
     // ── 1. LINEUP: pull from boxscore battingOrder if not yet loaded
-    const needsMudLineup = !lineupIsReal;
-    const needsOppLineup = !oppLineupIsReal;
+    // Also re-try if lineupIsReal but all names are still placeholder (schedule hydrate gave no names)
+    const mudHasPlaceholders = lineupIsReal && lineup.length > 0 && lineup.every(p => p.name === 'Player' || p.name?.startsWith('ID'));
+    const oppHasPlaceholders = oppLineupIsReal && oppLineup.length > 0 && oppLineup.every(p => p.name === 'Player' || p.name?.startsWith('ID'));
+    const needsMudLineup = !lineupIsReal || mudHasPlaceholders;
+    const needsOppLineup = !oppLineupIsReal || oppHasPlaceholders;
+    if (mudHasPlaceholders) console.log('[lineup] Mud Hens lineup has placeholder names — re-extracting from live feed');
+    if (oppHasPlaceholders) console.log('[lineup] Opp lineup has placeholder names — re-extracting from live feed');
 
     if (needsMudLineup) {
       const extracted = extractLineupFromFeed(feed, mudSide);
@@ -1841,22 +1846,35 @@ async function fetchGame() {
     const schedMudPlayers = isHome ? game.lineups?.homePlayers : game.lineups?.awayPlayers;
     const schedOppPlayers = isHome ? game.lineups?.awayPlayers : game.lineups?.homePlayers;
 
-    if (schedMudPlayers?.length) {
+    // Only accept schedule hydrate lineup if players have real names
+    // (hydrate sometimes returns empty fullName, which would block live feed from retrying)
+    const schedMudValid = schedMudPlayers?.length &&
+      schedMudPlayers.some(p => p.person?.fullName && p.person.fullName.trim().length > 1);
+    const schedOppValid = schedOppPlayers?.length &&
+      schedOppPlayers.some(p => p.person?.fullName && p.person.fullName.trim().length > 1);
+
+    if (schedMudValid) {
       lineup = schedMudPlayers.slice(0,9).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
       lineupIsReal = true;
+      console.log('[lineup] Schedule hydrate provided Mud Hens lineup:', lineup.map(p=>p.name));
       renderScorecard();
       fetchPlayerStats(lineup.map(p=>p.mlbId).filter(Boolean));
+    } else if (schedMudPlayers?.length) {
+      console.log('[lineup] Schedule hydrate had players but no real names — will rely on live feed');
     }
 
-    if (schedOppPlayers?.length) {
+    if (schedOppValid) {
       oppLineup = schedOppPlayers.slice(0,9).map(p=>({
         name:p.person?.fullName||'Player', pos:p.position?.abbreviation||'', num:p.jerseyNumber||'', mlbId:p.person?.id||null
       }));
       oppLineupIsReal = true;
+      console.log('[lineup] Schedule hydrate provided opp lineup:', oppLineup.map(p=>p.name));
       renderOppScorecard();
       fetchOppPlayerStats(oppLineup.map(p=>p.mlbId).filter(Boolean));
+    } else if (schedOppPlayers?.length) {
+      console.log('[lineup] Schedule hydrate had opp players but no real names — will rely on live feed');
     }
 
     // For any game with a gamePk, kick off the live feed poller
