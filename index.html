@@ -53,6 +53,13 @@ body{
 .app-hdr-titles{flex:1;}
 .app-hdr-team{font-size:15px;font-weight:800;color:var(--gold);letter-spacing:0.2px;line-height:1.1;}
 .app-hdr-sub{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
+.scorebug{display:none;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px;}
+.scorebug.live{display:flex;}
+.sb-score{font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.5px;}
+.sb-inn{font-size:9px;color:var(--gold);font-weight:600;white-space:nowrap;}
+.sb-outs{display:flex;gap:3px;align-items:center;}
+.sb-out-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.25);}
+.sb-out-dot.on{background:var(--gold);}
 .app-hdr-radio{
   background:var(--red);color:#fff;border:none;border-radius:16px;
   padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;
@@ -184,8 +191,8 @@ body{
   background:radial-gradient(ellipse at top right,rgba(200,16,46,0.1) 0%,transparent 60%);
   pointer-events:none;
 }
-.matchup-row{display:flex;align-items:center;justify-content:space-between;padding:0 8px;}
-.team-block{flex:0 1 38%;}
+.matchup-row{display:flex;align-items:center;width:100%;}
+.team-block{width:40%;flex-shrink:0;} .team-block + .matchup-vs{flex:1;text-align:center;}
 .team-block:last-child{text-align:right;}
 .team-nm{font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .team-rec{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:500;}
@@ -304,9 +311,9 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 /* ── SCHEDULE CALENDAR ──────────────────────────────────── */
 .sched-cal-month{margin-bottom:20px;}
 .sched-cal-month-title{font-size:13px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:2px;padding:10px 0 8px;border-bottom:2px solid var(--red);margin-bottom:8px;}
-.sched-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.sched-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;}
 .sched-cal-dow{font-size:9px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
-.sched-cal-day{border-radius:6px;min-height:54px;padding:4px;background:var(--surf);border:1px solid rgba(26,43,94,0.12);box-shadow:0 1px 2px rgba(13,31,60,0.04);}
+.sched-cal-day{border-radius:6px;height:58px;padding:4px;background:var(--surf);border:1px solid rgba(26,43,94,0.12);box-shadow:0 1px 2px rgba(13,31,60,0.04);overflow:hidden;}
 .sched-cal-day.empty{background:transparent;border-color:transparent;}
 .sched-cal-day.home{border-color:rgba(26,43,94,0.35);border-left:3px solid var(--navy);}
 .sched-cal-day.away{background:#ede8df;border-color:rgba(26,43,94,0.15);}
@@ -314,7 +321,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 .sched-cal-day.final{opacity:0.58;}
 .sched-cal-num{font-size:11px;font-weight:800;color:var(--navy);line-height:1;}
 .cal-day.today .sched-cal-num{color:var(--red);}
-.sched-cal-opp{font-size:8px;font-weight:700;color:#1a2b5e;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sched-cal-opp{font-size:7.5px;font-weight:700;color:#1a2b5e;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sched-cal-time{font-size:7px;color:rgba(26,43,94,0.6);margin-top:1px;font-weight:600;}
 .sched-cal-score{font-size:9px;font-weight:800;color:var(--navy);margin-top:2px;}
 .sched-cal-wl{font-size:7px;font-weight:800;}
@@ -510,6 +517,11 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
     <div class="app-hdr-team">Toledo Mud Hens</div>
     <div class="app-hdr-sub" id="app-venue-sub">Fifth Third Field &bull; Toledo, OH</div>
   </div>
+  <div class="scorebug" id="scorebug">
+    <span class="sb-score" id="sb-score">0-0</span>
+    <span class="sb-inn" id="sb-inn-lbl">-</span>
+    <div class="sb-outs"><div class="sb-out-dot" id="sb-o1"></div><div class="sb-out-dot" id="sb-o2"></div></div>
+  </div>
   <a class="app-hdr-radio" href="iheart://live/7480" onclick="setTimeout(()=>{window.open('https://www.iheart.com/live/the-gambler-1260-7480/','_blank')},500);return false;">&#9654; Radio</a>
 </div>
 
@@ -538,7 +550,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 <div class="page active" id="page-game">
   <div class="subnav" id="subnav-game">
     <button class="subnav-tab active" onclick="showSection('game',this,'game')">Game</button>
-    <button class="subnav-tab" onclick="showSection('gamenotes',this,'game')">Game Notes</button>
+    <button class="subnav-tab" onclick="showSection('gamenotes',this,'game')">Game Notes & News</button>
     <button class="subnav-tab" onclick="showSection('scorecard',this,'game')">Mud Hens SC</button>
     <button class="subnav-tab" id="opp-sc-tab" onclick="showSection('oppscore',this,'game')">Opp SC</button>
   </div>
@@ -546,6 +558,14 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
 
     <!-- GAME NOTES -->
     <div class="section" id="sec-gamenotes">
+  <a class="milb-link-card" href="https://www.milb.com/toledo/news" target="_blank" style="margin-bottom:10px;">
+    <div class="milb-link-icon">&#128240;</div>
+    <div class="milb-link-text">
+      <div class="milb-link-title">Mud Hens News</div>
+      <div class="milb-link-sub">Latest news on MiLB.com</div>
+    </div>
+    <div class="milb-link-arr">&#8250;</div>
+  </a>
   <button class="gn-fetch-btn" id="gn-fetch-btn" onclick="fetchGameNotes()">
     📋 Load Today's Game Notes
   </button>
@@ -640,8 +660,7 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
           </tbody>
         </table>
       </div>
-      <div class="sec-lbl" style="margin-top:16px;">Mud Hens News</div>
-      <div id="news-content"><div class="news-loading">Loading news...</div></div>
+
     </div><!-- /sec-game -->
 
     <!-- MUD HENS SCORECARD -->
@@ -1085,22 +1104,18 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
   <div class="modal">
     <h3 id="sc-modal-title">Score this at-bat</h3>
     <div class="modal-sub" id="sc-modal-sub"></div>
-
-    <!-- STEP 1: Choose category -->
     <div class="step active" id="step-cat">
-      <div class="step-label">Choose result type</div>
-      <div class="rg rg-4" style="margin-bottom:8px;">
-        <button class="rb hit" onclick="chooseCategory('hit')">Hit</button>
-        <button class="rb out" onclick="chooseCategory('out')">Out</button>
-        <button class="rb walk" onclick="chooseCategory('walk')">Walk / HBP</button>
-        <button class="rb misc" onclick="chooseCategory('misc')">Special</button>
+      <div class="step-label">What happened?</div>
+      <div class="rg rg-2" style="margin-bottom:8px;">
+        <button class="rb hit" onclick="chooseCategory('hit')">&#9654; Hit</button>
+        <button class="rb out" onclick="chooseCategory('out')">&#10005; Out</button>
+        <button class="rb walk" onclick="chooseCategory('walk')">BB / HBP</button>
+        <button class="rb gold" onclick="finalRec('')">Clear</button>
       </div>
     </div>
-
-    <!-- STEP 2a: Hit -->
     <div class="step" id="step-hit">
-      <button class="step-back" onclick="backToStep('step-cat')">← Back</button>
-      <div class="step-label">Select hit type</div>
+      <button class="step-back" onclick="backToStep('step-cat')">&#8592; Back</button>
+      <div class="step-label">Hit type</div>
       <div class="rg rg-4">
         <button class="rb hit" onclick="finalRec('1B')">1B</button>
         <button class="rb hit" onclick="finalRec('2B')">2B</button>
@@ -1108,54 +1123,37 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
         <button class="rb hit" onclick="finalRec('HR')">HR</button>
       </div>
     </div>
-
-    <!-- STEP 2b: Walk/HBP -->
     <div class="step" id="step-walk">
-      <button class="step-back" onclick="backToStep('step-cat')">← Back</button>
-      <div class="step-label">Select walk type</div>
+      <button class="step-back" onclick="backToStep('step-cat')">&#8592; Back</button>
+      <div class="step-label">Walk type</div>
       <div class="rg rg-3">
         <button class="rb walk" onclick="finalRec('BB')">BB</button>
         <button class="rb walk" onclick="finalRec('IBB')">IBB</button>
         <button class="rb walk" onclick="finalRec('HBP')">HBP</button>
       </div>
     </div>
-
-    <!-- STEP 2c: Out types -->
     <div class="step" id="step-out">
-      <button class="step-back" onclick="backToStep('step-cat')">← Back</button>
-      <div class="step-label">Select out type</div>
-      <div class="rg rg-4">
-        <button class="rb out" onclick="finalRec('K')">K</button>
-        <button class="rb out" onclick="finalRec('Kc')">Kc</button>
-        <button class="rb out" onclick="finalRec('DP')">DP</button>
-        <button class="rb out" onclick="finalRec('FC')">FC</button>
-        <button class="rb out" onclick="finalRec('E')">E</button>
-        <button class="rb out" onclick="needFielder('F')">F#</button>
-        <button class="rb out" onclick="needFielder('P')">P#</button>
-        <button class="rb out" onclick="needFielder('L')">L#</button>
-        <button class="rb out" onclick="needFielder('U')">U#</button>
-        <button class="rb out" onclick="needGroundout()">#-#</button>
-        <button class="rb misc" onclick="finalRec('SAC')">SAC</button>
-        <button class="rb misc" onclick="finalRec('SF')">SF</button>
-      </div>
-    </div>
-
-    <!-- STEP 2d: Special / Misc -->
-    <div class="step" id="step-misc">
-      <button class="step-back" onclick="backToStep('step-cat')">← Back</button>
-      <div class="step-label">Select</div>
+      <button class="step-back" onclick="backToStep('step-cat')">&#8592; Back</button>
+      <div class="step-label">Out type</div>
       <div class="rg rg-3">
-        <button class="rb misc" onclick="finalRec('SAC')">SAC</button>
-        <button class="rb misc" onclick="finalRec('SF')">SF</button>
-        <button class="rb gold" onclick="finalRec('')">Clear</button>
+        <button class="rb out" onclick="finalRec('K')">K<br><small>Swinging</small></button>
+        <button class="rb out" onclick="finalRec('Kc')">Kc<br><small>Called</small></button>
+        <button class="rb out" onclick="needFielder('F')">F#<br><small>Flyout</small></button>
+        <button class="rb out" onclick="needFielder('P')">P#<br><small>Popup</small></button>
+        <button class="rb out" onclick="needFielder('L')">L#<br><small>Lineout</small></button>
+        <button class="rb out" onclick="needFielder('U')">U#<br><small>Unassisted</small></button>
+        <button class="rb out" onclick="needGroundout()">6-3<br><small>Groundout</small></button>
+        <button class="rb out" onclick="needDoublePlay()">DP<br><small>Double play</small></button>
+        <button class="rb out" onclick="finalRec('FC')">FC<br><small>Fielder ch.</small></button>
+        <button class="rb out" onclick="finalRec('E')">E<br><small>Error</small></button>
+        <button class="rb misc" onclick="finalRec('SAC')">SAC<br><small>Sac bunt</small></button>
+        <button class="rb misc" onclick="finalRec('SF')">SF<br><small>Sac fly</small></button>
       </div>
     </div>
-
-    <!-- STEP 3a: Fielder number picker (for F#, P#, L#, U#) -->
     <div class="step" id="step-fielder">
-      <button class="step-back" onclick="backToStep('step-out')">← Back</button>
-      <div class="step-label" id="fielder-label">Select fielder number</div>
-      <div class="numpad" id="fielder-numpad">
+      <button class="step-back" onclick="backToStep('step-out')">&#8592; Back</button>
+      <div class="step-label" id="fielder-label">Select fielder</div>
+      <div class="numpad">
         <button class="npbtn" onclick="pickFielder(7)">7<br><span style="font-size:9px;color:#888">LF</span></button>
         <button class="npbtn" onclick="pickFielder(8)">8<br><span style="font-size:9px;color:#888">CF</span></button>
         <button class="npbtn" onclick="pickFielder(9)">9<br><span style="font-size:9px;color:#888">RF</span></button>
@@ -1167,24 +1165,36 @@ table.sc tr:nth-child(even) td.pn,table.sc tr:nth-child(even) td.pp{background:#
         <button class="npbtn" onclick="pickFielder(3)">3<br><span style="font-size:9px;color:#888">1B</span></button>
       </div>
     </div>
-
-    <!-- STEP 3b: Groundout builder (#-#) -->
     <div class="step" id="step-groundout">
-      <button class="step-back" onclick="backToStep('step-out')">← Back</button>
-      <div class="step-label" id="go-label">Groundout: select fielder who fielded it</div>
+      <button class="step-back" onclick="backToStep('step-out')">&#8592; Back</button>
+      <div class="step-label" id="go-label">Groundout — who fielded it?</div>
       <div class="numpad" id="go-numpad">
-        <button class="npbtn" onclick="goStep(7)">7</button>
-        <button class="npbtn" onclick="goStep(8)">8</button>
-        <button class="npbtn" onclick="goStep(9)">9</button>
-        <button class="npbtn" onclick="goStep(5)">5</button>
-        <button class="npbtn" onclick="goStep(6)">6</button>
-        <button class="npbtn" onclick="goStep(4)">4</button>
-        <button class="npbtn" onclick="goStep(1)">1</button>
-        <button class="npbtn" onclick="goStep(2)">2</button>
-        <button class="npbtn" onclick="goStep(3)">3</button>
+        <button class="npbtn" onclick="goStep(7,this)">7<br><span style="font-size:9px;color:#888">LF</span></button>
+        <button class="npbtn" onclick="goStep(8,this)">8<br><span style="font-size:9px;color:#888">CF</span></button>
+        <button class="npbtn" onclick="goStep(9,this)">9<br><span style="font-size:9px;color:#888">RF</span></button>
+        <button class="npbtn" onclick="goStep(5,this)">5<br><span style="font-size:9px;color:#888">3B</span></button>
+        <button class="npbtn" onclick="goStep(6,this)">6<br><span style="font-size:9px;color:#888">SS</span></button>
+        <button class="npbtn" onclick="goStep(4,this)">4<br><span style="font-size:9px;color:#888">2B</span></button>
+        <button class="npbtn" onclick="goStep(1,this)">1<br><span style="font-size:9px;color:#888">P</span></button>
+        <button class="npbtn" onclick="goStep(2,this)">2<br><span style="font-size:9px;color:#888">C</span></button>
+        <button class="npbtn" onclick="goStep(3,this)">3<br><span style="font-size:9px;color:#888">1B</span></button>
       </div>
     </div>
-
+    <div class="step" id="step-dp">
+      <button class="step-back" onclick="backToStep('step-out')">&#8592; Back</button>
+      <div class="step-label" id="dp-label">Double Play — who fielded it?</div>
+      <div class="numpad" id="dp-numpad">
+        <button class="npbtn" onclick="dpStep(7,this)">7<br><span style="font-size:9px;color:#888">LF</span></button>
+        <button class="npbtn" onclick="dpStep(8,this)">8<br><span style="font-size:9px;color:#888">CF</span></button>
+        <button class="npbtn" onclick="dpStep(9,this)">9<br><span style="font-size:9px;color:#888">RF</span></button>
+        <button class="npbtn" onclick="dpStep(5,this)">5<br><span style="font-size:9px;color:#888">3B</span></button>
+        <button class="npbtn" onclick="dpStep(6,this)">6<br><span style="font-size:9px;color:#888">SS</span></button>
+        <button class="npbtn" onclick="dpStep(4,this)">4<br><span style="font-size:9px;color:#888">2B</span></button>
+        <button class="npbtn" onclick="dpStep(1,this)">1<br><span style="font-size:9px;color:#888">P</span></button>
+        <button class="npbtn" onclick="dpStep(2,this)">2<br><span style="font-size:9px;color:#888">C</span></button>
+        <button class="npbtn" onclick="dpStep(3,this)">3<br><span style="font-size:9px;color:#888">1B</span></button>
+      </div>
+    </div>
     <button class="mc" onclick="closeScModal()">Cancel</button>
   </div>
 </div>
@@ -1274,9 +1284,31 @@ function col(r) {
 function diamond(r, isAuto) {
   const c = col(r), fill = r ? c : 'none', stroke = r ? c : '#d0c8a8';
   const dash = isAuto ? 'stroke-dasharray="2 1"' : '';
-  const dot  = r === 'HR' ? `<circle cx="10" cy="10" r="3" fill="${c}"/>` : '';
+
+  // Baserunner path segments (home=10,19 | 1B=19,10 | 2B=10,1 | 3B=1,10)
+  // Each segment = one base advanced
+  // Determine how many bases the batter reached
+  let bases = 0;
+  let scored = false;
+  if (r === '1B' || r === 'BB' || r === 'IBB' || r === 'HBP' || r === 'FC') bases = 1;
+  else if (r === '2B') bases = 2;
+  else if (r === '3B') bases = 3;
+  else if (r === 'HR') { bases = 4; scored = true; }
+
+  // Build path polyline points for bases reached
+  const corners = [[10,19],[19,10],[10,1],[1,10],[10,19]]; // home→1→2→3→home
+  let pathPts = '';
+  if (bases > 0) {
+    const pts = corners.slice(0, bases + 1).map(p => p.join(',')).join(' ');
+    pathPts = `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>`;
+    // Dot at final base reached (or filled circle for HR)
+    const end = corners[bases];
+    const dotR = bases === 4 ? 3 : 2;
+    pathPts += `<circle cx="${end[0]}" cy="${end[1]}" r="${dotR}" fill="${c}" opacity="0.9"/>`;
+  }
+
   return `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="10,1 19,10 10,19 1,10" fill="${fill}" fill-opacity="0.18" stroke="${stroke}" stroke-width="1.5" ${dash}/>${dot}</svg>`;
+    <polygon points="10,1 19,10 10,19 1,10" fill="${fill}" fill-opacity="0.12" stroke="${stroke}" stroke-width="1.5" ${dash}/>${pathPts}</svg>`;
 }
 
 // ── STREAK BADGE ───────────────────────────────────────────
@@ -1435,28 +1467,53 @@ function chooseCategory(cat) {
   if (cat === 'hit')  showStep('step-hit');
   if (cat === 'walk') showStep('step-walk');
   if (cat === 'out')  showStep('step-out');
-  if (cat === 'misc') showStep('step-misc');
 }
-
 function needFielder(prefix) {
   pendingPrefix = prefix;
-  document.getElementById('fielder-label').textContent =
-    prefix === 'F' ? 'Flyout — select fielder' :
-    prefix === 'P' ? 'Popup — select fielder' :
-    prefix === 'L' ? 'Lineout — select fielder' :
-    'Unassisted out — select fielder';
+  const labels = {F:'Flyout',P:'Popup',L:'Lineout',U:'Unassisted'};
+  document.getElementById('fielder-label').textContent = (labels[prefix]||prefix) + ' — which fielder?';
   showStep('step-fielder');
 }
 function pickFielder(n) { finalRec(pendingPrefix + n); }
-
-function needGroundout() { goFirst = null; document.getElementById('go-label').textContent = 'Groundout: who fielded it?'; showStep('step-groundout'); }
-function goStep(n) {
+function needGroundout() {
+  goFirst = null;
+  document.getElementById('go-label').textContent = 'Groundout — who fielded it?';
+  document.querySelectorAll('#go-numpad .npbtn').forEach(b => b.classList.remove('sel'));
+  showStep('step-groundout');
+}
+function goStep(n, btn) {
   if (goFirst === null) {
     goFirst = n;
-    document.getElementById('go-label').textContent = `${n}-? : Who threw to?`;
+    document.getElementById('go-label').textContent = n + ' — threw to?';
+    document.querySelectorAll('#go-numpad .npbtn').forEach(b => b.classList.remove('sel'));
+    if (btn) btn.classList.add('sel');
   } else {
-    finalRec(`${goFirst}-${n}`);
+    finalRec(goFirst + '-' + n);
     goFirst = null;
+    document.querySelectorAll('#go-numpad .npbtn').forEach(b => b.classList.remove('sel'));
+  }
+}
+let dpFirst = null, dpSecond = null;
+function needDoublePlay() {
+  dpFirst = null; dpSecond = null;
+  document.getElementById('dp-label').textContent = 'Double Play — who fielded it?';
+  document.querySelectorAll('#dp-numpad .npbtn').forEach(b => b.classList.remove('sel'));
+  showStep('step-dp');
+}
+function dpStep(n, btn) {
+  if (dpFirst === null) {
+    dpFirst = n;
+    document.getElementById('dp-label').textContent = dpFirst + ' — threw to?';
+    document.querySelectorAll('#dp-numpad .npbtn').forEach(b => b.classList.remove('sel'));
+    if (btn) btn.classList.add('sel');
+  } else if (dpSecond === null) {
+    dpSecond = n;
+    document.getElementById('dp-label').textContent = dpFirst + '-' + dpSecond + ' — completed to?';
+    if (btn) btn.classList.add('sel');
+  } else {
+    finalRec(dpFirst + '-' + dpSecond + '-' + n + ' DP');
+    dpFirst = null; dpSecond = null;
+    document.querySelectorAll('#dp-numpad .npbtn').forEach(b => b.classList.remove('sel'));
   }
 }
 
@@ -2190,6 +2247,26 @@ async function fetchGame() {
     if (ls && ls.currentInning) {
       document.getElementById('s-inn').textContent = `${ls.isTopInning?'Top':'Bot'} ${ls.currentInning}`;
       document.getElementById('s-cnt').textContent = `${ls.balls??0}-${ls.strikes??0} | ${ls.outs??0} out`;
+      // Scorebug update
+      const _sb = document.getElementById('scorebug');
+      if (_sb && isHome !== undefined) {
+        _sb.classList.add('live');
+        const _mi = isHome ? 'home' : 'away', _oi = isHome ? 'away' : 'home';
+        const _lsTeams = ld?.linescore?.teams;
+        if (_lsTeams) {
+          const _ms = _lsTeams[_mi]?.runs ?? 0;
+          const _os = _lsTeams[_oi]?.runs ?? 0;
+          const _sc = document.getElementById('sb-score');
+          const _il = document.getElementById('sb-inn-lbl');
+          const _o1 = document.getElementById('sb-o1');
+          const _o2 = document.getElementById('sb-o2');
+          if (_sc) _sc.textContent = _ms + '-' + _os;
+          if (_il) _il.textContent = (ls.isTopInning ? 'T' : 'B') + ls.currentInning;
+          const _outs = ls.outs ?? 0;
+          if (_o1) _o1.className = 'sb-out-dot' + (_outs >= 1 ? ' on' : '');
+          if (_o2) _o2.className = 'sb-out-dot' + (_outs >= 2 ? ' on' : '');
+        }
+      }
       const off = ls.offense||{};
       document.getElementById('b1').classList.toggle('on',!!off.first);
       document.getElementById('b2').classList.toggle('on',!!off.second);
@@ -2439,7 +2516,7 @@ function renderStatsTable(stats, bodyId) {
 function switchStatTab(team, type, el) {
   const batView = document.getElementById(team + '-bat-view');
   const pitView = document.getElementById(team + '-pit-view');
-  const tabs = el.closest('.sc-tabs').querySelectorAll('.sc-tab');
+  const container = el.closest('.sc-tabs') || el.closest('.sc-toggle'); if (!container) return; const tabs = container.querySelectorAll('.sc-tab');
   tabs.forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   if (type === 'bat') {
@@ -3063,6 +3140,35 @@ function renderGameNotesPdf(dateLabel, pdfUrl, isToday, isDirect) {
   el.innerHTML = html;
 }
 
+
+function setFoodFilter(tag, el) {
+  foodFilter = tag;
+  document.querySelectorAll('.food-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderFood();
+}
+
+function highlightFoodPin(id) {
+  foodHighlight = foodHighlight === id ? null : id;
+  renderFood();
+  if (foodHighlight !== null) {
+    const card = document.getElementById('food-card-' + id);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderFoodMap(visibleIds) {
+  const svg = document.getElementById('food-map-svg');
+  const pinsEl = document.getElementById('food-pins');
+  if (!svg || !pinsEl || typeof FOOD_LOCATIONS === 'undefined') return;
+  const allPins = pinsEl.querySelectorAll('.food-pin-marker');
+  allPins.forEach(pin => {
+    const id = parseInt(pin.dataset.id);
+    pin.style.opacity = visibleIds.includes(id) ? '1' : '0.15';
+    pin.style.transform = foodHighlight === id ? 'scale(1.4)' : 'scale(1)';
+  });
+}
+
 function renderFood() {
   if (typeof FOOD_LOCATIONS === 'undefined') return;
   const search = (document.getElementById('food-search-input')?.value || '').toLowerCase().trim();
@@ -3544,8 +3650,7 @@ function scheduleMidnightReset() {
     renderScorecard(); renderOppScorecard();
     fetchGame();
     loadNews();
-    loadStandingsTab();
-    loadHensStats();
+    setTimeout(() => { loadStandingsTab(); loadHensStats(); renderFood(); }, 100);
     fetchWeather(LAT, LON, 'Fifth Third Field', null, null);
     startCountdown();
     scheduleMidnightReset();
